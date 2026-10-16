@@ -15,14 +15,32 @@
       <div class="brand-mark">q</div>
       <p class="eyebrow">SMALL CIRCLES. PRIVATE CHATS.</p>
       <h1>Welcome to QuietChat</h1>
-      <p class="muted">Chat with people you invite. No email required.</p>
+      <p class="muted">A private place to chat with people you invite.</p>
       <div id="config-warning" class="notice hidden">First, add your Supabase URL and publishable/anon key in <code>app.js</code>.</div>
-      <form id="profile-form">
-        <label for="username">Choose a username</label>
-        <input id="username" maxlength="24" minlength="2" autocomplete="nickname" placeholder="e.g. maplefox" required>
-        <button class="primary full" type="submit">Enter QuietChat <span>→</span></button>
-      </form>
-      <p class="tiny muted">Use a nickname, not your real name or password.</p>
+      <section id="auth-options">
+        <button id="google-signin-btn" class="provider-button full" type="button"><span class="google-g" aria-hidden="true">G</span> Continue with Google</button>
+        <div class="auth-divider"><span>or use email</span></div>
+        <form id="email-auth-form">
+          <label for="auth-email">Email address</label>
+          <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+          <label for="auth-password" class="field-gap">Password</label>
+          <input id="auth-password" type="password" minlength="6" autocomplete="current-password" placeholder="At least 6 characters" required>
+          <div id="signup-username-wrap" class="hidden field-gap"><label for="signup-username">Choose a username</label><input id="signup-username" maxlength="24" minlength="2" autocomplete="nickname" placeholder="e.g. maplefox"></div>
+          <button id="email-submit-btn" class="primary full" type="submit">Sign in →</button>
+        </form>
+        <p class="auth-switch"><span id="auth-switch-copy">New to QuietChat?</span> <button id="auth-mode-btn" type="button">Create an account</button></p>
+        <div class="auth-divider"><span>or</span></div>
+        <button id="guest-signin-btn" class="secondary full guest-button" type="button">Continue as guest</button>
+      </section>
+      <section id="profile-setup" class="hidden">
+        <p class="muted">One last thing — choose the name people will see in chats.</p>
+        <form id="profile-form">
+          <label for="username">Choose a username</label>
+          <input id="username" maxlength="24" minlength="2" autocomplete="nickname" placeholder="e.g. maplefox" required>
+          <button class="primary full" type="submit">Enter QuietChat <span>→</span></button>
+        </form>
+      </section>
+      <p class="tiny muted">Use a nickname, not your real name or password. Email accounts can help you sign in again on another device.</p>
     </section>
   </main>
 
@@ -34,11 +52,12 @@
       </div>
       <div class="sidebar-actions">
         <button id="create-invite-btn" class="secondary">＋ New private chat</button>
+        <button id="create-group-btn" class="secondary">＋ Create group chat</button>
         <button id="join-invite-btn" class="secondary">↗ Join with code</button>
       </div>
       <div class="section-label">YOUR CHATS</div>
       <div id="chat-list" class="chat-list"><div class="empty-small">Your chats will appear here.</div></div>
-      <div class="profile-strip"><div class="avatar" id="my-avatar">?</div><div class="profile-name"><strong id="my-name">You</strong><span class="tiny muted">Signed in anonymously</span></div><button id="change-name-btn" class="icon-button" title="Change username">⋯</button></div>
+      <div class="profile-strip"><div class="avatar" id="my-avatar">?</div><div class="profile-name"><strong id="my-name">You</strong><span class="tiny muted" id="account-label">Signed in</span></div><button id="change-name-btn" class="icon-button" title="Change username">⋯</button></div>
     </aside>
 
     <section class="conversation">
@@ -46,6 +65,7 @@
         <button id="mobile-back" class="icon-button mobile-only" aria-label="Back to chats">←</button>
         <div class="avatar" id="chat-avatar">✦</div>
         <div class="chat-heading"><strong id="chat-title">Your messages</strong><span id="chat-subtitle" class="tiny muted">Choose a chat or start a new one</span></div>
+        <button id="add-people-btn" class="secondary header-action hidden" disabled>＋ Add people</button>
         <button id="call-btn" class="call-button" disabled>▣ <span>Call</span></button>
       </header>
       <div id="welcome-panel" class="welcome-panel">
@@ -56,10 +76,12 @@
       <div id="messages" class="messages hidden"></div>
       <div id="composer-wrap" class="composer-wrap hidden">
         <form id="message-form" class="composer">
-          <textarea id="message-input" rows="1" maxlength="4000" placeholder="Write a message…" aria-label="Message" required></textarea>
+          <label class="attach-button" for="media-input" title="Send a photo or video" aria-label="Send a photo or video">＋</label>
+          <input id="media-input" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" class="hidden" aria-label="Choose a photo or video">
+          <textarea id="message-input" rows="1" maxlength="4000" placeholder="Write a message…" aria-label="Message"></textarea>
           <button class="send-button" type="submit" aria-label="Send message">↑</button>
         </form>
-        <div class="composer-hint">Enter to send · Shift + Enter for a new line</div>
+        <div class="composer-hint">Enter to send · Shift + Enter for a new line · Photos/videos up to 50 MB</div>
       </div>
     </section>
   </main>
@@ -67,7 +89,7 @@
   <dialog id="invite-dialog" class="modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
     <div class="modal-icon">✉</div><h2>Your invite code</h2>
-    <p class="muted">Send this code to one person. It can only be used once and expires in 24 hours.</p>
+    <p class="muted">Send this one-time code to a friend. For group chats, make a separate code for each person. Codes expire in 24 hours.</p>
     <div class="code-box"><code id="invite-code">--------</code><button id="copy-code-btn" class="secondary">Copy</button></div>
     <p class="tiny muted">Anyone who gets this code may join, so share it privately.</p>
     <button id="invite-done-btn" class="primary full">Done</button>
@@ -78,6 +100,13 @@
     <div class="modal-icon">↗</div><h2>Join a private chat</h2>
     <p class="muted">Paste the one-time code your friend sent you.</p>
     <form id="join-form"><label for="invite-input">Invite code</label><input id="invite-input" maxlength="12" autocomplete="off" placeholder="ABCD-EFGH" required><button class="primary full" type="submit">Join chat →</button></form>
+  </dialog>
+
+  <dialog id="group-dialog" class="modal">
+    <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+    <div class="modal-icon">👥</div><h2>Create a group chat</h2>
+    <p class="muted">Give your group a name, then invite people with separate one-time codes.</p>
+    <form id="group-form"><label for="group-name-input">Group name</label><input id="group-name-input" maxlength="60" minlength="2" placeholder="Weekend crew" required><button class="primary full" type="submit">Create group →</button></form>
   </dialog>
 
   <dialog id="name-dialog" class="modal">

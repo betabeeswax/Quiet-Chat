@@ -3,7 +3,7 @@
 A plain HTML/CSS/JavaScript private chat starter using your existing Supabase project. It is designed for static hosting on Vercel.
 
 ## Features
-- Anonymous sign-in with a username
+- Email + password accounts, Google sign-in, and guest accounts with a username
 - One-time invite codes that expire after 24 hours
 - Multiple 1-to-1 chats and realtime messages
 - Responsive dark UI
@@ -13,8 +13,15 @@ A plain HTML/CSS/JavaScript private chat starter using your existing Supabase pr
 ## Already set up
 The Supabase database for project `simple-chat` has already been created and its five tables have RLS enabled. The app's Supabase URL and browser-safe publishable key are already filled into `app.js`.
 
-## One Supabase dashboard setting to check
-Anonymous sign-in must be enabled. Open the Supabase project, then **Authentication → Sign In / Providers** (the exact label can vary) and enable **Anonymous Sign-Ins**. I can't change that provider toggle with the available Supabase connection tools.
+## Supabase sign-in setup (required)
+In your Supabase dashboard, open **Authentication → Sign In / Providers** (labels may vary):
+- Enable **Email** for email/password accounts.
+- Enable **Google** and add the Google OAuth Client ID and Client Secret from Google Cloud. Follow Supabase's Google provider instructions; the Google button will not work until credentials are configured.
+- Enable **Anonymous Sign-Ins** if you want the guest option to work.
+
+Then open **Authentication → URL Configuration** and add your deployed Vercel URL to the allowed redirect URLs (and your local URL if testing locally). The app redirects Google sign-in back to the current site. If email confirmation is enabled, users must confirm their email before signing in.
+
+More providers (such as Apple or Discord) can be added later by enabling/configuring them in Supabase and adding a button in the app.
 
 You do **not** need to run `supabase-setup.sql` again; it is included as a reference/setup script only. The database migration has already been applied to the connected project.
 

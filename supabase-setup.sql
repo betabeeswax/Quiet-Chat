@@ -151,3 +151,58 @@ do $$ begin
 exception when duplicate_object then null;
 when undefined_object then raise notice 'Publication supabase_realtime was not found; enable Realtime for messages in the dashboard.';
 end $$;
+
+-- Group chats and photo/video messages (added in the latest QuietChat update).
+-- Safe to run on an existing installation.
+alter table public.chats add column if not exists name text;
+alter table public.messages add column if not exists attachment_path text;
+alter table public.messages add column if not exists attachment_type text check (attachment_type in ('image','video') or attachment_type is null);
+
+-- Let Supabase understand chat_members -> profiles(username) joins used by the UI.
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname='chat_members_user_id_profiles_fkey' and conrelid='public.chat_members'::regclass) then
+    alter table public.chat_members add constraint chat_members_user_id_profiles_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+  end if;
+end $$;
+
+create or replace function public.create_group_chat(group_name text)
+returns uuid language plpgsql security definer set search_path = public
+as $$
+declare new_chat uuid; cleaned_name text;
+begin
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
+  cleaned_name := left(trim(regexp_replace(coalesce(group_name,''), '\s+', ' ', 'g')), 60);
+  if char_length(cleaned_name) < 2 then raise exception 'Group name must be at least 2 characters'; end if;
+  insert into public.chats(name) values(cleaned_name) returning id into new_chat;
+  insert into public.chat_members(chat_id,user_id) values(new_chat,auth.uid());
+  return new_chat;
+end; $$;
+
+create or replace function public.create_chat_invite_for(target_chat uuid)
+returns text language plpgsql security definer set search_path = public, extensions
+as $$
+declare raw_code text;
+begin
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
+  if not public.is_chat_member(target_chat, auth.uid()) then raise exception 'You are not a member of this chat'; end if;
+  raw_code := upper(encode(gen_random_bytes(5),'hex'));
+  insert into public.chat_invites(code_hash,chat_id,created_by) values(encode(digest(raw_code,'sha256'),'hex'),target_chat,auth.uid());
+  return raw_code;
+end; $$;
+revoke all on function public.create_group_chat(text) from public;
+revoke all on function public.create_chat_invite_for(uuid) from public;
+grant execute on function public.create_group_chat(text) to authenticated;
+grant execute on function public.create_chat_invite_for(uuid) to authenticated;
+
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+values('chat-media','chat-media',false,52428800,array['image/jpeg','image/png','image/gif','image/webp','image/avif','video/mp4','video/webm','video/quicktime'])
+on conflict (id) do update set public=false,file_size_limit=52428800,allowed_mime_types=array['image/jpeg','image/png','image/gif','image/webp','image/avif','video/mp4','video/webm','video/quicktime'];
+
+drop policy if exists "Chat members can upload media" on storage.objects;
+create policy "Chat members can upload media" on storage.objects for insert to authenticated with check (bucket_id='chat-media' and public.is_chat_member(((storage.foldername(name))[1])::uuid,auth.uid()));
+drop policy if exists "Chat members can read media" on storage.objects;
+create policy "Chat members can read media" on storage.objects for select to authenticated using (bucket_id='chat-media' and public.is_chat_member(((storage.foldername(name))[1])::uuid,auth.uid()));
+drop policy if exists "Chat members can delete own media" on storage.objects;
+create policy "Chat members can delete own media" on storage.objects for delete to authenticated using (bucket_id='chat-media' and owner_id=auth.uid()::text and public.is_chat_member(((storage.foldername(name))[1])::uuid,auth.uid()));
+
+NOTIFY pgrst, 'reload schema';
