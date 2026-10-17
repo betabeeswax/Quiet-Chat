@@ -5,7 +5,10 @@ A plain HTML/CSS/JavaScript private chat starter using your existing Supabase pr
 ## Features
 - Email + password accounts, Google sign-in, and guest accounts with a username
 - One-time invite codes that expire after 24 hours
-- Multiple 1-to-1 chats and realtime messages
+- Private 1-to-1 chats and group chats with realtime messages
+- Persistent chat history saved in Supabase and loaded when you sign back in
+- Send photos and videos (up to 50 MB)
+- Record and send voice memos from the microphone (browser permission required)
 - Responsive dark UI
 - Jitsi Meet call links shared in the chat
 - Row Level Security (RLS) policies
@@ -23,10 +26,10 @@ Then open **Authentication → URL Configuration** and add your deployed Vercel 
 
 More providers (such as Apple or Discord) can be added later by enabling/configuring them in Supabase and adding a button in the app.
 
-You do **not** need to run `supabase-setup.sql` again; it is included as a reference/setup script only. The database migration has already been applied to the connected project.
+The connected Supabase project has been updated for group chats, photo/video attachments, and voice memos. Chat history and message records are stored in Supabase; uploaded media is stored in a private Storage bucket. The website code still needs to be uploaded to GitHub and deployed to Vercel before you can test these changes live.
 
 ## Put it on GitHub
-Upload the files inside the `quietchat` folder directly to the root of your new GitHub repository:
+Upload/replace the files inside the `quietchat` folder directly in the root of your GitHub repository:
 - `index.html`
 - `style.css`
 - `app.js`

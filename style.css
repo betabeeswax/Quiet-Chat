@@ -14,3 +14,7 @@
 /* Group chats and private photo/video attachments */
 .header-action{padding:9px 10px;font-size:12px;white-space:nowrap}.attach-button{display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:11px;background:#202a39;color:var(--accent);font-size:24px;cursor:pointer;line-height:1}.attach-button:hover{background:#2a384a}.chat-media-image,.chat-media-video{display:block;max-width:min(100%,420px);max-height:360px;border-radius:10px;object-fit:contain}.bubble:has(.chat-media-image),.bubble:has(.chat-media-video){padding:7px}.bubble:has(.chat-media-image)>div,.bubble:has(.chat-media-video)>div{padding:5px}.composer textarea{min-width:0}
 @media(max-width:720px){.chat-header{gap:7px}.header-action{padding:8px;font-size:11px}.chat-media-image,.chat-media-video{max-width:100%;max-height:280px}}
+
+/* Voice memos */
+.voice-button{display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:11px;background:#202a39;color:var(--accent);font-size:18px}.voice-button:hover{background:#2a384a}.voice-button.recording{background:#6c252c;color:#fff;animation:record-pulse 1s infinite alternate}.chat-media-audio{display:block;width:min(100%,320px);min-width:220px;max-width:100%;height:42px}.bubble:has(.chat-media-audio){padding:10px}@keyframes record-pulse{from{opacity:1}to{opacity:.65}}
+@media(max-width:720px){.voice-button{width:34px;height:36px}.chat-media-audio{min-width:200px;width:100%}}
