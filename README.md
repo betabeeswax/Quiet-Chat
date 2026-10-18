@@ -62,3 +62,12 @@ Open Supabase Dashboard → SQL Editor, paste and run the complete `supabase-set
 
 ## PDF export note
 The export opens a new browser tab. Click **Print / Save as PDF** and choose **Save as PDF**. Call links remain in the transcript. Private attachment links expire and are not embedded into the PDF.
+
+
+## Calls, games, emoji and file sizes
+
+- The call button opens a video call embedded inside QuietChat using Jitsi Meet. FaceTime itself cannot be embedded into a third-party website; Jitsi is the in-app alternative.
+- The chat header stays pinned at the top while you scroll.
+- Emoji picker is built in; GIF search opens Tenor in a new tab so you can copy a GIF URL into chat.
+- Chat uploads are configured for up to 50 MiB per file, subject to the Supabase project-wide upload limit. Supabase Free projects have a maximum global file-size limit of 50 MB; the Pro plan can raise this much higher.
+- Games include simplified UNO, Tic-tac-toe, Connect Four, Checkers, Chess (free-move practice mode), Battleship, Memory Match, Hangman, and online Rock Paper Scissors. Except for Rock Paper Scissors, the included games are pass-and-play on one device and are not synchronized multiplayer yet.

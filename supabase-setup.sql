@@ -204,8 +204,8 @@ grant execute on function public.create_group_chat(text) to authenticated;
 grant execute on function public.create_chat_invite_for(uuid) to authenticated;
 
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('chat-media','chat-media',false,5242880,null)
-on conflict (id) do update set public=false,file_size_limit=5242880,allowed_mime_types=null;
+values('chat-media','chat-media',false,52428800,null)
+on conflict (id) do update set public=false,file_size_limit=52428800,allowed_mime_types=null;
 
 drop policy if exists "Chat members can upload media" on storage.objects;
 create policy "Chat members can upload media" on storage.objects for insert to authenticated with check (bucket_id='chat-media' and public.is_chat_member(((storage.foldername(name))[1])::uuid,auth.uid()));

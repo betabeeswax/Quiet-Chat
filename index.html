@@ -76,7 +76,7 @@
         <div class="avatar" id="chat-avatar">✦</div>
         <div class="chat-heading"><strong id="chat-title">Your messages</strong><span id="chat-subtitle" class="tiny muted">Choose a chat or start a new one</span></div>
         <button id="add-people-btn" class="secondary header-action hidden" disabled>＋ Add people</button>
-        <div class="header-tools"><button id="export-btn" class="secondary header-action" disabled>⇩ Export PDF</button><button id="game-btn" class="secondary header-action" disabled>🎮 Games</button><button id="call-btn" class="call-button" disabled>▣ <span>Call</span></button></div>
+        <div class="header-tools"><button id="export-btn" class="secondary header-action" disabled>⇩ PDF</button><button id="game-btn" class="secondary header-action" disabled>🎮 Games</button><button id="call-btn" class="call-button" disabled>▣ <span>Call</span></button></div>
       </header>
       <div id="welcome-panel" class="welcome-panel">
         <div class="welcome-icon">✳</div><h2>A quieter way to chat.</h2>
@@ -86,13 +86,13 @@
       <div id="messages" class="messages hidden"></div>
       <div id="composer-wrap" class="composer-wrap hidden">
         <form id="message-form" class="composer">
-          <label class="attach-button" for="media-input" title="Attach any file up to 5 MB" aria-label="Attach a file">＋</label>
-          <input id="media-input" type="file" class="hidden" aria-label="Choose a file up to 5 MB">
-          <button id="voice-memo-btn" class="voice-button" type="button" title="Record a voice memo" aria-label="Record a voice memo">🎙</button>
+          <label class="attach-button" for="media-input" title="Attach any file up to 50 MB" aria-label="Attach a file">＋</label>
+          <input id="media-input" type="file" class="hidden" aria-label="Choose a file up to 50 MB">
+          <button id="emoji-btn" class="voice-button" type="button" title="Emoji and GIFs" aria-label="Emoji and GIFs">😊</button><button id="voice-memo-btn" class="voice-button" type="button" title="Record a voice memo" aria-label="Record a voice memo">🎙</button>
           <textarea id="message-input" rows="1" maxlength="4000" placeholder="Write a message…" aria-label="Message"></textarea>
           <button class="send-button" type="submit" aria-label="Send message">↑</button>
         </form>
-        <div class="composer-hint">Enter to send · Shift + Enter for a new line · Any file up to 5 MB · Tap 🎙 to record a voice memo</div>
+        <div class="composer-hint">Enter to send · Shift + Enter for a new line · Any file up to 50 MB · Tap 🎙 to record a voice memo</div>
       </div>
     </section>
   </main>
@@ -138,14 +138,24 @@
     <p class="tiny muted">Two-factor authentication is not required by this app. Username-only accounts cannot be recovered if your anonymous browser session is lost.</p>
     <p><a href="privacy.html" target="_blank" rel="noopener">Read the privacy policy</a></p>
   </dialog>
+  <dialog id="call-dialog" class="call-modal">
+    <div class="call-modal-top"><div><strong>QuietChat video call</strong><div class="tiny muted">Camera and microphone permissions may be requested by your browser.</div></div><button id="end-call-btn" class="secondary">End call ✕</button></div>
+    <iframe id="call-frame" title="QuietChat video call" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write" referrerpolicy="no-referrer" src="about:blank"></iframe>
+  </dialog>
+  <dialog id="emoji-dialog" class="modal emoji-modal">
+    <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+    <h2>Emoji & GIFs</h2><p class="tiny muted">Tap an emoji to add it to your message, or open a GIF search and paste a GIF link.</p>
+    <div id="emoji-grid" class="emoji-grid"></div>
+    <label for="gif-search" class="field-gap">Find a GIF</label><div class="gif-search-row"><input id="gif-search" placeholder="funny cat, happy dance…"><button id="gif-search-btn" class="primary">Search</button></div>
+    <div id="gif-results" class="gif-results"><p class="tiny muted">GIF search opens Tenor in a new tab. Copy a GIF link and paste it into your message.</p></div>
+  </dialog>
   <dialog id="game-dialog" class="modal game-modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
-    <div class="modal-icon">🎮</div><h2>Play with your chat</h2>
-    <p class="muted">Rock, paper, scissors — your move is shared live with everyone in this chat.</p>
-    <div class="rps-score" id="rps-score">Loading game…</div>
-    <div class="rps-last" id="rps-last">Choose your move to start a round.</div>
-    <div class="rps-buttons"><button type="button" data-rps="rock">🪨 Rock</button><button type="button" data-rps="paper">📄 Paper</button><button type="button" data-rps="scissors">✂️ Scissors</button></div>
-    <p class="tiny muted">Each player chooses once per round. The game updates for everyone in this chat.</p>
+    <div class="modal-icon">🎮</div><h2>Game corner</h2>
+    <p class="muted">Pick a game. Most games here are local pass-and-play for two people on the same device; Rock Paper Scissors is synced with your chat.</p>
+    <div id="game-picker" class="game-picker"></div>
+    <div id="game-board" class="game-board"><p class="muted">Choose a game to start.</p></div>
+    <div id="online-rps" class="online-rps hidden"><div class="rps-score" id="rps-score">Loading game…</div><div class="rps-last" id="rps-last">Choose your move to start a round.</div><div class="rps-buttons"><button type="button" data-rps="rock">🪨 Rock</button><button type="button" data-rps="paper">📄 Paper</button><button type="button" data-rps="scissors">✂️ Scissors</button></div></div>
   </dialog>
   <div id="toast" class="toast" role="status"></div>
 </body>
