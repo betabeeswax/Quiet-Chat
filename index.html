@@ -17,7 +17,7 @@
       <h1>Welcome to QuietChat</h1>
       <p class="muted">A private place to chat with people you invite.</p>
       <div id="config-warning" class="notice hidden">First, add your Supabase URL and publishable/anon key in <code>app.js</code>.</div>
-      <section id="auth-options">
+      <section id="auth-options" class="hidden">
         <button id="google-signin-btn" class="provider-button full" type="button"><span class="google-g" aria-hidden="true">G</span> Continue with Google</button>
         <div class="auth-divider"><span>or use email</span></div>
         <form id="email-auth-form">
@@ -29,18 +29,28 @@
           <button id="email-submit-btn" class="primary full" type="submit">Sign in →</button>
         </form>
         <p class="auth-switch"><span id="auth-switch-copy">New to QuietChat?</span> <button id="auth-mode-btn" type="button">Create an account</button></p>
+        <div class="auth-divider"><span>or use a username</span></div>
+        <form id="username-auth-form">
+          <label for="username-auth-name">Username</label>
+          <input id="username-auth-name" maxlength="24" minlength="2" autocomplete="username" placeholder="maplefox" pattern="[A-Za-z0-9_-]{2,24}" required>
+          <label for="username-auth-password" class="field-gap">Password</label>
+          <input id="username-auth-password" type="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="At least 8 characters" required>
+          <button id="username-auth-submit" class="primary full field-gap" type="submit">Sign in with username →</button>
+        </form>
+        <p class="auth-switch"><span id="username-auth-switch-copy">New here without an email?</span> <button id="username-auth-mode-btn" type="button">Create username account</button></p>
         <div class="auth-divider"><span>or</span></div>
-        <button id="guest-signin-btn" class="secondary full guest-button" type="button">Continue as guest</button>
+        <button id="guest-signin-btn" class="secondary full guest-button" type="button">Continue as guest (no password)</button>
       </section>
       <section id="profile-setup" class="hidden">
-        <p class="muted">One last thing — choose the name people will see in chats.</p>
+        <p class="muted">Choose a username to start. No email or password needed.</p>
         <form id="profile-form">
           <label for="username">Choose a username</label>
           <input id="username" maxlength="24" minlength="2" autocomplete="nickname" placeholder="e.g. maplefox" required>
-          <button class="primary full" type="submit">Enter QuietChat <span>→</span></button>
+          <button class="primary full" type="submit">Continue with username <span>→</span></button>
         </form>
       </section>
-      <p class="tiny muted">Use a nickname, not your real name or password. Email accounts can help you sign in again on another device.</p>
+      <p class="tiny muted">Username + password accounts do not need an email. Keep your password safe: there is no email-based password recovery for these accounts. Guest accounts can be lost if browser data is cleared.</p>
+    <p class="tiny muted policy-link"><a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a> · Chats and messages older than one year are scheduled for deletion each January.</p>
     </section>
   </main>
 
@@ -52,12 +62,14 @@
       </div>
       <div class="sidebar-actions">
         <button id="create-invite-btn" class="secondary">＋ New private chat</button>
+        <button id="gallery-btn" class="secondary">🖼 Local media library</button>
+        <button id="enable-notifications-btn" class="secondary">🔔 Enable notifications</button>
         <button id="create-group-btn" class="secondary">＋ Create group chat</button>
         <button id="join-invite-btn" class="secondary">↗ Join with code</button>
       </div>
       <div class="section-label">YOUR CHATS</div>
       <div id="chat-list" class="chat-list"><div class="empty-small">Your chats will appear here.</div></div>
-      <div class="profile-strip"><div class="avatar" id="my-avatar">?</div><div class="profile-name"><strong id="my-name">You</strong><span class="tiny muted" id="account-label">Signed in</span></div><button id="change-name-btn" class="icon-button" title="Change username">⋯</button></div>
+      <div class="profile-strip"><div class="avatar" id="my-avatar">?</div><div class="profile-name"><strong id="my-name">You</strong><span class="tiny muted" id="account-label">Signed in</span></div><button id="change-name-btn" class="icon-button" title="Profile and settings">⋯</button></div>
     </aside>
 
     <section class="conversation">
@@ -66,7 +78,7 @@
         <div class="avatar" id="chat-avatar">✦</div>
         <div class="chat-heading"><strong id="chat-title">Your messages</strong><span id="chat-subtitle" class="tiny muted">Choose a chat or start a new one</span></div>
         <button id="add-people-btn" class="secondary header-action hidden" disabled>＋ Add people</button>
-        <button id="call-btn" class="call-button" disabled>▣ <span>Call</span></button>
+        <div class="header-tools"><button id="export-btn" class="secondary header-action" disabled>⇩ PDF</button><button id="game-btn" class="secondary header-action" disabled>🎮 Games</button><button id="call-btn" class="call-button" disabled>▣ <span>Call</span></button></div>
       </header>
       <div id="welcome-panel" class="welcome-panel">
         <div class="welcome-icon">✳</div><h2>A quieter way to chat.</h2>
@@ -76,13 +88,13 @@
       <div id="messages" class="messages hidden"></div>
       <div id="composer-wrap" class="composer-wrap hidden">
         <form id="message-form" class="composer">
-          <label class="attach-button" for="media-input" title="Send a photo or video" aria-label="Send a photo or video">＋</label>
-          <input id="media-input" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" class="hidden" aria-label="Choose a photo or video">
-          <button id="voice-memo-btn" class="voice-button" type="button" title="Record a voice memo" aria-label="Record a voice memo">🎙</button>
+          <label class="attach-button" for="media-input" title="Attach any file up to 50 MB" aria-label="Attach a file">＋</label>
+          <input id="media-input" type="file" class="hidden" aria-label="Choose a file up to 50 MB">
+          <button id="emoji-btn" class="voice-button" type="button" title="Emoji and GIFs" aria-label="Emoji and GIFs">😊</button><button id="voice-memo-btn" class="voice-button" type="button" title="Record a voice memo" aria-label="Record a voice memo">🎙</button>
           <textarea id="message-input" rows="1" maxlength="4000" placeholder="Write a message…" aria-label="Message"></textarea>
           <button class="send-button" type="submit" aria-label="Send message">↑</button>
         </form>
-        <div class="composer-hint">Enter to send · Shift + Enter for a new line · Photos/videos up to 50 MB · Tap 🎙 to record a voice memo</div>
+        <div class="composer-hint">Enter to send · Shift + Enter for a new line · Any file up to 50 MB · Tap 🎙 to record a voice memo</div>
       </div>
     </section>
   </main>
@@ -113,6 +125,50 @@
   <dialog id="name-dialog" class="modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
     <h2>Change username</h2><form id="name-form"><label for="new-name">Username</label><input id="new-name" maxlength="24" minlength="2" required><button class="primary full" type="submit">Save username</button></form>
+  </dialog>
+
+  <dialog id="profile-dialog" class="modal profile-modal">
+    <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+    <h2>Your profile</h2><p class="muted">Choose what friends see about you.</p>
+    <form id="profile-edit-form">
+      <label for="profile-username">Username</label><input id="profile-username" maxlength="24" minlength="2" required>
+      <label for="profile-bio" class="field-gap">Bio</label><textarea id="profile-bio" maxlength="160" rows="3" placeholder="A little about you (optional)"></textarea>
+      <label for="avatar-input" class="field-gap">Profile picture (image under 5 MB)</label><input id="avatar-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+      <button class="primary full field-gap" type="submit">Save profile</button>
+    </form>
+    <button id="profile-export-btn" class="secondary full field-gap" type="button">Export all chats as PDF</button>
+    <p class="tiny muted">Two-factor authentication is not required by this app. Username-only accounts cannot be recovered if your anonymous browser session is lost.</p>
+    <p><a href="privacy.html" target="_blank" rel="noopener">Read the privacy policy</a></p>
+  </dialog>
+  <dialog id="call-dialog" class="call-modal">
+    <div class="call-modal-top"><div><strong>QuietChat video call</strong><div class="tiny muted">Camera and microphone permissions may be requested by your browser.</div></div><button id="end-call-btn" class="secondary">End call ✕</button></div>
+    <iframe id="call-frame" title="QuietChat video call" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write" referrerpolicy="no-referrer" src="about:blank"></iframe>
+  </dialog>
+  <dialog id="emoji-dialog" class="modal emoji-modal">
+    <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+    <h2>Emoji & GIFs</h2><p class="tiny muted">Tap an emoji to add it to your message, or open a GIF search and paste a GIF link.</p>
+    <div id="emoji-grid" class="emoji-grid"></div>
+    <label for="gif-search" class="field-gap">Find a GIF</label><div class="gif-search-row"><input id="gif-search" placeholder="funny cat, happy dance…"><button id="gif-search-btn" class="primary">Search</button></div>
+    <div id="gif-results" class="gif-results"><p class="tiny muted">GIF search opens Tenor in a new tab. Copy a GIF link and paste it into your message.</p></div>
+  </dialog>
+  <dialog id="game-dialog" class="modal game-modal">
+    <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+    <div class="modal-icon">🎮</div><h2>Game corner</h2>
+    <p class="muted">Pick a game. Most games here are local pass-and-play for two people on the same device; Rock Paper Scissors is synced with your chat.</p>
+    <div id="game-picker" class="game-picker"></div>
+    <div id="game-board" class="game-board"><p class="muted">Choose a game to start.</p></div>
+    <div id="online-rps" class="online-rps hidden"><div class="rps-score" id="rps-score">Loading game…</div><div class="rps-last" id="rps-last">Choose your move to start a round.</div><div class="rps-buttons"><button type="button" data-rps="rock">🪨 Rock</button><button type="button" data-rps="paper">📄 Paper</button><button type="button" data-rps="scissors">✂️ Scissors</button></div></div>
+  </dialog>
+  <dialog id="safety-warning-dialog" class="modal warning-modal">
+    <div class="modal-icon">⚠️</div><h2>Before you use QuietChat</h2>
+    <p><strong>QuietChat is a web app, not iMessage.</strong> Chat messages and shared attachments are currently stored in the online Supabase service so your chat partners can receive them. This update also saves copies of media you view in this browser.</p>
+    <ul><li>Local media stays on this browser/device and may be lost if browser data is cleared.</li><li>Local copies do not automatically appear on another computer.</li><li>Only chat with people you trust. Do not send passwords or highly sensitive information.</li><li>Calls use Jitsi Meet inside the website; call privacy depends on that service and its settings.</li></ul>
+    <button id="warning-continue-btn" class="primary full">I understand — continue</button>
+    <p class="tiny muted"><a href="privacy.html" target="_blank" rel="noopener">Read the privacy policy</a></p>
+  </dialog>
+  <dialog id="gallery-dialog" class="modal gallery-modal">
+    <div class="gallery-top"><div><h2>Local media library</h2><p class="tiny muted">Saved copies on this browser, newest first.</p></div><button id="gallery-close-btn" class="secondary">Close ✕</button></div>
+    <div id="gallery-grid" class="gallery-grid"></div>
   </dialog>
   <div id="toast" class="toast" role="status"></div>
 </body>
