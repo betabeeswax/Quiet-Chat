@@ -160,13 +160,6 @@ alter table public.messages add column if not exists attachment_type text;
 alter table public.messages drop constraint if exists messages_attachment_type_check;
 alter table public.messages add constraint messages_attachment_type_check check (attachment_type in ('image','video','audio') or attachment_type is null);
 
--- Let Supabase understand messages -> profiles(username) joins used by the UI.
-do $$ begin
-  if not exists (select 1 from pg_constraint where conname='messages_sender_id_profiles_fkey' and conrelid='public.messages'::regclass) then
-    alter table public.messages add constraint messages_sender_id_profiles_fkey foreign key (sender_id) references public.profiles(id) on delete cascade;
-  end if;
-end $$;
-
 -- Let Supabase understand chat_members -> profiles(username) joins used by the UI.
 do $$ begin
   if not exists (select 1 from pg_constraint where conname='chat_members_user_id_profiles_fkey' and conrelid='public.chat_members'::regclass) then
@@ -204,8 +197,8 @@ grant execute on function public.create_group_chat(text) to authenticated;
 grant execute on function public.create_chat_invite_for(uuid) to authenticated;
 
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('chat-media','chat-media',false,52428800,null)
-on conflict (id) do update set public=false,file_size_limit=52428800,allowed_mime_types=null;
+values('chat-media','chat-media',false,52428800,array['image/jpeg','image/png','image/gif','image/webp','image/avif','video/mp4','video/webm','video/quicktime','audio/webm','audio/ogg','audio/mp4','audio/mpeg','audio/wav','audio/x-m4a','audio/aac'])
+on conflict (id) do update set public=false,file_size_limit=52428800,allowed_mime_types=array['image/jpeg','image/png','image/gif','image/webp','image/avif','video/mp4','video/webm','video/quicktime','audio/webm','audio/ogg','audio/mp4','audio/mpeg','audio/wav','audio/x-m4a','audio/aac'];
 
 drop policy if exists "Chat members can upload media" on storage.objects;
 create policy "Chat members can upload media" on storage.objects for insert to authenticated with check (bucket_id='chat-media' and public.is_chat_member(((storage.foldername(name))[1])::uuid,auth.uid()));
@@ -215,98 +208,3 @@ drop policy if exists "Chat members can delete own media" on storage.objects;
 create policy "Chat members can delete own media" on storage.objects for delete to authenticated using (bucket_id='chat-media' and owner_id=auth.uid()::text and public.is_chat_member(((storage.foldername(name))[1])::uuid,auth.uid()));
 
 NOTIFY pgrst, 'reload schema';
-
-
--- QuietChat profile pictures, bios, arbitrary files, games and yearly retention.
-alter table public.profiles add column if not exists bio text not null default '';
-alter table public.profiles add column if not exists avatar_path text;
-alter table public.messages add column if not exists attachment_name text;
-alter table public.messages drop constraint if exists messages_attachment_type_check;
-alter table public.messages add constraint messages_attachment_type_check
-  check (attachment_type in ('image','video','audio','file') or attachment_type is null);
-
-insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values ('profile-pics','profile-pics',false,5242880,array['image/jpeg','image/png','image/webp','image/gif'])
-on conflict (id) do update set public=false,file_size_limit=5242880,allowed_mime_types=array['image/jpeg','image/png','image/webp','image/gif'];
-drop policy if exists "Users upload own profile pictures" on storage.objects;
-create policy "Users upload own profile pictures" on storage.objects for insert to authenticated
-with check (bucket_id='profile-pics' and (storage.foldername(name))[1]=auth.uid()::text);
-drop policy if exists "Users update own profile pictures" on storage.objects;
-create policy "Users update own profile pictures" on storage.objects for update to authenticated
-using (bucket_id='profile-pics' and (storage.foldername(name))[1]=auth.uid()::text)
-with check (bucket_id='profile-pics' and (storage.foldername(name))[1]=auth.uid()::text);
-drop policy if exists "Shared chat members can read profile pictures" on storage.objects;
-create policy "Shared chat members can read profile pictures" on storage.objects for select to authenticated
-using (bucket_id='profile-pics' and ((storage.foldername(name))[1]=auth.uid()::text or exists (
-  select 1 from public.chat_members mine join public.chat_members theirs on theirs.chat_id=mine.chat_id
-  where mine.user_id=auth.uid() and theirs.user_id::text=(storage.foldername(name))[1]
-)));
-drop policy if exists "Users delete own profile pictures" on storage.objects;
-create policy "Users delete own profile pictures" on storage.objects for delete to authenticated
-using (bucket_id='profile-pics' and (storage.foldername(name))[1]=auth.uid()::text);
-
-create table if not exists public.chat_games (
-  id uuid primary key default gen_random_uuid(), chat_id uuid not null references public.chats(id) on delete cascade,
-  game_type text not null default 'rps' check (game_type in ('rps')),
-  state jsonb not null default '{"round":1,"moves":{},"scores":{},"last":null}'::jsonb,
-  updated_at timestamptz not null default now(), unique(chat_id,game_type)
-);
-alter table public.chat_games enable row level security;
-drop policy if exists "Chat members can read game state" on public.chat_games;
-create policy "Chat members can read game state" on public.chat_games for select to authenticated using (public.is_chat_member(chat_id,auth.uid()));
-drop policy if exists "Chat members can create game state" on public.chat_games;
-create policy "Chat members can create game state" on public.chat_games for insert to authenticated with check (public.is_chat_member(chat_id,auth.uid()));
-drop policy if exists "Chat members can update game state" on public.chat_games;
-create policy "Chat members can update game state" on public.chat_games for update to authenticated using (public.is_chat_member(chat_id,auth.uid())) with check (public.is_chat_member(chat_id,auth.uid()));
-grant select on public.chat_games to authenticated;
-do $$ begin alter publication supabase_realtime add table public.chat_games; exception when duplicate_object then null; when undefined_object then raise notice 'Enable Realtime for chat_games in the dashboard.'; end $$;
-
-create or replace function public.play_rps(target_chat uuid, chosen_move text)
-returns jsonb language plpgsql security definer set search_path=public as $$
-declare game public.chat_games%rowtype; moves jsonb; scores jsonb; member_count int; ids text[]; p1 text; p2 text; m1 text; m2 text; result text; last_round jsonb;
-begin
- if auth.uid() is null or not public.is_chat_member(target_chat,auth.uid()) then raise exception 'You are not a member of this chat'; end if;
- if chosen_move not in ('rock','paper','scissors') then raise exception 'Invalid move'; end if;
- insert into public.chat_games(chat_id,game_type,state) values(target_chat,'rps','{"round":1,"moves":{},"scores":{},"last":null}'::jsonb) on conflict(chat_id,game_type) do nothing;
- select * into game from public.chat_games where chat_id=target_chat and game_type='rps' for update;
- moves := coalesce(game.state->'moves','{}'::jsonb) || jsonb_build_object(auth.uid()::text,chosen_move); scores := coalesce(game.state->'scores','{}'::jsonb);
- select count(*) into member_count from public.chat_members where chat_id=target_chat; last_round := null;
- if member_count >= 2 and (select count(*) from jsonb_object_keys(moves)) >= 2 then
-   select array_agg(key order by key) into ids from jsonb_object_keys(moves) as t(key); p1:=ids[1]; p2:=ids[2]; m1:=moves->>p1; m2:=moves->>p2;
-   if m1=m2 then result:='tie'; elsif (m1='rock' and m2='scissors') or (m1='paper' and m2='rock') or (m1='scissors' and m2='paper') then result:=p1; else result:=p2; end if;
-   if result<>'tie' then scores:=jsonb_set(scores,array[result],to_jsonb(coalesce((scores->>result)::int,0)+1),true); end if;
-   last_round:=jsonb_build_object('p1',p1,'m1',m1,'p2',p2,'m2',m2,'winner',result,'at',now()); moves:='{}'::jsonb;
- end if;
- update public.chat_games set state=jsonb_build_object('round',coalesce((game.state->>'round')::int,1)+case when last_round is not null then 1 else 0 end,'moves',moves,'scores',scores,'last',coalesce(last_round,game.state->'last')),updated_at=now() where id=game.id;
- return (select state from public.chat_games where id=game.id);
-end; $$;
-revoke all on function public.play_rps(uuid,text) from public,anon;
-grant execute on function public.play_rps(uuid,text) to authenticated;
-
-create or replace function public.quietchat_annual_cleanup()
-returns void language plpgsql security definer set search_path=public as $$
-begin
- delete from public.messages where created_at < now() - interval '1 year';
- delete from public.chats where created_at < now() - interval '1 year';
- delete from public.chat_invites where expires_at < now() or used_at is not null;
-end; $$;
-revoke all on function public.quietchat_annual_cleanup() from public,anon,authenticated;
-do $$ begin
- execute 'create extension if not exists pg_cron with schema pg_catalog';
- if not exists(select 1 from cron.job where jobname='quietchat-annual-cleanup') then perform cron.schedule('quietchat-annual-cleanup','0 3 1 1 *','select public.quietchat_annual_cleanup()'); end if;
-exception when others then raise notice 'Schedule public.quietchat_annual_cleanup() for 03:00 on January 1 in Supabase Cron if pg_cron is unavailable.';
-end $$;
-
-notify pgrst, 'reload schema';
-
-
--- Username + password accounts do not require a real email. The Edge Function
--- creates a confirmed Supabase Auth user with an internal .invalid address.
--- This private registry prevents duplicate usernames for username-login accounts.
-create table if not exists public.username_accounts (
-  username_key text primary key check (username_key ~ '^[a-z0-9_-]{2,24}$'),
-  user_id uuid not null unique references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now()
-);
-alter table public.username_accounts enable row level security;
-revoke all on public.username_accounts from public, anon, authenticated;
