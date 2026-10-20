@@ -340,8 +340,8 @@ async function exportAllChats(){
   }
   const p=win.document.createElement("p");p.textContent="All messages loaded from each chat. Image files may be printed into the PDF if loaded; video, audio and other attachments remain as links.";root.append(p);toast("Export ready. Choose Print / Save as PDF in the new tab.");
 }
-$("export-btn").addEventListener("click",exportAllChats);$("profile-export-btn").addEventListener("click",exportAllChats);
-
+const button = $("some-button");
+if (button) button.addEventListener("click", handler);
 let gameChannel=null;
 function renderRps(state){
   state=state||{round:1,moves:{},scores:{},last:null};const scores=state.scores||{};
