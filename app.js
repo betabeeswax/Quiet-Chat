@@ -138,7 +138,7 @@ function renderChats(){
 }
 async function selectChat(chat){
   activeChat=chat;try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);
-  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;renderChats();
+  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;renderChats();
   requestAnimationFrame(()=>{const item=$(`chat-list`).querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
   // Subscribe before fetching history so a message sent during loading is not missed.
@@ -270,10 +270,14 @@ $("join-form").addEventListener("submit",async e=>{
   if(error){toast("That code is invalid, expired, or already used.");return;}
   closeDialog("join-dialog");$("invite-input").value="";await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);toast("You joined the private chat!");
 });
-$("gallery-btn").addEventListener("click",showLocalGallery);
+$("settings-btn").addEventListener("click",()=>openDialog("settings-dialog"));
+$("settings-close-btn").addEventListener("click",()=>closeDialog("settings-dialog"));
+$("settings-gallery-btn").addEventListener("click",()=>{closeDialog("settings-dialog");showLocalGallery();});
+$("settings-notifications-btn").addEventListener("click",async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return;}try{const permission=await Notification.requestPermission();toast(permission==="granted"?"Notifications enabled while QuietChat is open in this browser.":"Notifications were not allowed.");}catch{toast("Could not enable notifications.");}});
+$("settings-export-btn").addEventListener("click",()=>{if(!activeChat)return;closeDialog("settings-dialog");window.print();});
 $("media-save-mode").addEventListener("change",async e=>{localStorage.setItem(MEDIA_SAVE_KEY,e.target.value);if(e.target.value==="day")await purgeExpiredLocalMedia();toast(({none:"Automatic media saving is off.",auto:"Media will save automatically and stay until browser data is cleared.",day:"Media copies will be kept for up to 24 hours."})[e.target.value]||"Media setting saved.");closeDialog("gallery-dialog");await showLocalGallery();});
 $("gallery-close-btn").addEventListener("click",()=>closeDialog("gallery-dialog"));
-$("enable-notifications-btn").addEventListener("click",async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return;}try{const permission=await Notification.requestPermission();toast(permission==="granted"?"Notifications enabled while QuietChat is open in this browser.":"Notifications were not allowed.");}catch{toast("Could not enable notifications.");}});
+
 $("warning-continue-btn").addEventListener("click",()=>{localStorage.setItem("quietchat-warning-accepted-v1","yes");closeDialog("safety-warning-dialog");});
 $("call-btn").addEventListener("click",()=>{
   if(!activeChat)return;
@@ -281,6 +285,8 @@ $("call-btn").addEventListener("click",()=>{
   const room="QuietChat-"+activeChat.id.replace(/-/g,"");
   const url="https://meet.jit.si/"+room+"#config.prejoinPageEnabled=false&config.startWithAudioMuted=true&config.startWithVideoMuted=true";
   $("call-frame").src=url;openDialog("call-dialog");
+  const inviteText="📞 Join my QuietChat video call: "+url;
+  db.from("messages").insert({chat_id:activeChat.id,sender_id:user.id,body:inviteText}).then(({error})=>{if(error)toast("Call opened, but the invite could not be sent to chat.");else toast("Jitsi call invite sent in chat.");});
 });
 $("end-call-btn").addEventListener("click",()=>{$("call-frame").src="about:blank";closeDialog("call-dialog");});
 $("call-dialog").addEventListener("close",()=>{$("call-frame").src="about:blank";});
