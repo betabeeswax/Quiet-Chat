@@ -113,6 +113,13 @@ async function loadChats(){
     return {id:row.chat_id,created_at:row.chats?.created_at,title:row.chats?.name || other,memberCount,isGroup:Boolean(row.chats?.name),bio:members[0]?.profiles?.bio||""};
   });
   renderChats();
+  // Restore the last conversation this account used, instead of opening the first/top chat.
+  if(!activeChat && chats.length){
+    let remembered="";
+    try{remembered=localStorage.getItem("quietchat-last-chat-"+user.id)||"";}catch{}
+    const last=chats.find(c=>c.id===remembered);
+    if(last) await selectChat(last);
+  }
 }
 function rowProfileForChat(chatId){return window.chatProfileLookup?.[chatId]||null;}
 function renderChats(){
@@ -124,14 +131,15 @@ function renderChats(){
     const t=document.createElement("div");t.className="chat-item-text";
     const strong=document.createElement("strong");strong.textContent=chat.title;
     const preview=document.createElement("span");preview.className="preview";preview.textContent=chat.isGroup?`${chat.memberCount} members · Group chat`:chat.memberCount<2?"Invite sent · waiting to join":"Private conversation";
-    t.append(strong,preview);b.append(av,t);b.addEventListener("click",()=>selectChat(chat));list.append(b);
+    t.append(strong,preview);b.append(av,t);b.dataset.chatId=chat.id;b.addEventListener("click",()=>selectChat(chat));list.append(b);
     const memberData=rowProfileForChat(chat.id);
     if(memberData?.avatar_path){db.storage.from("profile-pics").createSignedUrl(memberData.avatar_path,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="";img.className="profile-avatar-img";av.replaceChildren(img);}});}
   });
 }
 async function selectChat(chat){
-  activeChat=chat;$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);
+  activeChat=chat;try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);
   $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;renderChats();
+  requestAnimationFrame(()=>{const item=$(`chat-list`).querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
   // Subscribe before fetching history so a message sent during loading is not missed.
   lastRenderedDay="";messageChannel=db.channel("messages-"+chat.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"chat_id=eq."+chat.id},payload=>{showMessageNotification(payload.new);renderMessage(payload.new);}).subscribe();
