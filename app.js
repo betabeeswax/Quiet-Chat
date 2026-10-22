@@ -30,7 +30,7 @@ async function cacheMedia(m,url){try{const mode=getMediaSaveMode();if(mode==="no
 async function listLocalMediaRaw(){const d=await openMediaDB();return new Promise((resolve,reject)=>{const r=d.transaction("media","readonly").objectStore("media").getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error);});}
 async function listLocalMedia(){await purgeExpiredLocalMedia();return (await listLocalMediaRaw()).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));}
 async function showLocalGallery(){const root=$("gallery-grid");root.replaceChildren();$("media-save-mode").value=getMediaSaveMode();try{const items=await listLocalMedia();if(!items.length){root.textContent=getMediaSaveMode()==="none"?"Automatic saving is off. Change the setting to Auto or Save for a day to archive media you view.":"Photos and videos you open will be saved here on this browser. Nothing has been archived yet.";openDialog("gallery-dialog");return;}for(const item of items){const card=document.createElement("div");card.className="gallery-card";const url=URL.createObjectURL(item.blob);if(item.type==="image"){const img=document.createElement("img");img.src=url;img.alt=item.name;card.append(img);}else if(item.type==="video"){const v=document.createElement("video");v.src=url;v.controls=true;card.append(v);}else{const a=document.createElement("a");a.href=url;a.textContent="📎 "+item.name;a.target="_blank";card.append(a);}const date=document.createElement("small");date.textContent=new Date(item.created_at).toLocaleString();const save=document.createElement("a");save.href=url;save.download=item.name||"quietchat-media";save.textContent="Save to computer";card.append(date,save);root.append(card);}openDialog("gallery-dialog");}catch(e){toast("Couldn't open local media library in this browser.");}}
-function showMessageNotification(m){if(!m||m.sender_id===user?.id||!document.hidden)return;const body=m.attachment_type?`Sent a ${m.attachment_type}.`:String(m.body||"New message").slice(0,120);if("Notification" in window&&Notification.permission==="granted"){try{new Notification(activeChat?.title||"New QuietChat message",{body,tag:"quietchat-"+m.id});}catch{}}}
+function showMessageNotification(m){if(!m||m.sender_id===user?.id||!document.hidden)return;if(localStorage.getItem("quietchat-notifications-enabled")!=="yes")return;const body=m.attachment_type?`Sent a ${m.attachment_type}.`:String(m.body||"New message").slice(0,120);if("Notification" in window&&Notification.permission==="granted"){try{new Notification(activeChat?.title||"New QuietChat message",{body,tag:"quietchat-"+m.id});}catch{}}}
 function checkFirstWarning(){if(!localStorage.getItem("quietchat-warning-accepted-v1"))openDialog("safety-warning-dialog");}
 
 function setProfile(name){username=name;$("my-name").textContent=name;$("my-avatar").textContent=initials(name);}
@@ -120,6 +120,7 @@ async function loadChats(){
     const last=chats.find(c=>c.id===remembered);
     if(last) await selectChat(last);
   }
+  await handleCallDeepLink();
 }
 function rowProfileForChat(chatId){return window.chatProfileLookup?.[chatId]||null;}
 function renderChats(){
@@ -171,7 +172,7 @@ async function renderMessage(m){
     }else{const unavailable=document.createElement("span");unavailable.textContent="Media unavailable";bubble.append(unavailable);}
   }
   if(m.body&&!((m.attachment_type==="image"&&m.body==="📷 Photo")||(m.attachment_type==="video"&&m.body==="🎬 Video")||(m.attachment_type==="audio"&&m.body==="🎙 Voice memo"))){const caption=document.createElement("div");linkifyText(m.body,caption);bubble.append(caption);}
-  $("messages").scrollTop=$("messages").scrollHeight;
+  requestAnimationFrame(()=>{const area=$("messages");area.scrollTop=area.scrollHeight;});
 }
 $("message-form").addEventListener("submit",async e=>{
   e.preventDefault();if(!activeChat)return;const input=$("message-input"),body=input.value.trim();if(!body)return;
@@ -273,23 +274,62 @@ $("join-form").addEventListener("submit",async e=>{
 $("settings-btn").addEventListener("click",()=>openDialog("settings-dialog"));
 $("settings-close-btn").addEventListener("click",()=>closeDialog("settings-dialog"));
 $("settings-gallery-btn").addEventListener("click",()=>{closeDialog("settings-dialog");showLocalGallery();});
-$("settings-notifications-btn").addEventListener("click",async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return;}try{const permission=await Notification.requestPermission();toast(permission==="granted"?"Notifications enabled while QuietChat is open in this browser.":"Notifications were not allowed.");}catch{toast("Could not enable notifications.");}});
+$("settings-notifications-btn").addEventListener("click",async()=>{if(localStorage.getItem("quietchat-notifications-enabled")==="yes"){localStorage.setItem("quietchat-notifications-enabled","no");toast("Notifications turned off.");return;}if(!("Notification" in window)){toast("This browser does not support notifications.");return;}try{const permission=await Notification.requestPermission();if(permission==="granted"){localStorage.setItem("quietchat-notifications-enabled","yes");toast("Notifications enabled while QuietChat is open in this browser.");}else{localStorage.setItem("quietchat-notifications-enabled","no");toast("Notifications were not allowed.");}}catch{toast("Could not enable notifications.");}});
+$("settings-all-export-btn").addEventListener("click",()=>{closeDialog("settings-dialog");exportAllChats();});
 $("settings-export-btn").addEventListener("click",()=>{if(!activeChat)return;closeDialog("settings-dialog");window.print();});
 $("media-save-mode").addEventListener("change",async e=>{localStorage.setItem(MEDIA_SAVE_KEY,e.target.value);if(e.target.value==="day")await purgeExpiredLocalMedia();toast(({none:"Automatic media saving is off.",auto:"Media will save automatically and stay until browser data is cleared.",day:"Media copies will be kept for up to 24 hours."})[e.target.value]||"Media setting saved.");closeDialog("gallery-dialog");await showLocalGallery();});
 $("gallery-close-btn").addEventListener("click",()=>closeDialog("gallery-dialog"));
 
 $("warning-continue-btn").addEventListener("click",()=>{localStorage.setItem("quietchat-warning-accepted-v1","yes");closeDialog("safety-warning-dialog");});
-$("call-btn").addEventListener("click",()=>{
-  if(!activeChat)return;
-  // Both members derive the same room from the chat ID. The call is embedded in-app.
-  const room="QuietChat-"+activeChat.id.replace(/-/g,"");
-  const url="https://meet.jit.si/"+room+"#config.prejoinPageEnabled=false&config.startWithAudioMuted=true&config.startWithVideoMuted=true";
-  $("call-frame").src=url;openDialog("call-dialog");
-  const inviteText="📞 Join my QuietChat video call: "+url;
-  db.from("messages").insert({chat_id:activeChat.id,sender_id:user.id,body:inviteText}).then(({error})=>{if(error)toast("Call opened, but the invite could not be sent to chat.");else toast("Jitsi call invite sent in chat.");});
+let currentCallUrl="";
+function makeCallUrl(chat){
+  // The room is deterministic, so every member of this chat reaches the same Jitsi room.
+  const room="QuietChat-"+String(chat.id).replace(/-/g,"");
+  return "https://meet.jit.si/"+room+"#config.prejoinPageEnabled=true&config.startWithAudioMuted=true&config.startWithVideoMuted=true";
+}
+async function startCallForChat(chat,sendInvite=true){
+  if(!chat)return;
+  activeChat=chat;
+  currentCallUrl=makeCallUrl(chat);
+  $("call-frame").src=currentCallUrl;
+  openDialog("call-dialog");
+  if(sendInvite){
+    // App deep link opens QuietChat and automatically starts the same call after sign-in.
+    const appUrl=new URL(window.location.href);
+    appUrl.searchParams.set("call",chat.id);
+    appUrl.hash="";
+    const inviteText="📞 Join my QuietChat call in the app: "+appUrl.toString()+"\nIf that does not open, join directly: "+currentCallUrl;
+    const {error}=await db.from("messages").insert({chat_id:chat.id,sender_id:user.id,body:inviteText});
+    toast(error?"Call opened, but the invite could not be sent to chat.":"Call invite sent in chat.");
+  }
+}
+$("call-btn").addEventListener("click",()=>{if(activeChat)startCallForChat(activeChat,true);});
+$("call-new-tab-btn").addEventListener("click",()=>{if(currentCallUrl)window.open(currentCallUrl,"_blank","noopener,noreferrer");});
+$("call-share-link-btn").addEventListener("click",async()=>{
+  const link=window.prompt("Paste a Google Meet, Zoom, or Microsoft Teams meeting link to share:");
+  if(!link||!activeChat)return;
+  let parsed;try{parsed=new URL(link.trim());}catch{toast("That does not look like a valid meeting link.");return;}
+  if(!["https:","http:"].includes(parsed.protocol)){toast("Please use a web meeting link.");return;}
+  const {error}=await db.from("messages").insert({chat_id:activeChat.id,sender_id:user.id,body:"🎥 Join my other video meeting: "+parsed.href});
+  if(error)toast("Could not share that meeting link.");else{toast("Meeting link shared in chat.");window.open(parsed.href,"_blank","noopener,noreferrer");}
 });
 $("end-call-btn").addEventListener("click",()=>{$("call-frame").src="about:blank";closeDialog("call-dialog");});
 $("call-dialog").addEventListener("close",()=>{$("call-frame").src="about:blank";});
+// A call invite URL (?call=CHAT_ID) survives sign-in; only chats the user can access will open.
+async function handleCallDeepLink(){
+  const params=new URLSearchParams(window.location.search),callId=params.get("call");
+  if(!callId||!user||!chats.length)return;
+  const chat=chats.find(c=>c.id===callId);
+  if(chat){
+    params.delete("call");
+    const clean=window.location.pathname+(params.toString()?"?"+params.toString():"");
+    window.history.replaceState({},document.title,clean);
+    await selectChat(chat);
+    await startCallForChat(chat,false);
+  }else{
+    toast("This call link only works for an account that has joined that chat.");
+  }
+}
 $("change-name-btn").addEventListener("click",()=>{$("new-name").value=username;openDialog("name-dialog");});
 $("name-form").addEventListener("submit",async e=>{
   e.preventDefault();const name=cleanName($("new-name").value);if(name.length<2)return;
@@ -340,8 +380,8 @@ async function exportAllChats(){
   }
   const p=win.document.createElement("p");p.textContent="All messages loaded from each chat. Image files may be printed into the PDF if loaded; video, audio and other attachments remain as links.";root.append(p);toast("Export ready. Choose Print / Save as PDF in the new tab.");
 }
-const button = $("some-button");
-if (button) button.addEventListener("click", handler);
+$("profile-export-btn")?.addEventListener("click",exportAllChats);
+
 let gameChannel=null;
 function renderRps(state){
   state=state||{round:1,moves:{},scores:{},last:null};const scores=state.scores||{};

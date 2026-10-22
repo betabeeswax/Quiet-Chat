@@ -46,3 +46,8 @@
   .message { break-inside:avoid; }
   .bubble { background:white!important; color:black!important; border:1px solid #ddd!important; }
 }
+
+/* Call fallback controls */
+.call-tools{display:flex;flex-wrap:wrap;gap:.5rem;padding:.65rem 1rem;background:var(--panel, #151923)}
+.call-tools button{font-size:.88rem}
+#call-frame{width:100%;min-height:55vh;border:0;background:#111}

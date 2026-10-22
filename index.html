@@ -140,8 +140,9 @@
     <p><a href="privacy.html" target="_blank" rel="noopener">Read the privacy policy</a></p>
   </dialog>
   <dialog id="call-dialog" class="call-modal">
-    <div class="call-modal-top"><div><strong>QuietChat video call</strong><div class="tiny muted">Camera and microphone permissions may be requested by your browser.</div></div><button id="end-call-btn" class="secondary">End call ✕</button></div>
-    <iframe id="call-frame" title="QuietChat video call" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write" referrerpolicy="no-referrer" src="about:blank"></iframe>
+    <div class="call-modal-top"><div><strong>QuietChat video call</strong><div class="tiny muted">If the embedded call will not connect, open the same room in a new tab.</div></div><button id="end-call-btn" class="secondary">End call ✕</button></div>
+    <div class="call-tools"><button id="call-new-tab-btn" class="secondary" type="button">↗ Open Jitsi in new tab</button><button id="call-share-link-btn" class="secondary" type="button">🔗 Share another meeting link</button></div>
+    <iframe id="call-frame" title="QuietChat video call" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" src="about:blank"></iframe>
   </dialog>
   <dialog id="emoji-dialog" class="modal emoji-modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
@@ -172,6 +173,7 @@
       <button id="settings-gallery-btn" class="secondary full">🖼 Open local media library</button>
       <button id="settings-notifications-btn" class="secondary full">🔔 Enable notifications</button>
       <button id="settings-export-btn" class="secondary full" disabled>⇩ Export current chat / Save as PDF</button>
+      <button id="settings-all-export-btn" class="secondary full">📄 Export all chats as PDF</button>
       <p class="tiny muted">For PDF: choose Export, then select “Save as PDF” in your browser's print window.</p>
     </div>
   </dialog>

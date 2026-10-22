@@ -82,3 +82,14 @@ The export opens a new browser tab. Click **Print / Save as PDF** and choose **S
 - **Calls:** the Jitsi call remains embedded in the website. Jitsi rooms are not authenticated private rooms just because the room name is hard to guess; don't treat this as end-to-end private.
 
 **Important storage limitation:** this version keeps local copies but still uploads shared chat attachments to Supabase, because that is how the other participant can receive them. It does not delete the cloud originals. A website cannot silently write files to an arbitrary local-drive folder, and deleting the cloud originals before every recipient has a local copy could make those attachments unavailable. To make attachments truly local-only, the app would need to stop sharing them across devices/users or be redesigned around a local desktop app.
+
+
+## October 2026 fixes
+- Fixed the startup JavaScript error caused by a listener being attached to a missing `export-btn` element.
+- Added automatic scroll-to-latest behaviour after message rendering.
+- Call invitations now include a QuietChat deep link (`?call=CHAT_ID`) that opens the same chat and starts the same Jitsi room after the invited person signs in. The recipient must already be a member of that chat.
+- Added an “Open Jitsi in new tab” fallback for browsers that cannot run the embedded call, and a way to share an existing Google Meet, Zoom, or Microsoft Teams meeting URL.
+- Added an all-chats export action inside Settings and a persistent notification on/off toggle.
+- Links in messages remain clickable.
+
+Note: These changes were checked for JavaScript syntax, but live calls, authentication, Supabase permissions, and multiplayer sessions still need to be tested on the deployed site with two accounts. External meeting services such as Google Meet generally cannot be embedded directly inside another website, so those links open in a separate tab.
