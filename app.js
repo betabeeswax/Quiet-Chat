@@ -643,6 +643,9 @@ async function handleInviteLink(){
 document.addEventListener("click",e=>{
  const button=e.target.closest("[data-menu-action]");if(!button)return;
  const action=button.dataset.menuAction;button.closest("details")?.removeAttribute("open");
+ if(action==="layout-auto"){document.body.classList.remove("pc-layout","compact-layout");localStorage.removeItem("quietchat-layout");}
+ if(action==="layout-mobile"){document.body.classList.remove("pc-layout");document.body.classList.add("compact-layout");localStorage.setItem("quietchat-layout","mobile");}
+ if(action==="layout-pc"){document.body.classList.remove("compact-layout");document.body.classList.add("pc-layout");localStorage.setItem("quietchat-layout","pc");}
  if(action==="notifications")$("chat-notification-btn")?.click();
  if(action==="settings")$("group-settings-btn")?.click();
  if(action==="invite")$("add-people-btn")?.click();
@@ -676,3 +679,17 @@ function renderLocalGame(){const root=document.getElementById('game-board');root
 }
 function setupGameCorner(){buildGamePicker();}
 
+
+
+// Choose a compact layout automatically on phones or narrow browser windows; allow manual override.
+(function initResponsiveLayout(){
+ const saved=localStorage.getItem("quietchat-layout");
+ if(saved==="mobile")document.body.classList.add("compact-layout");
+ else if(saved==="pc")document.body.classList.add("pc-layout");
+ else if(window.matchMedia("(max-width: 600px)").matches)document.body.classList.add("compact-layout");
+ window.matchMedia("(max-width: 600px)").addEventListener?.("change",e=>{
+  if(localStorage.getItem("quietchat-layout"))return;
+  document.body.classList.toggle("compact-layout",e.matches);
+  document.body.classList.remove("pc-layout");
+ });
+})();
