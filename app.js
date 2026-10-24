@@ -168,7 +168,7 @@ async function loadChats(){
       let remembered="";
       try{remembered=localStorage.getItem("quietchat-last-chat-"+user.id)||"";}catch{}
       const last=chats.find(c=>c.id===remembered);
-      if(last) await selectChat(last);
+      await selectChat(last||chats[0]);
     }
     await handleCallDeepLink();
   }catch(error){
