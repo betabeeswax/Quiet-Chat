@@ -121,7 +121,7 @@ async function loadChats(){
       return;
     }
     const {data:chatRows,error:chatError}=await db.from("chats")
-      .select("id,name,created_at,is_public,description,allow_gifs,remove_inactive,created_by")
+      .select("id,name,created_at,is_public,description,allow_gifs,remove_inactive,created_by,logo_path,notifications_enabled")
       .in("id",ids);
     if(chatError) throw new Error("Memberships loaded, but chat details couldn't load: "+chatError.message);
     const validChats=chatRows||[];
@@ -151,7 +151,7 @@ async function loadChats(){
       const memberCount=allMembers.length||1;
       const other=members[0]?.profiles?.username||"Waiting for friend";
       if(members[0]?.profiles)window.chatProfileLookup[chatId]=members[0].profiles;
-      return {id:chatId,created_at:chat.created_at,title:chat.name||other,memberCount,isGroup:Boolean(chat.name),bio:members[0]?.profiles?.bio||"",isPublic:!!chat.is_public,description:chat.description||"",allowGifs:chat.allow_gifs!==false,removeInactive:chat.remove_inactive!==false,createdBy:chat.created_by,memberNames:allMembers.map(m=>m.profiles?.username).filter(Boolean)};
+      return {id:chatId,created_at:chat.created_at,title:chat.name||other,memberCount,isGroup:Boolean(chat.name),bio:members[0]?.profiles?.bio||"",isPublic:!!chat.is_public,description:chat.description||"",allowGifs:chat.allow_gifs!==false,removeInactive:chat.remove_inactive!==false,createdBy:chat.created_by,logoPath:chat.logo_path||null,notificationsEnabled:chat.notifications_enabled!==false,memberNames:allMembers.map(m=>m.profiles?.username).filter(Boolean)};
     });
     renderChats();
     if(!activeChat&&chats.length){
@@ -196,12 +196,18 @@ async function selectChat(chat){
       if(activeChat?.id!==selectedChatId)return;
       const exists=$("messages").querySelector(`[data-message-id="${CSS.escape(payload.new.id)}"]`);
       if(!exists)showMessageNotification(payload.new);
-      renderMessage(payload.new);
+      hydrateAndRenderMessage(payload.new);
     })
     .subscribe();
   await loadMessages();
   // Poll the newest messages every 2.5 seconds as a reliable fallback for missed realtime events.
   messageRefreshTimer=setInterval(()=>refreshActiveChatMessages(selectedChatId),2500);
+}
+async function hydrateAndRenderMessage(message){
+  if(!message||!activeChat||message.chat_id!==activeChat.id)return;
+  if(!message.profiles&&message.sender_id){const {data}=await db.from("profiles").select("username").eq("id",message.sender_id).maybeSingle();if(data)message={...message,profiles:data};}
+  if(message.sender_id===user?.id)message={...message,profiles:{username:username}};
+  renderMessage(message);
 }
 async function refreshActiveChatMessages(chatId){
   if(!db||!user||activeChat?.id!==chatId)return;
@@ -213,7 +219,7 @@ async function refreshActiveChatMessages(chatId){
   (data||[]).reverse().forEach(m=>{
     const exists=$("messages").querySelector(`[data-message-id="${CSS.escape(m.id)}"]`);
     if(!exists)showMessageNotification(m);
-    renderMessage(m);
+    hydrateAndRenderMessage(m);
   });
   scrollMessagesToBottom();
 }
