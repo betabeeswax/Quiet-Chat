@@ -265,16 +265,24 @@ async function toggleVoiceRecording(){
 }
 $("voice-memo-btn")?.addEventListener("click",toggleVoiceRecording);
 
-$("create-group-btn").addEventListener("click",()=>{if(!user||user.is_anonymous){toast("Please sign in with an account before creating a community.");showSetup(true);return;}openDialog("group-dialog");});
+$("create-group-btn").addEventListener("click",()=>{if(!user){toast("Please sign in first.");showSetup(false);return;}openDialog("group-dialog");});
 $("group-form").addEventListener("submit",async e=>{
-  e.preventDefault();const name=cleanName($("group-name-input").value);
+  e.preventDefault();
+  if(!user||!db){toast("Please sign in again, then try creating the group.");return;}
+  const name=cleanName($("group-name-input").value);
   if(name.length<2){toast("Group name must have at least 2 characters.");return;}
-  const btn=e.submitter; if(btn)btn.disabled=true;
-  const visibility=document.querySelector('input[name="group-visibility"]:checked')?.value==="public";
-  const {data,error}=await db.rpc("create_group_chat",{group_name:name,is_public:visibility});
-  if(btn)btn.disabled=false;
-  if(error){toast("Could not create group: "+error.message+"");return;}
-  closeDialog("group-dialog");$("group-name-input").value="";await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);toast("Group created! Use Add people to invite friends.");
+  const btn=e.submitter||$("group-form").querySelector('button[type="submit"]');
+  if(btn)btn.disabled=true;
+  try{
+    const {data,error}=await db.rpc("create_group_chat",{group_name:name,is_public:false,group_description:""});
+    if(error){toast("Could not create group: "+error.message+". If it says function not found, run the latest supabase-setup.sql in Supabase.");return;}
+    closeDialog("group-dialog");$("group-name-input").value="";
+    await loadChats();
+    const chat=chats.find(c=>c.id===data);
+    if(chat)await selectChat(chat);
+    toast("Group created! Use Add people to invite friends.");
+  }catch(err){toast("Could not create group: "+(err?.message||"please try again."));}
+  finally{if(btn)btn.disabled=false;}
 });
 $("add-people-btn").addEventListener("click",async()=>{
   if(!activeChat?.isGroup)return;
@@ -494,7 +502,24 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
  }
  $("refresh-public-communities-btn")?.addEventListener("click",loadPublicCommunities);
  document.querySelectorAll("[data-community-view]").forEach(btn=>btn.addEventListener("click",()=>{showCommunityView(btn.dataset.communityView);if(btn.dataset.communityView==="discover")loadMyCommunities();if(btn.dataset.communityView==="public")loadPublicCommunities();}));
- $("community-create-form")?.addEventListener("submit",async ev=>{ev.preventDefault();const name=cleanName($("community-name").value);if(name.length<2){toast("Group name needs at least 2 characters.");return;}if(!user||user.is_anonymous){toast("Please sign in with a permanent account before creating a community.");closeDialog("communities-dialog");showSetup(false);return;}const isPublic=$("community-is-public")?.checked||false;const description=$("community-description")?.value||"";const {data,error}=await db.rpc("create_group_chat",{group_name:name,is_public:isPublic,group_description:description});if(error){toast("Could not create community: "+error.message);return;}toast(isPublic?"Public community created!":"Private community created! Use Add people to invite friends.");$("community-create-form").reset();closeDialog("communities-dialog");await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);});
+ $("community-create-form")?.addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  if(!user||!db){toast("Please sign in first, then try again.");return;}
+  const name=cleanName($("community-name").value);
+  if(name.length<2){toast("Group name needs at least 2 characters.");return;}
+  const form= $("community-create-form"),btn=form.querySelector('button[type="submit"]');
+  if(btn)btn.disabled=true;
+  try{
+    const isPublic=$("community-is-public")?.checked||false;
+    const description=$("community-description")?.value||"";
+    const {data,error}=await db.rpc("create_group_chat",{group_name:name,is_public:isPublic,group_description:description});
+    if(error){toast("Could not create community: "+error.message+". If the function is missing, run the latest supabase-setup.sql in Supabase.");return;}
+    toast(isPublic?"Public community created!":"Private community created! Use Add people to invite friends.");
+    form.reset();closeDialog("communities-dialog");await loadChats();
+    const chat=chats.find(c=>c.id===data);if(chat)await selectChat(chat);
+  }catch(err){toast("Could not create community: "+(err?.message||"please try again."));}
+  finally{if(btn)btn.disabled=false;}
+});
  $("save-group-settings")?.addEventListener("click",async()=>{if(!activeChat?.isGroup){toast("Open a community first.");return;}const isPublic=document.querySelector('input[name="existing-group-visibility"]:checked')?.value==="public";const allowGifs=$("group-allow-gifs").checked;const removeInactive=$("group-inactivity-rule").checked;const {error}=await db.rpc("update_group_settings",{target_chat:activeChat.id,make_public:isPublic,allow_gifs:allowGifs,remove_inactive:removeInactive});if(error){toast("Could not save changes: "+error.message);return;}toast("Community settings saved.");await loadChats();const fresh=chats.find(x=>x.id===activeChat.id);if(fresh)selectChat(fresh);closeDialog("group-settings-dialog");});
  
  $("group-settings-btn")?.addEventListener("click",()=>{if(!activeChat?.isGroup)return;document.querySelectorAll('input[name="existing-group-visibility"]').forEach(x=>x.checked=(x.value==="public"&&activeChat.isPublic)||(x.value==="private"&&!activeChat.isPublic));$("group-allow-gifs").checked=!!activeChat.allowGifs;$("group-inactivity-rule").checked=activeChat.removeInactive!==false;openDialog("group-settings-dialog");});
