@@ -30,7 +30,7 @@ async function cacheMedia(m,url){try{const mode=getMediaSaveMode();if(mode==="no
 async function listLocalMediaRaw(){const d=await openMediaDB();return new Promise((resolve,reject)=>{const r=d.transaction("media","readonly").objectStore("media").getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error);});}
 async function listLocalMedia(){await purgeExpiredLocalMedia();return (await listLocalMediaRaw()).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));}
 async function showLocalGallery(){const root=$("gallery-grid");root.replaceChildren();$("media-save-mode").value=getMediaSaveMode();try{const items=await listLocalMedia();if(!items.length){root.textContent=getMediaSaveMode()==="none"?"Automatic saving is off. Change the setting to Auto or Save for a day to archive media you view.":"Photos and videos you open will be saved here on this browser. Nothing has been archived yet.";openDialog("gallery-dialog");return;}for(const item of items){const card=document.createElement("div");card.className="gallery-card";const url=URL.createObjectURL(item.blob);if(item.type==="image"){const img=document.createElement("img");img.src=url;img.alt=item.name;card.append(img);}else if(item.type==="video"){const v=document.createElement("video");v.src=url;v.controls=true;card.append(v);}else{const a=document.createElement("a");a.href=url;a.textContent="📎 "+item.name;a.target="_blank";card.append(a);}const date=document.createElement("small");date.textContent=new Date(item.created_at).toLocaleString();const save=document.createElement("a");save.href=url;save.download=item.name||"quietchat-media";save.textContent="Save to computer";card.append(date,save);root.append(card);}openDialog("gallery-dialog");}catch(e){toast("Couldn't open local media library in this browser.");}}
-function showMessageNotification(m){if(!m||m.sender_id===user?.id||!document.hidden)return;if(localStorage.getItem("quietchat-notifications-enabled")!=="yes")return;const body=m.attachment_type?`Sent a ${m.attachment_type}.`:String(m.body||"New message").slice(0,120);if("Notification" in window&&Notification.permission==="granted"){try{new Notification(activeChat?.title||"New QuietChat message",{body,tag:"quietchat-"+m.id});}catch{}}}
+function showMessageNotification(m){if(!m||m.sender_id===user?.id||!document.hidden)return;if(localStorage.getItem("quietchat-notifications-enabled")!=="yes")return;\n  try{const muted=JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]");if(muted.includes(m.chat_id))return;}catch{}const body=m.attachment_type?`Sent a ${m.attachment_type}.`:String(m.body||"New message").slice(0,120);if("Notification" in window&&Notification.permission==="granted"){try{new Notification(activeChat?.title||"New QuietChat message",{body,tag:"quietchat-"+m.id});}catch{}}}
 function checkFirstWarning(){if(!localStorage.getItem("quietchat-warning-accepted-v1"))openDialog("safety-warning-dialog");}
 
 function setProfile(name){username=name;$("my-name").textContent=name;$("my-avatar").textContent=initials(name);}
@@ -569,7 +569,39 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
   }catch(err){toast("Could not create community: "+(err?.message||"please try again."));}
   finally{if(btn)btn.disabled=false;}
 });
- $("save-group-settings")?.addEventListener("click",async()=>{if(!activeChat?.isGroup){toast("Open a community first.");return;}const isPublic=document.querySelector('input[name="existing-group-visibility"]:checked')?.value==="public";const allowGifs=$("group-allow-gifs").checked;const removeInactive=$("group-inactivity-rule").checked;const {error}=await db.rpc("update_group_settings",{target_chat:activeChat.id,make_public:isPublic,p_allow_gifs:allowGifs,p_remove_inactive:removeInactive});if(error){toast("Could not save changes: "+error.message);return;}toast("Community settings saved.");await loadChats();const fresh=chats.find(x=>x.id===activeChat.id);if(fresh)selectChat(fresh);closeDialog("group-settings-dialog");});
+ $("save-group-settings")?.addEventListener("click",async()=>{
+  if(!activeChat?.isGroup)return;
+  if(activeChat.createdBy!==user.id){toast("Only the community owner can save changes.");return;}
+  const isPublic=document.querySelector('input[name="existing-group-visibility"]:checked')?.value==="public";
+  const allowGifs=$("group-allow-gifs").checked,removeInactive=$("group-inactivity-rule").checked;
+  const newName=cleanName($("group-name-edit").value);
+  if(newName.length<2){toast("Community name needs at least 2 characters.");return;}
+  let logoPath=null;const file=$("community-logo-input").files?.[0];
+  if(file){
+    if(!file.type.startsWith("image/")||file.size>5*1024*1024){toast("Choose a logo image smaller than 5 MB.");return;}
+    const ext=(file.name.split(".").pop()||"png").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,8)||"png";
+    logoPath=activeChat.id+"/community-logo-"+crypto.randomUUID()+"."+ext;
+    const up=await db.storage.from("chat-media").upload(logoPath,file,{contentType:file.type,upsert:false});
+    if(up.error){toast("Logo upload failed: "+up.error.message);return;}
+  }
+  const {error}=await db.rpc("update_group_settings",{target_chat:activeChat.id,make_public:isPublic,p_allow_gifs:allowGifs,p_remove_inactive:removeInactive,p_name:newName,p_logo_path:logoPath});
+  if(error){if(logoPath)await db.storage.from("chat-media").remove([logoPath]);toast("Could not save changes: "+error.message);return;}
+  const newOwner=$("transfer-owner-select").value;
+  if(newOwner){const transfer=await db.rpc("transfer_group_ownership",{target_chat:activeChat.id,new_owner:newOwner});if(transfer.error){toast("Settings saved, but ownership transfer failed: "+transfer.error.message);}else toast("Community settings saved and ownership transferred.");}
+  else toast("Community settings saved.");
+  $("community-logo-input").value="";
+  await loadChats();const fresh=chats.find(x=>x.id===activeChat.id);if(fresh)await selectChat(fresh);closeDialog("group-settings-dialog");
+ });
+ $("chat-notification-btn")?.addEventListener("click",()=>{
+  if(!activeChat)return;
+  const key="quietchat-muted-chats-"+user.id;let muted=[];
+  try{muted=JSON.parse(localStorage.getItem(key)||"[]");}catch{}
+  const isMuted=muted.includes(activeChat.id);
+  muted=isMuted?muted.filter(id=>id!==activeChat.id):[...muted,activeChat.id];
+  localStorage.setItem(key,JSON.stringify(muted));
+  $("chat-notification-btn").textContent=muted.includes(activeChat.id)?"🔕 Muted":"🔔 Notifications";
+  toast(muted.includes(activeChat.id)?"Notifications muted for this chat.":"Notifications enabled for this chat.");
+ });
  
  $("group-settings-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup)return;document.querySelectorAll('input[name="existing-group-visibility"]').forEach(x=>x.checked=(x.value==="public"&&activeChat.isPublic)||(x.value==="private"&&!activeChat.isPublic));$("group-allow-gifs").checked=!!activeChat.allowGifs;$("group-inactivity-rule").checked=activeChat.removeInactive!==false;$("group-name-edit").value=activeChat.title||"";const select=$("transfer-owner-select");select.replaceChildren(new Option("Keep current owner",""));(activeChat.memberNames||[]).forEach(name=>{const member=window.chatMembersByName?.[activeChat.id]?.[name];if(member&&member!==user.id)select.add(new Option(name,member));});openDialog("group-settings-dialog");});
  $("delete-group-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup){toast("Open a group first.");return;}if(!confirm('Delete "'+activeChat.title+'" and its group chat? This cannot be undone.'))return;const id=activeChat.id;const {error}=await db.rpc("delete_group_chat",{target_chat:id});if(error){toast("Could not delete group: "+error.message+" (secure delete function may need installing)");return;}if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}activeChat=null;$("app-screen").classList.remove("chat-open");$("welcome-panel").classList.remove("hidden");$("messages").classList.add("hidden");$("composer-wrap").classList.add("hidden");await loadChats();await loadMyCommunities();toast("Group deleted.");});
