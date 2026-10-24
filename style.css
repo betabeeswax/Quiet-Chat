@@ -159,3 +159,51 @@ body.compact-layout .brand-row strong{font-size:13px}
 body.pc-layout .app-shell{grid-template-columns:280px minmax(0,1fr)}
 body.pc-layout .header-action{display:inline-flex!important}
 @media(max-width:600px){body.pc-layout .app-shell{grid-template-columns:220px minmax(0,1fr)!important}}
+
+
+/* Mobile fix: use a full-width screen for either the chat list OR the open chat.
+   Never squeeze both columns into a tiny strip on phones or narrow windows. */
+@media(max-width:720px){
+  .app-shell,
+  body.compact-layout .app-shell,
+  body.pc-layout .app-shell{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:100dvh!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  .app-shell .sidebar,
+  body.compact-layout .app-shell .sidebar,
+  body.pc-layout .app-shell .sidebar{
+    grid-column:1!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .app-shell .conversation,
+  body.compact-layout .app-shell .conversation,
+  body.pc-layout .app-shell .conversation{
+    grid-column:1!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:100dvh!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  .app-shell:not(.chat-open) .conversation{display:none!important}
+  .app-shell.chat-open .sidebar{display:none!important}
+  .app-shell.chat-open .conversation{display:flex!important}
+  .conversation>*{min-width:0;max-width:100%}
+  .messages,.message-list{min-width:0;max-width:100%;overflow-x:hidden}
+  .composer-wrap,.composer{min-width:0;max-width:100%}
+}
+@media(min-width:721px){
+  .app-shell,body.pc-layout .app-shell{grid-template-columns:280px minmax(0,1fr)!important}
+}
