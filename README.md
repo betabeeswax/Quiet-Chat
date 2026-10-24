@@ -97,3 +97,7 @@ Note: These changes were checked for JavaScript syntax, but live calls, authenti
 
 ## Complete future features roadmap
 The full requested roadmap, including 30-day group inactivity removal, a 7-day warning, rejoining/welcome-back behaviour, and GIF/picture restrictions, is in `QUIETCHAT-FUTURE-ROADMAP.md`. This file is a specification only; it does not mean every listed feature is already implemented or tested.
+
+## Related repository
+- **Android app:** https://github.com/betabeeswax/QuietChat-Android
+- **Website app (this repository):** https://github.com/betabeeswax/Quiet-Chat
