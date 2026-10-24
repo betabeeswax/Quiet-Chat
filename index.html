@@ -70,7 +70,7 @@
         <button id="join-invite-btn" class="secondary">↗ Join with code</button>
         <button id="sidebar-discover-btn" class="sidebar-action community-action" type="button"><span>◈ My communities</span><small>Open your groups or create one</small></button>
       </div>
-      <div class="section-label">YOUR CHATS</div>
+      <div class="section-label online-heading">ONLINE <span id="online-count">0</span></div><div id="online-people" class="online-people"><span class="tiny muted">Checking who is online…</span></div><div class="section-label">YOUR CHATS</div>
       <div id="chat-list" class="chat-list"><div class="empty-small">Your chats will appear here.</div></div>
       <div class="profile-strip"><div class="avatar" id="my-avatar">?</div><div class="profile-name"><strong id="my-name">You</strong><span class="tiny muted" id="account-label">Signed in</span></div><button id="settings-btn" class="secondary" title="Settings">Settings</button></div>
     </aside>
@@ -81,7 +81,7 @@
         <div class="avatar" id="chat-avatar">✦</div>
         <div class="chat-heading"><strong id="chat-title">Your messages</strong><span id="chat-subtitle" class="tiny muted">Choose a chat or start a new one</span></div>
         <button id="chat-notification-btn" class="secondary header-action" type="button">🔔 Notifications</button><button id="group-settings-btn" class="secondary header-action hidden" type="button">⚙ Group settings</button><button id="add-people-btn" class="secondary header-action hidden" disabled>＋ Add people</button>
-        <div class="header-tools"><button id="game-btn" class="secondary header-action" disabled>🎮 Games</button><button id="call-btn" class="call-button" disabled>▣ <span>Call</span></button></div>
+        <div class="header-tools"><button id="game-btn" class="secondary header-action" disabled>🎮 Games</button><button id="call-btn" class="call-button" disabled>▣ <span>Call</span></button><details class="more-menu"><summary aria-label="More actions">•••</summary><div class="more-menu-pop"><button type="button" data-menu-action="notifications">Notifications</button><button type="button" data-menu-action="settings">Group settings</button><button type="button" data-menu-action="invite">Add people</button><button type="button" data-menu-action="games">Games</button></div></details></div>
       </header>
       <div id="welcome-panel" class="welcome-panel">
         <div class="welcome-icon">✳</div><h2>A quieter way to chat.</h2>
