@@ -106,45 +106,65 @@ $("profile-form").addEventListener("submit",async e=>{
 });
 async function loadChats(){
   if(!db||!user){toast("Please sign in again to load chats.");return;}
-  // Keep this query simple: nested profiles joins can fail when the Supabase
-  // relationship cache has not refreshed after a database setup change.
-  const {data,error}=await db.from("chat_members")
-    .select("chat_id,chats(id,name,created_at,is_public,description,allow_gifs,remove_inactive,created_by)")
-    .eq("user_id",user.id);
-  if(error){console.error("QuietChat loadChats membership query failed:",error);toast("Couldn't load chats: "+error.message);return;}
-  const rows=data||[];
-  const ids=[...new Set(rows.map(r=>r.chat_id))];
-  const {data:memberships,error:membersError}=ids.length
-    ? await db.from("chat_members").select("chat_id,user_id").in("chat_id",ids)
-    : {data:[],error:null};
-  if(membersError){console.error("QuietChat loadChats members query failed:",membersError);toast("Chats found, but members couldn't load: "+membersError.message);return;}
-  const userIds=[...new Set((memberships||[]).map(m=>m.user_id))];
-  const {data:profiles,error:profilesError}=userIds.length
-    ? await db.from("profiles").select("id,username,avatar_path,bio").in("id",userIds)
-    : {data:[],error:null};
-  if(profilesError){console.error("QuietChat loadChats profiles query failed:",profilesError);toast("Chats found, but usernames couldn't load: "+profilesError.message);return;}
-  const profileById=Object.fromEntries((profiles||[]).map(p=>[p.id,p]));
-  const membersByChat={};
-  (memberships||[]).forEach(m=>{(membersByChat[m.chat_id] ||= []).push({...m,profiles:profileById[m.user_id]||null});});
-  window.chatProfileLookup={};
-  chats=rows.map(row=>{
-    const chat=row.chats||{};
-    const allMembers=membersByChat[row.chat_id]||[];
-    const members=allMembers.filter(m=>m.user_id!==user.id);
-    const memberCount=allMembers.length||1;
-    const other=members[0]?.profiles?.username||"Waiting for friend";
-    if(members[0]?.profiles)window.chatProfileLookup[row.chat_id]=members[0].profiles;
-    return {id:row.chat_id,created_at:chat.created_at,title:chat.name||other,memberCount,isGroup:Boolean(chat.name),bio:members[0]?.profiles?.bio||"",isPublic:!!chat.is_public,description:chat.description||"",allowGifs:chat.allow_gifs!==false,removeInactive:chat.remove_inactive!==false,createdBy:chat.created_by,memberNames:allMembers.map(m=>m.profiles?.username).filter(Boolean)};
-  });
-  renderChats();
-  // Restore the last conversation this account used, instead of opening the first/top chat.
-  if(!activeChat && chats.length){
-    let remembered="";
-    try{remembered=localStorage.getItem("quietchat-last-chat-"+user.id)||"";}catch{}
-    const last=chats.find(c=>c.id===remembered);
-    if(last) await selectChat(last);
+  try{
+    // Avoid PostgREST relationship joins entirely: some projects don't have
+    // the chat_members -> chats relationship available in the schema cache.
+    const {data:myMemberships,error:myMembershipsError}=await db
+      .from("chat_members").select("chat_id").eq("user_id",user.id);
+    if(myMembershipsError) throw new Error("Couldn't find your chat memberships: "+myMembershipsError.message);
+    const ids=[...new Set((myMemberships||[]).map(m=>m.chat_id).filter(Boolean))];
+    if(!ids.length){
+      chats=[];
+      window.chatProfileLookup={};
+      renderChats();
+      await handleCallDeepLink();
+      return;
+    }
+    const {data:chatRows,error:chatError}=await db.from("chats")
+      .select("id,name,created_at,is_public,description,allow_gifs,remove_inactive,created_by")
+      .in("id",ids);
+    if(chatError) throw new Error("Memberships loaded, but chat details couldn't load: "+chatError.message);
+    const validChats=chatRows||[];
+    const validIds=validChats.map(c=>c.id);
+    if(!validIds.length){
+      chats=[];window.chatProfileLookup={};renderChats();await handleCallDeepLink();return;
+    }
+    const {data:memberships,error:membersError}=await db.from("chat_members")
+      .select("chat_id,user_id").in("chat_id",validIds);
+    if(membersError) throw new Error("Chats loaded, but member lists couldn't load: "+membersError.message);
+    const userIds=[...new Set((memberships||[]).map(m=>m.user_id).filter(Boolean))];
+    let profiles=[];
+    if(userIds.length){
+      const {data,error}=await db.from("profiles").select("id,username,avatar_path,bio").in("id",userIds);
+      if(error) throw new Error("Chats loaded, but usernames couldn't load: "+error.message);
+      profiles=data||[];
+    }
+    const profileById=Object.fromEntries(profiles.map(p=>[p.id,p]));
+    const membersByChat={};
+    (memberships||[]).forEach(m=>{(membersByChat[m.chat_id] ||= []).push({...m,profiles:profileById[m.user_id]||null});});
+    const chatById=Object.fromEntries(validChats.map(c=>[c.id,c]));
+    window.chatProfileLookup={};
+    chats=validIds.map(chatId=>{
+      const chat=chatById[chatId]||{};
+      const allMembers=membersByChat[chatId]||[];
+      const members=allMembers.filter(m=>m.user_id!==user.id);
+      const memberCount=allMembers.length||1;
+      const other=members[0]?.profiles?.username||"Waiting for friend";
+      if(members[0]?.profiles)window.chatProfileLookup[chatId]=members[0].profiles;
+      return {id:chatId,created_at:chat.created_at,title:chat.name||other,memberCount,isGroup:Boolean(chat.name),bio:members[0]?.profiles?.bio||"",isPublic:!!chat.is_public,description:chat.description||"",allowGifs:chat.allow_gifs!==false,removeInactive:chat.remove_inactive!==false,createdBy:chat.created_by,memberNames:allMembers.map(m=>m.profiles?.username).filter(Boolean)};
+    });
+    renderChats();
+    if(!activeChat&&chats.length){
+      let remembered="";
+      try{remembered=localStorage.getItem("quietchat-last-chat-"+user.id)||"";}catch{}
+      const last=chats.find(c=>c.id===remembered);
+      if(last) await selectChat(last);
+    }
+    await handleCallDeepLink();
+  }catch(error){
+    console.error("QuietChat loadChats failed:",error);
+    toast(error?.message||"Couldn't load chats. Please try again.");
   }
-  await handleCallDeepLink();
 }
 function rowProfileForChat(chatId){return window.chatProfileLookup?.[chatId]||null;}
 function renderChats(){
