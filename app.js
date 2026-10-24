@@ -194,7 +194,7 @@ function renderChats(){
 }
 async function selectChat(chat){
   activeChat=chat;try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.memberCount} members${chat.memberNames?.length?" · "+chat.memberNames.join(", "):""} · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
-  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
+  $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
   requestAnimationFrame(()=>{const item=$(`chat-list`).querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
   if(messageRefreshTimer){clearInterval(messageRefreshTimer);messageRefreshTimer=null;}
@@ -368,6 +368,26 @@ $("join-form").addEventListener("submit",async e=>{
   if(error){toast("That code is invalid, expired, or already used.");return;}
   closeDialog("join-dialog");$("invite-input").value="";await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);toast("You joined the private chat!");
 });
+
+$("chat-remove-btn")?.addEventListener("click",async()=>{
+  if(!activeChat||!user)return;
+  const chat=activeChat;
+  const action=chat.isGroup?"leave this group":"remove this chat from your list";
+  if(!window.confirm("Are you sure you want to "+action+"? This removes your membership. It does not delete the other person's copy."))return;
+  const {error}=await db.rpc("quietchat_remove_chat",{target_chat:chat.id});
+  if(error){toast("Couldn't remove this chat. Run the latest supabase-setup.sql in Supabase, then try again.");return;}
+  if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
+  if(messageRefreshTimer){clearInterval(messageRefreshTimer);messageRefreshTimer=null;}
+  activeChat=null;
+  try{localStorage.removeItem("quietchat-last-chat-"+user.id);}catch{}
+  $("app-screen").classList.remove("chat-open");
+  $("chat-title").textContent="Your messages";
+  $("chat-subtitle").textContent="Choose a chat or start a new one";
+  $("messages").replaceChildren();$("messages").classList.add("hidden");$("composer-wrap").classList.add("hidden");$("welcome-panel").classList.remove("hidden");
+  await loadChats();
+  toast("Chat removed from your list.");
+});
+
 $("settings-btn").addEventListener("click",()=>openDialog("settings-dialog"));
 $("settings-close-btn").addEventListener("click",()=>closeDialog("settings-dialog"));
  $("settings-signout-btn")?.addEventListener("click",async()=>{if(!db)return;const {error}=await db.auth.signOut();if(error){toast("Sign out failed: "+error.message);return;}user=null;activeChat=null;chats=[];if(messageChannel)db.removeChannel(messageChannel);if(listChannel)db.removeChannel(listChannel);showSetup(false);setAuthMode("signin");setUsernameAuthMode("signin");toast("Signed out.");});
