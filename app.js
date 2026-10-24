@@ -39,12 +39,22 @@ function scrollMessagesToBottom(){const area=$("messages");if(!area)return;reque
 function closeDialog(id){$(id).close();}
 
 async function start(){
-  if(!configured){$("config-warning").classList.remove("hidden");return;}
-  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-  const {data,error}=await db.auth.getSession();
-  if(error){toast(error.message);return;}
-  if(data.session){user=data.session.user;await loadProfile();} else showSetup(false);
-  setAuthMode("signin");setUsernameAuthMode("signin");checkFirstWarning();
+  try{
+    if(!configured){$("config-warning").classList.remove("hidden");showSetup(false);return;}
+    if(!window.supabase||typeof window.supabase.createClient!=="function"){
+      showSetup(false);toast("QuietChat could not start: Supabase library did not load. Refresh the page or check your connection.");return;
+    }
+    db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    setAuthMode("signin");setUsernameAuthMode("signin");checkFirstWarning();
+    const {data,error}=await db.auth.getSession();
+    if(error)throw error;
+    if(data?.session){user=data.session.user;await loadProfile();}
+    else showSetup(false);
+  }catch(error){
+    console.error("QuietChat startup failed:",error);
+    showSetup(false);
+    toast("QuietChat startup error: "+(error?.message||"Unknown error"));
+  }
 }
 async function loadProfile(){
   const {data,error}=await db.from("profiles").select("username,bio,avatar_path").eq("id",user.id).maybeSingle();
