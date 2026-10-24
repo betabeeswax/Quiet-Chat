@@ -321,3 +321,46 @@ create or replace function public.discover_public_groups() returns table(id uuid
 revoke all on function public.discover_public_groups() from public; grant execute on function public.discover_public_groups() to authenticated;
 create or replace function public.join_public_group(target_chat uuid) returns uuid language plpgsql security definer set search_path=public as $$ begin if auth.uid() is null then raise exception 'Sign in required'; end if; if not exists(select 1 from public.chats c where c.id=target_chat and c.is_public=true and c.name is not null) then raise exception 'This group is not public or no longer exists'; end if; insert into public.chat_members(chat_id,user_id) values(target_chat,auth.uid()) on conflict do nothing; return target_chat; end; $$;
 revoke all on function public.join_public_group(uuid) from public; grant execute on function public.join_public_group(uuid) to authenticated;
+
+
+-- Community settings and creator-only management.
+alter table public.chats add column if not exists created_by uuid references auth.users(id) on delete set null;
+alter table public.chats add column if not exists allow_gifs boolean not null default true;
+alter table public.chats add column if not exists remove_inactive boolean not null default true;
+
+create or replace function public.create_group_chat(group_name text, is_public boolean default false, group_description text default '') returns uuid
+language plpgsql security definer set search_path=public as $$
+declare new_chat uuid; cleaned_name text; cleaned_description text;
+begin
+ if auth.uid() is null then raise exception 'Sign in required'; end if;
+ cleaned_name:=left(trim(regexp_replace(coalesce(group_name,''), '\s+', ' ', 'g')),60);
+ cleaned_description:=left(trim(coalesce(group_description,'')),240);
+ if char_length(cleaned_name)<2 then raise exception 'Group name must have at least 2 characters'; end if;
+ insert into public.chats(name,is_public,description,created_by,allow_gifs,remove_inactive)
+ values(cleaned_name,is_public,cleaned_description,auth.uid(),true,true) returning id into new_chat;
+ insert into public.chat_members(chat_id,user_id) values(new_chat,auth.uid());
+ return new_chat;
+end; $$;
+revoke all on function public.create_group_chat(text,boolean,text) from public;
+grant execute on function public.create_group_chat(text,boolean,text) to authenticated;
+
+create or replace function public.update_group_settings(target_chat uuid, make_public boolean, allow_gifs boolean, remove_inactive boolean)
+returns void language plpgsql security definer set search_path=public as $$
+begin
+ if auth.uid() is null then raise exception 'Sign in required'; end if;
+ if not exists(select 1 from public.chats where id=target_chat and created_by=auth.uid()) then raise exception 'Only the community creator can change settings'; end if;
+ update public.chats set is_public=make_public, public.chats.allow_gifs=update_group_settings.allow_gifs,
+ public.chats.remove_inactive=update_group_settings.remove_inactive where id=target_chat;
+end; $$;
+revoke all on function public.update_group_settings(uuid,boolean,boolean,boolean) from public;
+grant execute on function public.update_group_settings(uuid,boolean,boolean,boolean) to authenticated;
+
+create or replace function public.delete_group_chat(target_chat uuid) returns void
+language plpgsql security definer set search_path=public as $$
+begin
+ if auth.uid() is null then raise exception 'Sign in required'; end if;
+ if not exists(select 1 from public.chats where id=target_chat and created_by=auth.uid() and name is not null) then raise exception 'Only the community creator can delete this group'; end if;
+ delete from public.chats where id=target_chat;
+end; $$;
+revoke all on function public.delete_group_chat(uuid) from public;
+grant execute on function public.delete_group_chat(uuid) to authenticated;
