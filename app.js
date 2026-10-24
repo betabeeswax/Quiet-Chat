@@ -183,13 +183,13 @@ function renderChats(){
   if(!chats.length){const d=document.createElement("div");d.className="empty-small";d.textContent="No chats yet. Create an invite or join a friend.";list.append(d);return;}
   chats.forEach(chat=>{
     const b=document.createElement("button");b.className="chat-item"+(activeChat?.id===chat.id?" active":"");
-    const av=document.createElement("div");av.className="avatar";av.textContent=initials(chat.title);
+    const av=document.createElement("div");av.className="avatar";av.textContent=initials(chat.title);if(chat.isGroup&&chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";av.replaceChildren(img);}});}
     const t=document.createElement("div");t.className="chat-item-text";
     const strong=document.createElement("strong");strong.textContent=chat.title;
     const preview=document.createElement("span");preview.className="preview";preview.textContent=chat.isGroup?`${chat.memberCount} members · Group chat`:chat.memberCount<2?"Invite sent · waiting to join":"Private conversation";
     t.append(strong,preview);b.append(av,t);b.dataset.chatId=chat.id;b.addEventListener("click",()=>selectChat(chat));list.append(b);
     const memberData=rowProfileForChat(chat.id);
-    if(memberData?.avatar_path){db.storage.from("profile-pics").createSignedUrl(memberData.avatar_path,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="";img.className="profile-avatar-img";av.replaceChildren(img);}});}
+    if(!chat.isGroup&&memberData?.avatar_path){db.storage.from("profile-pics").createSignedUrl(memberData.avatar_path,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="";img.className="profile-avatar-img";av.replaceChildren(img);}});}
   });
 }
 async function selectChat(chat){
@@ -348,7 +348,7 @@ $("add-people-btn").addEventListener("click",async()=>{
   if(!activeChat?.isGroup)return;
   const {data,error}=await db.rpc("create_chat_invite_for",{target_chat:activeChat.id});
   if(error){toast("Couldn't make an invite for this group.");return;}
-  $("invite-code").textContent=data;openDialog("invite-dialog");
+  window.currentInviteCode=String(data);$("invite-code").textContent=window.currentInviteCode;const url=new URL(window.location.href);url.searchParams.set("invite",window.currentInviteCode);window.currentInviteUrl=url.toString();openDialog("invite-dialog");
 });
 
 async function createInvite(){
@@ -356,10 +356,10 @@ async function createInvite(){
   const {data,error}=await db.rpc("create_chat_invite");
   btns.forEach(b=>b.disabled=false);
   if(error){toast("Couldn't create invite. Check that you ran supabase-setup.sql.");return;}
-  $("invite-code").textContent=data;openDialog("invite-dialog");await loadChats();
+  window.currentInviteCode=String(data);$("invite-code").textContent=window.currentInviteCode;const url=new URL(window.location.href);url.searchParams.set("invite",window.currentInviteCode);window.currentInviteUrl=url.toString();openDialog("invite-dialog");await loadChats();
 }
 $("create-invite-btn").addEventListener("click",createInvite);$("new-chat-btn").addEventListener("click",createInvite);$("welcome-create").addEventListener("click",createInvite);
-$("copy-code-btn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("invite-code").textContent);toast("Invite code copied!");}catch{toast("Select and copy the code manually.");}});
+$("copy-code-btn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(window.currentInviteUrl||$("invite-code").textContent);toast(window.currentInviteUrl?"Invite link copied!":"Invite code copied!");}catch{toast("Select and copy the invite shown above.");}});
 $("invite-done-btn").addEventListener("click",()=>closeDialog("invite-dialog"));
 $("join-invite-btn").addEventListener("click",()=>openDialog("join-dialog"));
 $("join-form").addEventListener("submit",async e=>{
