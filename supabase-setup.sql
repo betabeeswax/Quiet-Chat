@@ -324,6 +324,8 @@ revoke all on function public.join_public_group(uuid) from public; grant execute
 
 
 -- Community settings and creator-only management.
+-- Remove the old one-argument overload so PostgREST cannot choose the wrong RPC.
+drop function if exists public.create_group_chat(text);
 alter table public.chats add column if not exists created_by uuid references auth.users(id) on delete set null;
 alter table public.chats add column if not exists allow_gifs boolean not null default true;
 alter table public.chats add column if not exists remove_inactive boolean not null default true;
