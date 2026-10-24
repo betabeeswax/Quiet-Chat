@@ -5,7 +5,7 @@ const SUPABASE_URL = "https://zdmkuookuljcintzgzrh.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_eIjdkSKcO53agFW0J26A5Q_ENp_-m32";
 const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includes("PASTE_");
 const $ = (id) => document.getElementById(id);
-let db, user, username = "", activeChat = null, chats = [], messageChannel = null, listChannel = null, toastTimer, authMode = "signin", usernameAuthMode = "signin", mediaRecorder = null, recordingChunks = [], recordingChatId = null, lastRenderedDay = "";
+let db, user, username = "", activeChat = null, chats = [], messageChannel = null, listChannel = null, messageRefreshTimer = null, toastTimer, authMode = "signin", usernameAuthMode = "signin", mediaRecorder = null, recordingChunks = [], recordingChatId = null, lastRenderedDay = "";
 
 const setup = $("setup-screen"), app = $("app-screen");
 function toast(message) { const el=$("toast"); el.textContent=message; el.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove("show"),2800); }
@@ -143,9 +143,36 @@ async function selectChat(chat){
   $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;renderChats();
   requestAnimationFrame(()=>{const item=$(`chat-list`).querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
-  // Subscribe before fetching history so a message sent during loading is not missed.
-  lastRenderedDay="";messageChannel=db.channel("messages-"+chat.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"chat_id=eq."+chat.id},payload=>{showMessageNotification(payload.new);renderMessage(payload.new);}).subscribe();
+  if(messageRefreshTimer){clearInterval(messageRefreshTimer);messageRefreshTimer=null;}
+  // Realtime gives instant updates when enabled by the Supabase project.
+  // Polling below is a fallback so new messages still appear without refreshing the page.
+  lastRenderedDay="";
+  const selectedChatId=chat.id;
+  messageChannel=db.channel("messages-"+chat.id)
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"chat_id=eq."+chat.id},payload=>{
+      if(activeChat?.id!==selectedChatId)return;
+      const exists=$("messages").querySelector(`[data-message-id="${CSS.escape(payload.new.id)}"]`);
+      if(!exists)showMessageNotification(payload.new);
+      renderMessage(payload.new);
+    })
+    .subscribe();
   await loadMessages();
+  // Poll the newest messages every 2.5 seconds as a reliable fallback for missed realtime events.
+  messageRefreshTimer=setInterval(()=>refreshActiveChatMessages(selectedChatId),2500);
+}
+async function refreshActiveChatMessages(chatId){
+  if(!db||!user||activeChat?.id!==chatId)return;
+  const {data,error}=await db.from("messages")
+    .select("id,chat_id,sender_id,body,created_at,attachment_path,attachment_type,attachment_name,profiles(username)")
+    .eq("chat_id",chatId).order("created_at",{ascending:false}).limit(100);
+  if(error)return; // Realtime remains active; retry on the next poll.
+  if(activeChat?.id!==chatId)return;
+  (data||[]).reverse().forEach(m=>{
+    const exists=$("messages").querySelector(`[data-message-id="${CSS.escape(m.id)}"]`);
+    if(!exists)showMessageNotification(m);
+    renderMessage(m);
+  });
+  scrollMessagesToBottom();
 }
 async function loadMessages(){
   const area=$("messages");area.replaceChildren();
