@@ -80,7 +80,7 @@
         <button id="mobile-back" class="icon-button mobile-only" aria-label="Back to chats">←</button>
         <div class="avatar" id="chat-avatar">✦</div>
         <div class="chat-heading"><strong id="chat-title">Your messages</strong><span id="chat-subtitle" class="tiny muted">Choose a chat or start a new one</span></div>
-        <button id="group-settings-btn" class="secondary header-action hidden" type="button">⚙ Group settings</button><button id="add-people-btn" class="secondary header-action hidden" disabled>＋ Add people</button>
+        <button id="chat-notification-btn" class="secondary header-action" type="button">🔔 Notifications</button><button id="group-settings-btn" class="secondary header-action hidden" type="button">⚙ Group settings</button><button id="add-people-btn" class="secondary header-action hidden" disabled>＋ Add people</button>
         <div class="header-tools"><button id="game-btn" class="secondary header-action" disabled>🎮 Games</button><button id="call-btn" class="call-button" disabled>▣ <span>Call</span></button></div>
       </header>
       <div id="welcome-panel" class="welcome-panel">
@@ -126,7 +126,7 @@
 
   <dialog id="group-settings-dialog" class="modal community-modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
-    <div class="modal-icon">⚙</div><h2>Group settings</h2><p class="muted">Manage this group's privacy and membership rules.</p>
+    <div class="modal-icon">⚙</div><h2>Community settings</h2><p class="muted">Only the owner can edit details or transfer ownership.</p><label for="group-name-edit">Community name</label><input id="group-name-edit" maxlength="60" minlength="2"><label for="community-logo-input" class="field-gap">Community logo</label><input id="community-logo-input" type="file" accept="image/*"><label for="transfer-owner-select" class="field-gap">Transfer ownership to a member</label><select id="transfer-owner-select"><option value="">Keep current owner</option></select>
     <label>Who can access this group?</label><div class="privacy-choice"><label><input type="radio" name="existing-group-visibility" value="private" checked> <span><strong>Private group</strong><small>Members join by invitation.</small></span></label><label><input type="radio" name="existing-group-visibility" value="public"> <span><strong>Public group</strong><small>Anyone can discover and join.</small></span></label></div>
     <label class="setting-toggle"><span><strong>Allow GIFs</strong><small>Public groups only. Pictures remain disabled in public groups.</small></span><input id="group-allow-gifs" type="checkbox"></label>
     <label class="setting-toggle"><span><strong>Remove inactive members</strong><small>Warn after 23 days; remove after 30 days without a message.</small></span><input id="group-inactivity-rule" type="checkbox" checked></label>
