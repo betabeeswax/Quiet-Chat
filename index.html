@@ -139,10 +139,10 @@
     <p><a href="privacy.html" target="_blank" rel="noopener">Read the privacy policy</a></p>
   </dialog>
   <dialog id="call-dialog" class="call-modal">
-    <div class="call-modal-top"><div><strong>QuietChat video call</strong><div class="tiny muted">Talkvoo opens in a new tab and does not require an account.</div></div><button id="end-call-btn" class="secondary">Close ✕</button></div>
-    <div class="call-tools"><button id="call-new-tab-btn" class="primary" type="button">↗ Open Talkvoo call</button><button id="call-share-link-btn" class="secondary" type="button">🔗 Share another meeting link</button></div>
-    <p class="muted call-info">Your friend can join using the same Talkvoo room link in the chat. Allow camera and microphone when your browser asks.</p>
-    <iframe id="call-frame" title="QuietChat call information" src="about:blank" hidden></iframe>
+    <div class="call-modal-top"><div><strong>QuietChat video call</strong><div class="tiny muted">VDO.Ninja runs inside QuietChat; guests do not need an account.</div></div><button id="end-call-btn" class="secondary">Close ✕</button></div>
+    <div class="call-tools"><button id="call-new-tab-btn" class="primary" type="button">↗ Open call in a new tab</button><button id="call-share-link-btn" class="secondary" type="button">🔗 Share another meeting link</button></div>
+    <p class="muted call-info">Both of you use the same secure VDO.Ninja room. Allow camera and microphone when your browser asks. If the embedded call does not load, use “Open call in a new tab”.</p>
+    <iframe id="call-frame" title="QuietChat video call" src="about:blank" allow="camera; microphone; fullscreen; display-capture; autoplay" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
   </dialog>
   <dialog id="emoji-dialog" class="modal emoji-modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>

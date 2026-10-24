@@ -286,25 +286,31 @@ $("gallery-close-btn").addEventListener("click",()=>closeDialog("gallery-dialog"
 $("warning-continue-btn").addEventListener("click",()=>{localStorage.setItem("quietchat-warning-accepted-v1","yes");closeDialog("safety-warning-dialog");});
 let currentCallUrl="";
 function makeCallUrl(chat){
-  // A stable room name means both members of this chat receive the same call link.
-  const room="QuietChat-"+String(chat.id).replace(/-/g,"");
-  return "https://talkvoo.com/"+encodeURIComponent(room);
+  // VDO.Ninja supports shared room links without requiring guests to create accounts.
+  // Keep the room ID URL-safe and stable for both members of this chat.
+  const room="QuietChat"+String(chat.id).replace(/[^a-zA-Z0-9]/g,"");
+  const url=new URL("https://vdo.ninja/");
+  url.searchParams.set("room",room);
+  url.searchParams.set("label","");
+  return url.toString();
 }
 async function startCallForChat(chat,sendInvite=true){
   if(!chat)return;
   activeChat=chat;
   currentCallUrl=makeCallUrl(chat);
-  // This provider does not require an account. Keep the call in its own tab because
-  // third-party meeting sites can block iframe embedding and camera/mic permissions.
+  const frame=$("call-frame");
+  frame.hidden=false;
+  frame.src=currentCallUrl;
   openDialog("call-dialog");
-  window.open(currentCallUrl,"_blank","noopener,noreferrer");
   if(sendInvite){
     const appUrl=new URL(window.location.href);
+    // Prefer HTTPS on hosted sites; preserve HTTP for local development.
+    if(appUrl.protocol==="http:" && !["localhost","127.0.0.1"].includes(appUrl.hostname)) appUrl.protocol="https:";
     appUrl.searchParams.set("call",chat.id);
     appUrl.hash="";
-    const inviteText="📹 Join my QuietChat video call (no account needed): "+currentCallUrl+"\nOpen QuietChat chat: "+appUrl.toString();
+    const inviteText="📹 Join my QuietChat video call (no account needed): "+currentCallUrl+"\\nOpen QuietChat chat: "+appUrl.toString();
     const {error}=await db.from("messages").insert({chat_id:chat.id,sender_id:user.id,body:inviteText});
-    toast(error?"Call opened, but the invite could not be sent to chat.":"Talkvoo call invite sent in chat.");
+    toast(error?"Call opened, but the invite could not be sent to chat.":"VDO.Ninja call invite sent in chat.");
   }
 }
 $("call-btn").addEventListener("click",()=>{if(activeChat)startCallForChat(activeChat,true);});
