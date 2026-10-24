@@ -48,7 +48,7 @@ async function start(){
 }
 async function loadProfile(){
   const {data,error}=await db.from("profiles").select("username,bio,avatar_path").eq("id",user.id).maybeSingle();
-  if(error){toast("Could not load your profile. Check the SQL setup.");showSetup();return;}
+  if(error){toast("Could not load your profile: "+error.message);user=null;showSetup(false);return;}
   if(data?.username){setProfile(data.username);window.myProfile=data;$("profile-bio").value=data.bio||"";if(data.avatar_path)await showAvatar(data.avatar_path);showApp();await loadChats();subscribeChatList();}
   else {showSetup(true);$("username").focus();}
 }
@@ -95,7 +95,7 @@ $("username-auth-form").addEventListener("submit",async e=>{
     user=data.user;await loadProfile();
   }finally{button.disabled=false;}
 });
-$("guest-signin-btn").addEventListener("click",()=>{showSetup(true);$("username").focus();});
+$("guest-signin-btn").addEventListener("click",async()=>{try{const {data,error}=await db.auth.signInAnonymously();if(error){toast("Guest sign-in failed. Enable Anonymous Sign-Ins in Supabase Auth.");return;}user=data.user;showSetup(true);$("username").focus();}catch(e){toast("Guest sign-in failed. Please try again.");}});
 $("profile-form").addEventListener("submit",async e=>{
   e.preventDefault();if(!configured)return;
   const name=cleanName($("username").value);if(name.length<2){toast("Use at least 2 characters.");return;}
@@ -474,20 +474,21 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
   recognition.onend=()=>input.focus();try{recognition.start();}catch{toast("Voice-to-text could not start. Try again.");}
  }
  $("group-settings-btn")?.addEventListener("click",()=>openDialog("group-settings-dialog"));
- $("save-group-settings")?.addEventListener("click",()=>toast("Group settings are displayed, but server-side group privacy and membership rules still need Supabase support."));
  $("communities-btn")?.addEventListener("click",()=>{openDialog("communities-dialog");showCommunityView("discover");loadMyCommunities();});
  $("sidebar-discover-btn")?.addEventListener("click",()=>{openDialog("communities-dialog");showCommunityView("discover");loadMyCommunities();});
- async function loadMyCommunities(){const list=$("community-list");if(!list)return;if(!user){list.innerHTML='<div class="community-empty"><strong>Sign in to view your communities</strong></div>';return;}await loadChats();const groups=chats.filter(c=>c.isGroup);list.replaceChildren();if(!groups.length){list.innerHTML='<div class="community-empty"><strong>No communities yet</strong><p class="muted">Create a private community or accept an invite from a friend.</p></div>';return;}groups.forEach(g=>{const card=document.createElement("article");card.className="discover-group-card";const details=document.createElement("div");details.className="discover-group-details";const title=document.createElement("strong");title.textContent=g.title;const meta=document.createElement("small");meta.textContent=g.memberCount+" members";details.append(title,meta);const btn=document.createElement("button");btn.className="primary discover-join";btn.type="button";btn.textContent="Open";btn.addEventListener("click",()=>{closeDialog("communities-dialog");selectChat(g);});card.append(details,btn);list.append(card);});}
+ async function loadMyCommunities(){
+   const list=$("community-list");if(!list)return;
+   if(!user){list.innerHTML='<div class="community-empty"><strong>Sign in to view your communities</strong></div>';return;}
+   await loadChats();const groups=chats.filter(c=>c.isGroup);list.replaceChildren();
+   if(!groups.length){list.innerHTML='<div class="community-empty"><strong>No communities yet</strong><p class="muted">Create a private community or accept an invite from a friend.</p></div>';return;}
+   groups.forEach(g=>{const card=document.createElement("article");card.className="discover-group-card";const details=document.createElement("div");details.className="discover-group-details";const title=document.createElement("strong");title.textContent=g.title;const meta=document.createElement("small");meta.textContent=(g.memberCount||1)+" members";details.append(title,meta);const btn=document.createElement("button");btn.className="primary discover-join";btn.type="button";btn.textContent="Open";btn.addEventListener("click",()=>{closeDialog("communities-dialog");selectChat(g);});card.append(details,btn);list.append(card);});
+ }
  function showCommunityView(view){document.querySelectorAll("[data-community-view]").forEach(btn=>btn.classList.toggle("active",btn.dataset.communityView===view));["discover","create"].forEach(n=>$("community-"+n+"-panel")?.classList.toggle("hidden",n!==view));}
  $("refresh-communities-btn")?.addEventListener("click",loadMyCommunities);
-document.querySelectorAll("[data-community-view]").forEach(btn=>btn.classList.toggle("active",btn.dataset.communityView===view));["discover","create","settings"].forEach(n=>$("community-"+n+"-panel")?.classList.toggle("hidden",n!==view));}
- $("refresh-communities-btn")?.addEventListener("click",loadDiscoverGroups);$("community-search")?.addEventListener("input",renderDiscoverGroups);
- document.querySelectorAll("[data-group-filter]").forEach(btn=>btn.addEventListener("click",()=>{activeGroupFilter=btn.dataset.groupFilter;document.querySelectorAll("[data-group-filter]").forEach(x=>x.classList.toggle("active",x===btn));renderDiscoverGroups();}));
- document.querySelectorAll("[data-community-view]").forEach(btn=>btn.addEventListener("click",()=>{showCommunityView(btn.dataset.communityView);if(btn.dataset.communityView==="discover")loadDiscoverGroups();}));
- $("community-create-form")?.addEventListener("submit",async ev=>{ev.preventDefault();const name=cleanName($("community-name").value);if(name.length<2){toast("Group name needs at least 2 characters.");return;}if(!user||user.is_anonymous){toast("Please sign in with an account before creating a community.");closeDialog("communities-dialog");showSetup(true);return;}const {data,error}=await db.rpc("create_group_chat",{group_name:name});if(error){toast("Could not create community: "+error.message);return;}toast("Private community created! Use Add people to invite friends.");$("community-create-form").reset();closeDialog("communities-dialog");await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);});
- $("save-community-settings")?.addEventListener("click",()=>{localStorage.setItem("quietchat-community-always-public",String($("community-always-public").checked));localStorage.setItem("quietchat-community-open-join",String($("community-open-join").checked));localStorage.setItem("quietchat-community-discoverable",String($("community-discoverable").checked));toast("Community preferences saved on this device.");});
- try{["always-public","open-join","discoverable"].forEach(k=>{const el=$("community-"+k);const v=localStorage.getItem("quietchat-community-"+k);if(el&&v!==null)el.checked=v==="true";});}catch{}
-$("mobile-back").addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");});
+ document.querySelectorAll("[data-community-view]").forEach(btn=>btn.addEventListener("click",()=>{showCommunityView(btn.dataset.communityView);if(btn.dataset.communityView==="discover")loadMyCommunities();}));
+ $("community-create-form")?.addEventListener("submit",async ev=>{ev.preventDefault();const name=cleanName($("community-name").value);if(name.length<2){toast("Group name needs at least 2 characters.");return;}if(!user||user.is_anonymous){toast("Please sign in with a permanent account before creating a community.");closeDialog("communities-dialog");showSetup(false);return;}const {data,error}=await db.rpc("create_group_chat",{group_name:name});if(error){toast("Could not create community: "+error.message);return;}toast("Private community created! Use Add people to invite friends.");$("community-create-form").reset();closeDialog("communities-dialog");await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);});
+ $("save-community-settings")?.addEventListener("click",()=>toast("Community access is invitation-only."));
+ $("mobile-back").addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");});
 function subscribeChatList(){
   if(listChannel)db.removeChannel(listChannel);
   listChannel=db.channel("my-chat-members-"+user.id).on("postgres_changes",{event:"*",schema:"public",table:"chat_members",filter:"user_id=eq."+user.id},async()=>{await loadChats();if(activeChat){const fresh=chats.find(c=>c.id===activeChat.id);if(fresh){activeChat=fresh;$("chat-title").textContent=fresh.title;}}}).subscribe();
