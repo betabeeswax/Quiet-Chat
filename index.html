@@ -168,14 +168,31 @@
   </dialog>
   <dialog id="settings-dialog" class="modal">
     <div class="dialog-head"><div><p class="eyebrow">PREFERENCES</p><h2>Settings</h2></div><button id="settings-close-btn" class="icon-button" aria-label="Close settings">×</button></div>
-    <p class="muted">Manage notifications, saved media, profile, and chat exports.</p>
-    <div class="settings-actions">
-      <button id="settings-edit-profile-btn" class="secondary full">👤 Edit profile</button>
-      <button id="settings-gallery-btn" class="secondary full">🖼 Open local media library</button>
-      <div class="notification-choice"><span>🔔 Notifications</span><div><button id="settings-notifications-yes" class="secondary" type="button">Yes</button><button id="settings-notifications-no" class="secondary" type="button">No</button></div></div>
-      <button id="settings-export-btn" class="secondary full" disabled>⇩ Export current chat / Save as PDF</button>
-      <button id="settings-all-export-btn" class="secondary full">📄 Export all chats as PDF</button>
-      <p class="tiny muted">For PDF: choose Export, then select “Save as PDF” in your browser's print window.</p>
+    <p class="muted settings-intro">Make QuietChat work the way you like. Your preferences are saved on this device.</p>
+    <div class="settings-section">
+      <h3>🎥 Video calls</h3>
+      <p class="tiny muted">Choose where calls open when you press Call.</p>
+      <div class="call-location-choice" role="group" aria-label="Video call location">
+        <button id="settings-call-inline" class="secondary" type="button" aria-pressed="true">▣ Inside QuietChat</button>
+        <button id="settings-call-tab" class="secondary" type="button" aria-pressed="false">↗ In a new tab</button>
+      </div>
+      <p class="tiny muted" id="settings-call-location-help">Calls open inside the chat window.</p>
+    </div>
+    <div class="settings-section">
+      <h3>🔔 Notifications</h3>
+      <p class="tiny muted">Choose whether QuietChat can show browser notifications.</p>
+      <div class="notification-choice"><span id="notification-state-label">Notifications are off.</span><div><button id="settings-notifications-yes" class="secondary" type="button" aria-pressed="false">Yes</button><button id="settings-notifications-no" class="secondary" type="button" aria-pressed="true">No</button></div></div>
+    </div>
+    <div class="settings-section">
+      <h3>👤 Your account</h3>
+      <button id="settings-edit-profile-btn" class="secondary full">Edit profile <span>›</span></button>
+      <button id="settings-gallery-btn" class="secondary full">Open local media library <span>›</span></button>
+    </div>
+    <div class="settings-section">
+      <h3>📄 Chat exports</h3>
+      <button id="settings-export-btn" class="secondary full" disabled>Export current chat / Save as PDF <span>›</span></button>
+      <button id="settings-all-export-btn" class="secondary full">Export all chats as PDF <span>›</span></button>
+      <p class="tiny muted">For PDF, choose “Save as PDF” in your browser's print window.</p>
     </div>
   </dialog>
   <dialog id="gallery-dialog" class="modal gallery-modal">

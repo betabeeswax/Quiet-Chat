@@ -276,8 +276,30 @@ $("settings-btn").addEventListener("click",()=>openDialog("settings-dialog"));
 $("settings-close-btn").addEventListener("click",()=>closeDialog("settings-dialog"));
 $("settings-edit-profile-btn").addEventListener("click",()=>{closeDialog("settings-dialog");$("profile-username").value=username;$("profile-bio").value=window.myProfile?.bio||"";$("avatar-input").value="";openDialog("profile-dialog");});
 $("settings-gallery-btn").addEventListener("click",()=>{closeDialog("settings-dialog");showLocalGallery();});
-$("settings-notifications-yes").addEventListener("click",async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return;}try{const permission=await Notification.requestPermission();if(permission==="granted"){localStorage.setItem("quietchat-notifications-enabled","yes");toast("Notifications set to Yes.");}else{localStorage.setItem("quietchat-notifications-enabled","no");toast("Browser permission was denied, so notifications are set to No.");}}catch{toast("Could not enable notifications.");}});
-$("settings-notifications-no").addEventListener("click",()=>{localStorage.setItem("quietchat-notifications-enabled","no");toast("Notifications set to No.");});
+$("settings-notifications-yes").addEventListener("click",async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return;}try{const permission=await Notification.requestPermission();if(permission==="granted"){localStorage.setItem("quietchat-notifications-enabled","yes");updateNotificationButtons();toast("Notifications set to Yes.");}else{localStorage.setItem("quietchat-notifications-enabled","no");updateNotificationButtons();toast("Browser permission was denied, so notifications are set to No.");}}catch{toast("Could not enable notifications.");}});
+$("settings-notifications-no").addEventListener("click",()=>{localStorage.setItem("quietchat-notifications-enabled","no");updateNotificationButtons();toast("Notifications set to No.");});
+const CALL_LOCATION_KEY="quietchat-call-location";
+function getCallLocation(){return localStorage.getItem(CALL_LOCATION_KEY)==="tab"?"tab":"inline";}
+function updateCallLocationButtons(){
+  const loc=getCallLocation();
+  $("settings-call-inline").setAttribute("aria-pressed",String(loc==="inline"));
+  $("settings-call-tab").setAttribute("aria-pressed",String(loc==="tab"));
+  $("settings-call-inline").classList.toggle("selected",loc==="inline");
+  $("settings-call-tab").classList.toggle("selected",loc==="tab");
+  $("settings-call-location-help").textContent=loc==="inline"?"Calls open inside the QuietChat chat window.":"Calls open in a separate browser tab. Your chat stays open here.";
+}
+$("settings-call-inline").addEventListener("click",()=>{localStorage.setItem(CALL_LOCATION_KEY,"inline");updateCallLocationButtons();toast("Calls will open inside QuietChat.");});
+$("settings-call-tab").addEventListener("click",()=>{localStorage.setItem(CALL_LOCATION_KEY,"tab");updateCallLocationButtons();toast("Calls will open in a new tab.");});
+updateCallLocationButtons();
+function updateNotificationButtons(){
+  const yes=localStorage.getItem("quietchat-notifications-enabled")==="yes";
+  $("settings-notifications-yes").setAttribute("aria-pressed",String(yes));
+  $("settings-notifications-no").setAttribute("aria-pressed",String(!yes));
+  $("settings-notifications-yes").classList.toggle("selected",yes);
+  $("settings-notifications-no").classList.toggle("selected",!yes);
+  $("notification-state-label").textContent=yes?"Notifications are enabled.":"Notifications are off.";
+}
+updateNotificationButtons();
 $("settings-all-export-btn").addEventListener("click",()=>{closeDialog("settings-dialog");exportAllChats();});
 $("settings-export-btn").addEventListener("click",()=>{if(!activeChat)return;closeDialog("settings-dialog");window.print();});
 $("media-save-mode").addEventListener("change",async e=>{localStorage.setItem(MEDIA_SAVE_KEY,e.target.value);if(e.target.value==="day")await purgeExpiredLocalMedia();toast(({none:"Automatic media saving is off.",auto:"Media will save automatically and stay until browser data is cleared.",day:"Media copies will be kept for up to 24 hours."})[e.target.value]||"Media setting saved.");closeDialog("gallery-dialog");await showLocalGallery();});
@@ -299,9 +321,14 @@ async function startCallForChat(chat,sendInvite=true){
   activeChat=chat;
   currentCallUrl=makeCallUrl(chat);
   const frame=$("call-frame");
-  frame.hidden=false;
-  frame.src=currentCallUrl;
-  openDialog("call-dialog");
+  if(getCallLocation()==="tab"){
+    const opened=window.open(currentCallUrl,"_blank","noopener,noreferrer");
+    if(!opened)toast("Your browser blocked the call tab. Allow pop-ups for QuietChat, or choose Inside QuietChat in Settings.");
+  }else{
+    frame.hidden=false;
+    frame.src=currentCallUrl;
+    openDialog("call-dialog");
+  }
   if(sendInvite){
     const appUrl=new URL(window.location.href);
     // Prefer HTTPS on hosted sites; preserve HTTP for local development.
