@@ -542,8 +542,8 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
   recognition.onend=()=>input.focus();try{recognition.start();}catch{toast("Voice-to-text could not start. Try again.");}
  }
  $("group-settings-btn")?.addEventListener("click",()=>openDialog("group-settings-dialog"));
- $("communities-btn")?.addEventListener("click",()=>{openDialog("communities-dialog");showCommunityView("discover");loadMyCommunities();});
- $("sidebar-discover-btn")?.addEventListener("click",()=>{openDialog("communities-dialog");showCommunityView("discover");loadMyCommunities();});
+ $("communities-btn")?.addEventListener("click",()=>{openDialog("communities-dialog");showCommunityView("public");loadPublicCommunities();});
+ $("sidebar-discover-btn")?.addEventListener("click",()=>{openDialog("communities-dialog");showCommunityView("public");loadPublicCommunities();});
  async function loadMyCommunities(){
    const list=$("community-list");if(!list)return;
    if(!user){list.innerHTML='<div class="community-empty"><strong>Sign in to view your communities</strong></div>';return;}
