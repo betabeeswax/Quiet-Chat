@@ -93,3 +93,7 @@ The export opens a new browser tab. Click **Print / Save as PDF** and choose **S
 - Links in messages remain clickable.
 
 Note: These changes were checked for JavaScript syntax, but live calls, authentication, Supabase permissions, and multiplayer sessions still need to be tested on the deployed site with two accounts. External meeting services such as Google Meet generally cannot be embedded directly inside another website, so those links open in a separate tab.
+
+
+## Complete future features roadmap
+The full requested roadmap, including 30-day group inactivity removal, a 7-day warning, rejoining/welcome-back behaviour, and GIF/picture restrictions, is in `QUIETCHAT-FUTURE-ROADMAP.md`. This file is a specification only; it does not mean every listed feature is already implemented or tested.

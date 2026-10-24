@@ -21,7 +21,7 @@
 
 .header-tools{display:flex;align-items:center;gap:6px}.header-tools .header-action{padding:8px 10px;font-size:12px}.policy-link{margin-top:16px;text-align:center}.policy-link a,.profile-modal a{color:#9ca8ff}.profile-modal textarea{width:100%;resize:vertical}.profile-modal input[type=file]{font-size:12px}.field-gap{margin-top:10px}.rps-score{padding:14px;border-radius:12px;background:var(--panel,#171b27);margin:14px 0;font-weight:700}.rps-last{padding:12px;border:1px solid #30374b;border-radius:12px;margin-bottom:14px;min-height:42px}.rps-buttons{display:flex;gap:8px}.rps-buttons button{flex:1;padding:12px 6px;border:1px solid #343b50;border-radius:12px;background:#22283a;color:inherit;cursor:pointer}.chat-file-link{display:inline-block;margin-top:5px;color:#b8c0ff;word-break:break-word}.chat-media-image{max-width:240px}.chat-media-video{max-width:280px}.header-tools button:disabled{opacity:.45}@media(max-width:650px){.header-tools{gap:3px}.header-tools .header-action{padding:7px 5px;font-size:10px}.header-tools .call-button{padding:8px}.rps-buttons{flex-direction:column}}
 
-.profile-avatar-img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}.avatar{overflow:hidden}
+.profile-avatar-img{width:100%;height:100%;object-fit:contain;border-radius:inherit;display:block}.avatar{overflow:hidden}
 /* Sticky chat controls, embedded calls, emoji/GIF and game corner */
 .chat-header{position:sticky;top:0;z-index:5;backdrop-filter:blur(16px)}
 .call-modal{width:min(96vw,1100px);height:min(90dvh,760px);max-width:none;max-height:none;padding:0;background:#0d1118;color:var(--text);border:1px solid #30394a;border-radius:18px;overflow:hidden}
@@ -80,4 +80,7 @@
 @media(max-width:480px){#settings-dialog{padding:16px}.settings-section{padding:12px}.call-location-choice{grid-template-columns:1fr}.call-location-choice button{font-size:13px}}
 
 /* QuietChat brand logo */
-.brand-mark{overflow:hidden;padding:0;background:#090d25;box-shadow:0 4px 18px #543cff22}.brand-mark img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}.brand-mark.small{flex-shrink:0}
+.brand-mark{overflow:hidden;padding:0;background:#090d25;box-shadow:0 4px 18px #543cff22}.brand-mark img{display:block;width:100%;height:100%;object-fit:contain;border-radius:inherit}.brand-mark.small{flex-shrink:0}
+
+/* Fixed QuietChat brand symbol: never crop the artwork */
+.brand-mark{background:#090d25;overflow:hidden}.brand-mark img{object-fit:contain;width:100%;height:100%;padding:2px}
