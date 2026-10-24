@@ -366,3 +366,42 @@ begin
 end; $$;
 revoke all on function public.delete_group_chat(uuid) from public;
 grant execute on function public.delete_group_chat(uuid) to authenticated;
+
+
+-- QuietChat: allow a signed-in member to leave/remove a chat from their own list.
+create or replace function public.quietchat_remove_chat(target_chat uuid)
+returns void language plpgsql security definer set search_path=public as $$
+declare remaining_members int;
+begin
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
+  if not exists(select 1 from public.chat_members where chat_id=target_chat and user_id=auth.uid()) then
+    raise exception 'You are not a member of this chat';
+  end if;
+  delete from public.chat_members where chat_id=target_chat and user_id=auth.uid();
+  select count(*) into remaining_members from public.chat_members where chat_id=target_chat;
+  if remaining_members=0 then delete from public.chats where id=target_chat; end if;
+end; $$;
+revoke all on function public.quietchat_remove_chat(uuid) from public, anon;
+grant execute on function public.quietchat_remove_chat(uuid) to authenticated;
+
+-- Enforce a 5 MB maximum for chat uploads at the Supabase Storage level too.
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+values('chat-media','chat-media',false,5242880,null)
+on conflict (id) do update set file_size_limit=5242880;
+
+-- Expired/used invite records are cleaned daily (codes already expire after 24 hours).
+create or replace function public.quietchat_daily_invite_cleanup()
+returns void language sql security definer set search_path=public as $$
+  delete from public.chat_invites where expires_at <= now() or used_at is not null;
+$$;
+revoke all on function public.quietchat_daily_invite_cleanup() from public, anon, authenticated;
+do $$ begin
+  execute 'create extension if not exists pg_cron with schema pg_catalog';
+  if not exists(select 1 from cron.job where jobname='quietchat-daily-invite-cleanup') then
+    perform cron.schedule('quietchat-daily-invite-cleanup','17 3 * * *','select public.quietchat_daily_invite_cleanup()');
+  end if;
+exception when others then
+  raise notice 'pg_cron is unavailable. Schedule public.quietchat_daily_invite_cleanup() daily in Supabase Cron.';
+end $$;
+
+notify pgrst, 'reload schema';
