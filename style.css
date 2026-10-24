@@ -78,3 +78,6 @@
 .notification-choice>span{font-size:13px;line-height:1.4}
 .notification-choice button{border-radius:10px}
 @media(max-width:480px){#settings-dialog{padding:16px}.settings-section{padding:12px}.call-location-choice{grid-template-columns:1fr}.call-location-choice button{font-size:13px}}
+
+/* QuietChat brand logo */
+.brand-mark{overflow:hidden;padding:0;background:#090d25;box-shadow:0 4px 18px #543cff22}.brand-mark img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}.brand-mark.small{flex-shrink:0}
