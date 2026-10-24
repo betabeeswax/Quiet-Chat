@@ -302,6 +302,9 @@ $("join-form").addEventListener("submit",async e=>{
 });
 $("settings-btn").addEventListener("click",()=>openDialog("settings-dialog"));
 $("settings-close-btn").addEventListener("click",()=>closeDialog("settings-dialog"));
+ $("settings-signout-btn")?.addEventListener("click",async()=>{if(!db)return;const {error}=await db.auth.signOut();if(error){toast("Sign out failed: "+error.message);return;}user=null;activeChat=null;chats=[];if(messageChannel)db.removeChannel(messageChannel);if(listChannel)db.removeChannel(listChannel);showSetup(false);setAuthMode("signin");setUsernameAuthMode("signin");toast("Signed out.");});
+ $("settings-delete-account-btn")?.addEventListener("click",()=>toast("Permanent account deletion is not configured yet. Nothing has been deleted."));
+
 $("settings-edit-profile-btn").addEventListener("click",()=>{closeDialog("settings-dialog");$("profile-username").value=username;$("profile-bio").value=window.myProfile?.bio||"";$("avatar-input").value="";openDialog("profile-dialog");});
 $("settings-gallery-btn").addEventListener("click",()=>{closeDialog("settings-dialog");showLocalGallery();});
 $("settings-notifications-yes").addEventListener("click",async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return;}try{const permission=await Notification.requestPermission();if(permission==="granted"){localStorage.setItem("quietchat-notifications-enabled","yes");updateNotificationButtons();toast("Notifications set to Yes.");}else{localStorage.setItem("quietchat-notifications-enabled","no");updateNotificationButtons();toast("Browser permission was denied, so notifications are set to No.");}}catch{toast("Could not enable notifications.");}});
