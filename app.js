@@ -140,7 +140,7 @@ function renderChats(){
 }
 async function selectChat(chat){
   activeChat=chat;try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);
-  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;renderChats();
+  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
   requestAnimationFrame(()=>{const item=$(`chat-list`).querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
   if(messageRefreshTimer){clearInterval(messageRefreshTimer);messageRefreshTimer=null;}
@@ -263,7 +263,7 @@ async function toggleVoiceRecording(){
     mediaRecorder.start();btn.textContent="■";btn.classList.add("recording");toast("Recording… tap ■ to stop and send.");
   }catch(err){toast(err?.name==="NotAllowedError"?"Allow microphone access to record a voice memo.":"Couldn't start recording. Check your microphone.");}
 }
-$("voice-memo-btn").addEventListener("click",toggleVoiceRecording);
+$("voice-memo-btn")?.addEventListener("click",toggleVoiceRecording);
 
 $("create-group-btn").addEventListener("click",()=>openDialog("group-dialog"));
 $("group-form").addEventListener("submit",async e=>{
@@ -448,10 +448,35 @@ $("game-btn").addEventListener("click",()=>{if(!activeChat)return;openDialog("ga
 document.querySelectorAll("[data-rps]").forEach(btn=>btn.addEventListener("click",async()=>{if(!activeChat)return;const {data,error}=await db.rpc("play_rps",{target_chat:activeChat.id,chosen_move:btn.dataset.rps});if(error){toast("Game failed to update. Run the latest SQL setup.");return;}renderRps(data);}));
 const emojiList="😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😍 🥰 😎 🤩 🥳 😭 😡 🤔 🙄 😴 🤯 🥺 😇 🤗 🤝 👍 👎 👏 🙌 💪 🫶 ❤️ 🧡 💛 💚 💙 💜 🖤 🤍 💔 💯 🔥 ✨ ⭐ 🌈 ☀️ 🌙 ⚡ 🎉 🎊 🎮 🎲 🏆 🥇 ⚽ 🏀 🚗 🐱 🐶 🐸 🦊 🐼 🐵 🍕 🍔 🍟 🍎 🍌 🍓 🍪 ☕ 🎂".split(" ");
 const eg=$("emoji-grid");emojiList.forEach(emoji=>eg.append(gameButton(emoji,()=>{const input=$("message-input");input.value+=emoji;input.focus();closeDialog("emoji-dialog");}))); 
-$("emoji-btn").addEventListener("click",()=>openDialog("emoji-dialog"));
+if($("emoji-btn")) $("emoji-btn").addEventListener("click",()=>openDialog("emoji-dialog"));
 $("gif-search-btn").addEventListener("click",()=>{const q=$("gif-search").value.trim();if(!q){toast("Type what GIF you want to find.");return;}window.open("https://tenor.com/search/"+encodeURIComponent(q)+"-gifs","_blank","noopener,noreferrer");$("gif-results").textContent="Tenor opened in a new tab. Copy a GIF link and paste it into your QuietChat message.";});
 $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("gif-search-btn").click();}});
 
+
+ // Composer plus menu: keep attachment, emoji/GIF, voice memo and dictation together.
+ $("composer-plus-btn")?.addEventListener("click",()=>openDialog("composer-tools-dialog"));
+ $("tool-file-btn")?.addEventListener("click",()=>{closeDialog("composer-tools-dialog");$("media-input").click();});
+ $("tool-emoji-btn")?.addEventListener("click",()=>{closeDialog("composer-tools-dialog");openDialog("emoji-dialog");});
+ $("tool-gif-btn")?.addEventListener("click",()=>{closeDialog("composer-tools-dialog");openDialog("emoji-dialog");$("gif-search")?.focus();});
+ $("tool-voice-memo-btn")?.addEventListener("click",()=>{closeDialog("composer-tools-dialog");toggleVoiceRecording();});
+ $("tool-voice-text-btn")?.addEventListener("click",()=>{closeDialog("composer-tools-dialog");startVoiceToText();});
+ function startVoiceToText(){
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){toast("Voice-to-text is not supported in this browser. Try Chrome or Edge.");return;}
+  const recognition=new SpeechRecognition();recognition.lang=navigator.language||"en-CA";recognition.interimResults=true;recognition.continuous=false;
+  const input=$("message-input");const old=input.value;toast("Listening… speak your message.");
+  recognition.onresult=e=>{let words="";for(let i=e.resultIndex;i<e.results.length;i++)words+=e.results[i][0].transcript;input.value=(old?old+" ":"")+words;input.focus();};
+  recognition.onerror=e=>toast(e.error==="not-allowed"?"Allow microphone access for voice-to-text.":"Voice-to-text stopped. Try again.");
+  recognition.onend=()=>input.focus();try{recognition.start();}catch{toast("Voice-to-text could not start. Try again.");}
+ }
+ $("group-settings-btn")?.addEventListener("click",()=>openDialog("group-settings-dialog"));
+ $("save-group-settings")?.addEventListener("click",()=>toast("Group settings are displayed, but server-side group privacy and membership rules still need Supabase support."));
+ $("communities-btn")?.addEventListener("click",()=>openDialog("communities-dialog"));
+ document.querySelectorAll("[data-community-view]").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll("[data-community-view]").forEach(b=>b.classList.toggle("active",b===btn));const view=btn.dataset.communityView;["discover","create","settings"].forEach(name=>$("community-"+name+"-panel")?.classList.toggle("hidden",name!==view));}));
+ $("community-create-form")?.addEventListener("submit",e=>{e.preventDefault();const name=cleanName($("community-name").value);if(name.length<2){toast("Community name must have at least 2 characters.");return;}toast("Community form is ready, but creating real communities needs the Supabase community tables and access rules.");$("community-create-form").reset();const pub=document.querySelector('input[name="community-visibility"][value="public"]');if(pub)pub.checked=localStorage.getItem("quietchat-community-always-public")!=="false";});
+ $("community-search")?.addEventListener("input",()=>{const box=$("community-list");if(box)box.innerHTML='<div class="community-empty"><strong>Community discovery needs setup</strong><p class="muted">Public community search and joining will appear here once the database and access rules are connected.</p></div>';});
+ $("save-community-settings")?.addEventListener("click",()=>{localStorage.setItem("quietchat-community-always-public",String($("community-always-public").checked));localStorage.setItem("quietchat-community-open-join",String($("community-open-join").checked));localStorage.setItem("quietchat-community-discoverable",String($("community-discoverable").checked));toast("Community preferences saved on this device.");});
+ try{["always-public","open-join","discoverable"].forEach(k=>{const el=$("community-"+k);const v=localStorage.getItem("quietchat-community-"+k);if(el&&v!==null)el.checked=v==="true";});}catch{}
 $("mobile-back").addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");});
 function subscribeChatList(){
   if(listChannel)db.removeChannel(listChannel);
