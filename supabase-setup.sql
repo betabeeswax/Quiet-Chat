@@ -344,13 +344,13 @@ end; $$;
 revoke all on function public.create_group_chat(text,boolean,text) from public;
 grant execute on function public.create_group_chat(text,boolean,text) to authenticated;
 
-create or replace function public.update_group_settings(target_chat uuid, make_public boolean, allow_gifs boolean, remove_inactive boolean)
+create or replace function public.update_group_settings(target_chat uuid, make_public boolean, p_allow_gifs boolean, p_remove_inactive boolean)
 returns void language plpgsql security definer set search_path=public as $$
 begin
  if auth.uid() is null then raise exception 'Sign in required'; end if;
  if not exists(select 1 from public.chats where id=target_chat and created_by=auth.uid()) then raise exception 'Only the community creator can change settings'; end if;
- update public.chats set is_public=make_public, public.chats.allow_gifs=update_group_settings.allow_gifs,
- public.chats.remove_inactive=update_group_settings.remove_inactive where id=target_chat;
+ update public.chats set is_public=make_public, allow_gifs=p_allow_gifs,
+ remove_inactive=p_remove_inactive where id=target_chat;
 end; $$;
 revoke all on function public.update_group_settings(uuid,boolean,boolean,boolean) from public;
 grant execute on function public.update_group_settings(uuid,boolean,boolean,boolean) to authenticated;
