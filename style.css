@@ -243,3 +243,6 @@ body.pc-layout .header-action{display:inline-flex!important}
   body:not(.pc-layout) #sidebar-discover-btn small{display:none!important;}
   body.compact-layout #sidebar-discover-btn>span{display:block!important;}
 }
+
+/* Keep the QuietChat logo comfortably inside its tile instead of touching the edges. */
+.brand-mark img{box-sizing:border-box;padding:7px;width:100%;height:100%;object-fit:contain;border-radius:inherit}
