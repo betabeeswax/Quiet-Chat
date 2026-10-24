@@ -94,3 +94,68 @@
 /* Sidebar Discover entry */
 #sidebar-discover-btn{display:flex;align-items:center;justify-content:flex-start;text-align:left;width:100%;margin-top:5px;}
 #sidebar-discover-btn span{flex:1;}
+
+
+/* Responsive layout: keep controls usable and hide long text on narrow windows */
+.more-menu{position:relative;flex-shrink:0;z-index:30}
+.more-menu>summary{list-style:none;display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);font-size:21px;font-weight:800;cursor:pointer;letter-spacing:1px}
+.more-menu>summary::-webkit-details-marker{display:none}
+.more-menu-pop{position:absolute;right:0;top:calc(100% + 8px);width:210px;max-width:calc(100vw - 24px);padding:7px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 44px #0009;display:grid;gap:4px}
+.more-menu-pop button{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:9px;background:transparent;color:var(--text);font-size:13px}
+.more-menu-pop button:hover{background:var(--panel2)}
+.more-menu-pop hr{border:0;border-top:1px solid var(--line);width:100%;margin:4px 0}
+.header-tools{display:flex;align-items:center;gap:7px;min-width:0}
+.chat-header{min-width:0}
+.chat-heading{min-width:0;overflow:hidden}
+.chat-heading strong,.chat-heading span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.compact-layout .header-action,body.compact-layout #call-btn span,body.compact-layout .chat-heading span{display:none!important}
+body.compact-layout .chat-header{gap:6px;padding-left:10px;padding-right:10px}
+body.compact-layout .chat-heading strong{max-width:36vw;font-size:14px}
+body.compact-layout .header-tools{gap:4px}
+body.compact-layout .header-tools>button{padding:8px;min-width:36px}
+body.compact-layout .sidebar-actions .sidebar-action{font-size:0;justify-content:center;min-height:40px;padding:8px}
+body.compact-layout .sidebar-actions .sidebar-action>span{display:none}
+body.compact-layout .sidebar-actions .sidebar-action small{display:none}
+body.compact-layout .sidebar-actions .sidebar-action.community-action{grid-column:auto}
+body.compact-layout .online-heading,body.compact-layout #online-people{display:none!important}
+body.compact-layout .section-label{font-size:10px}
+body.compact-layout .brand-row strong{font-size:13px}
+@media(max-width:900px){
+ .chat-header{gap:6px;min-width:0}
+ .chat-heading strong{max-width:34vw}
+ .header-tools{gap:4px}
+ .header-tools .header-action{display:none}
+ .sidebar{min-width:0}
+}
+@media(max-width:600px){
+ body:not(.pc-layout) .app-shell{grid-template-columns:minmax(76px,22vw) minmax(0,1fr)!important}
+ body:not(.pc-layout) .sidebar{min-width:0;padding-left:6px;padding-right:6px}
+ body:not(.pc-layout) .brand-row strong,
+ body:not(.pc-layout) .sidebar .section-label,
+ body:not(.pc-layout) .sidebar .profile-strip .profile-details,
+ body:not(.pc-layout) .sidebar .sidebar-action .action-label,
+ body:not(.pc-layout) .sidebar .sidebar-action small,
+ body:not(.pc-layout) .chat-item .chat-item-text,
+ body:not(.pc-layout) .chat-item .chat-preview,
+ body:not(.pc-layout) .chat-item .chat-time,
+ body:not(.pc-layout) .online-heading,
+ body:not(.pc-layout) #online-people{display:none!important}
+ body:not(.pc-layout) .brand-row{justify-content:center}
+ body:not(.pc-layout) .sidebar-actions{display:grid;grid-template-columns:1fr!important;gap:5px;padding:0 2px 10px}
+ body:not(.pc-layout) .sidebar-actions .sidebar-action{display:grid;place-items:center;min-height:42px;padding:7px;font-size:0}
+ body:not(.pc-layout) .sidebar-actions .sidebar-action.community-action{grid-column:auto}
+ body:not(.pc-layout) .chat-list{padding:0 2px}
+ body:not(.pc-layout) .chat-item{justify-content:center;padding:8px 2px;min-height:52px}
+ body:not(.pc-layout) .chat-item .avatar{margin:0}
+ body:not(.pc-layout) .chat-header{padding:8px;min-width:0}
+ body:not(.pc-layout) .chat-heading strong{max-width:34vw;font-size:13px}
+ body:not(.pc-layout) .chat-heading span{display:none!important}
+ body:not(.pc-layout) .header-tools>button{display:none!important}
+ body:not(.pc-layout) .header-tools .more-menu{display:block!important}
+ body:not(.pc-layout) .composer{gap:5px;padding:7px}
+ body:not(.pc-layout) .composer textarea{min-width:0;font-size:14px}
+ body:not(.pc-layout) .message-list{padding:10px}
+}
+body.pc-layout .app-shell{grid-template-columns:280px minmax(0,1fr)}
+body.pc-layout .header-action{display:inline-flex!important}
+@media(max-width:600px){body.pc-layout .app-shell{grid-template-columns:220px minmax(0,1fr)!important}}
