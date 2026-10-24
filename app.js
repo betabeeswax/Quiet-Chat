@@ -60,7 +60,7 @@ async function start(){
 async function loadProfile(){
   const {data,error}=await db.from("profiles").select("username,bio,avatar_path").eq("id",user.id).maybeSingle();
   if(error){toast("Could not load your profile: "+error.message);user=null;showSetup(false);return;}
-  if(data?.username){setProfile(data.username);window.myProfile=data;$("profile-bio").value=data.bio||"";if(data.avatar_path)await showAvatar(data.avatar_path);showApp();await loadChats();subscribeChatList();}
+  if(data?.username){setProfile(data.username);window.myProfile=data;$("profile-bio").value=data.bio||"";if(data.avatar_path)await showAvatar(data.avatar_path);showApp();await loadChats();subscribeChatList();subscribeOnlineUsers();handleInviteLink();}
   else {showSetup(true);$("username").focus();}
 }
 $("auth-mode-btn").addEventListener("click",()=>setAuthMode(authMode==="signin"?"signup":"signin"));
@@ -617,6 +617,37 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
  $("group-settings-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup)return;document.querySelectorAll('input[name="existing-group-visibility"]').forEach(x=>x.checked=(x.value==="public"&&activeChat.isPublic)||(x.value==="private"&&!activeChat.isPublic));$("group-allow-gifs").checked=!!activeChat.allowGifs;$("group-inactivity-rule").checked=activeChat.removeInactive!==false;$("group-name-edit").value=activeChat.title||"";const select=$("transfer-owner-select");select.replaceChildren(new Option("Keep current owner",""));(activeChat.memberIds||[]).filter(m=>m.id!==user.id).forEach(m=>select.add(new Option(m.name,m.id)));openDialog("group-settings-dialog");});
  $("delete-group-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup){toast("Open a group first.");return;}if(!confirm('Delete "'+activeChat.title+'" and its group chat? This cannot be undone.'))return;const id=activeChat.id;const {error}=await db.rpc("delete_group_chat",{target_chat:id});if(error){toast("Could not delete group: "+error.message+" (secure delete function may need installing)");return;}if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}activeChat=null;$("app-screen").classList.remove("chat-open");$("welcome-panel").classList.remove("hidden");$("messages").classList.add("hidden");$("composer-wrap").classList.add("hidden");await loadChats();await loadMyCommunities();toast("Group deleted.");});
  $("mobile-back").addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");});
+let onlineChannel=null;
+function subscribeOnlineUsers(){
+ if(onlineChannel){db.removeChannel(onlineChannel);onlineChannel=null;}
+ const root=$("online-people");if(!root)return;
+ onlineChannel=db.channel("quietchat-online-presence",{config:{presence:{key:user.id}}})
+ .on("presence",{event:"sync"},()=>{
+   const state=onlineChannel.presenceState(),people=[];
+   Object.entries(state).forEach(([id,entries])=>{const p=entries?.[0]||{};if(id!==user.id)people.push({id,name:p.username||"Member"});});
+   root.replaceChildren();$("online-count").textContent=String(people.length);
+   if(!people.length){root.textContent="No one else online right now.";root.classList.add("tiny","muted");return;}
+   root.classList.remove("tiny","muted");
+   people.forEach(p=>{const chip=document.createElement("span");chip.className="online-person";const dot=document.createElement("i");dot.className="online-dot";const name=document.createElement("span");name.textContent=p.name;chip.append(dot,name);root.append(chip);});
+ })
+ .subscribe(async status=>{if(status==="SUBSCRIBED")await onlineChannel.track({username:username||"Member",online_at:new Date().toISOString()});});
+}
+async function handleInviteLink(){
+ const url=new URL(window.location.href),code=url.searchParams.get("invite");
+ if(!code||!user)return;
+ url.searchParams.delete("invite");history.replaceState({}, "", url.toString());
+ const {data,error}=await db.rpc("join_chat_with_invite",{invite_code:code.trim().toUpperCase()});
+ if(error){toast("Invite link could not be joined: "+error.message);return;}
+ await loadChats();const chat=chats.find(c=>c.id===data);if(chat)await selectChat(chat);
+}
+document.addEventListener("click",e=>{
+ const button=e.target.closest("[data-menu-action]");if(!button)return;
+ const action=button.dataset.menuAction;button.closest("details")?.removeAttribute("open");
+ if(action==="notifications")$("chat-notification-btn")?.click();
+ if(action==="settings")$("group-settings-btn")?.click();
+ if(action==="invite")$("add-people-btn")?.click();
+ if(action==="games")$("game-btn")?.click();
+});
 function subscribeChatList(){
   if(listChannel)db.removeChannel(listChannel);
   listChannel=db.channel("my-chat-members-"+user.id).on("postgres_changes",{event:"*",schema:"public",table:"chat_members",filter:"user_id=eq."+user.id},async()=>{await loadChats();if(activeChat){const fresh=chats.find(c=>c.id===activeChat.id);if(fresh){activeChat=fresh;$("chat-title").textContent=fresh.title;}}}).subscribe();
