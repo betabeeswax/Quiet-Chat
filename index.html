@@ -62,13 +62,12 @@
       </div>
       <div class="sidebar-actions">
         <button id="create-invite-btn" class="secondary">＋ New private chat</button>
-        <button id="settings-btn" class="secondary">⚙ Settings & media</button>
         <button id="create-group-btn" class="secondary">＋ Create group chat</button>
         <button id="join-invite-btn" class="secondary">↗ Join with code</button>
       </div>
       <div class="section-label">YOUR CHATS</div>
       <div id="chat-list" class="chat-list"><div class="empty-small">Your chats will appear here.</div></div>
-      <div class="profile-strip"><div class="avatar" id="my-avatar">?</div><div class="profile-name"><strong id="my-name">You</strong><span class="tiny muted" id="account-label">Signed in</span></div><button id="change-name-btn" class="icon-button" title="Profile and settings">⋯</button></div>
+      <div class="profile-strip"><div class="avatar" id="my-avatar">?</div><div class="profile-name"><strong id="my-name">You</strong><span class="tiny muted" id="account-label">Signed in</span></div><button id="settings-btn" class="secondary" title="Settings">Settings</button></div>
     </aside>
 
     <section class="conversation">
@@ -140,9 +139,10 @@
     <p><a href="privacy.html" target="_blank" rel="noopener">Read the privacy policy</a></p>
   </dialog>
   <dialog id="call-dialog" class="call-modal">
-    <div class="call-modal-top"><div><strong>QuietChat video call</strong><div class="tiny muted">If the embedded call will not connect, open the same room in a new tab.</div></div><button id="end-call-btn" class="secondary">End call ✕</button></div>
-    <div class="call-tools"><button id="call-new-tab-btn" class="secondary" type="button">↗ Open Jitsi in new tab</button><button id="call-share-link-btn" class="secondary" type="button">🔗 Share another meeting link</button></div>
-    <iframe id="call-frame" title="QuietChat video call" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" src="about:blank"></iframe>
+    <div class="call-modal-top"><div><strong>QuietChat video call</strong><div class="tiny muted">Talkvoo opens in a new tab and does not require an account.</div></div><button id="end-call-btn" class="secondary">Close ✕</button></div>
+    <div class="call-tools"><button id="call-new-tab-btn" class="primary" type="button">↗ Open Talkvoo call</button><button id="call-share-link-btn" class="secondary" type="button">🔗 Share another meeting link</button></div>
+    <p class="muted call-info">Your friend can join using the same Talkvoo room link in the chat. Allow camera and microphone when your browser asks.</p>
+    <iframe id="call-frame" title="QuietChat call information" src="about:blank" hidden></iframe>
   </dialog>
   <dialog id="emoji-dialog" class="modal emoji-modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
@@ -162,16 +162,17 @@
   <dialog id="safety-warning-dialog" class="modal warning-modal">
     <div class="modal-icon">⚠️</div><h2>Before you use QuietChat</h2>
     <p><strong>QuietChat is a web app, not iMessage.</strong> Chat messages and shared attachments are currently stored in the online Supabase service so your chat partners can receive them. This update also saves copies of media you view in this browser.</p>
-    <ul><li>Local media stays on this browser/device and may be lost if browser data is cleared.</li><li>Local copies do not automatically appear on another computer.</li><li>Only chat with people you trust. Do not send passwords or highly sensitive information.</li><li>Calls use Jitsi Meet inside the website; call privacy depends on that service and its settings.</li></ul>
+    <ul><li>Local media stays on this browser/device and may be lost if browser data is cleared.</li><li>Local copies do not automatically appear on another computer.</li><li>Only chat with people you trust. Do not send passwords or highly sensitive information.</li><li>Calls use Talkvoo in a separate browser tab; call privacy depends on that service and its settings.</li></ul>
     <button id="warning-continue-btn" class="primary full">I understand — continue</button>
     <p class="tiny muted"><a href="privacy.html" target="_blank" rel="noopener">Read the privacy policy</a></p>
   </dialog>
   <dialog id="settings-dialog" class="modal">
     <div class="dialog-head"><div><p class="eyebrow">PREFERENCES</p><h2>Settings</h2></div><button id="settings-close-btn" class="icon-button" aria-label="Close settings">×</button></div>
-    <p class="muted">Manage notifications, saved media, and chat exports.</p>
+    <p class="muted">Manage notifications, saved media, profile, and chat exports.</p>
     <div class="settings-actions">
+      <button id="settings-edit-profile-btn" class="secondary full">👤 Edit profile</button>
       <button id="settings-gallery-btn" class="secondary full">🖼 Open local media library</button>
-      <button id="settings-notifications-btn" class="secondary full">🔔 Enable notifications</button>
+      <div class="notification-choice"><span>🔔 Notifications</span><div><button id="settings-notifications-yes" class="secondary" type="button">Yes</button><button id="settings-notifications-no" class="secondary" type="button">No</button></div></div>
       <button id="settings-export-btn" class="secondary full" disabled>⇩ Export current chat / Save as PDF</button>
       <button id="settings-all-export-btn" class="secondary full">📄 Export all chats as PDF</button>
       <p class="tiny muted">For PDF: choose Export, then select “Save as PDF” in your browser's print window.</p>

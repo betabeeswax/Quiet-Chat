@@ -35,6 +35,7 @@ function checkFirstWarning(){if(!localStorage.getItem("quietchat-warning-accepte
 
 function setProfile(name){username=name;$("my-name").textContent=name;$("my-avatar").textContent=initials(name);}
 function openDialog(id){$(id).showModal();}
+function scrollMessagesToBottom(){const area=$("messages");if(!area)return;requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;});});}
 function closeDialog(id){$(id).close();}
 
 async function start(){
@@ -150,7 +151,7 @@ async function loadMessages(){
   const area=$("messages");area.replaceChildren();
   const {data,error}=await db.from("messages").select("id,chat_id,sender_id,body,created_at,attachment_path,attachment_type,attachment_name,profiles(username)").eq("chat_id",activeChat.id).order("created_at",{ascending:true}).limit(500);
   if(error){toast("Couldn't load messages.");return;}
-  (data||[]).forEach(renderMessage);area.scrollTop=area.scrollHeight;
+  (data||[]).forEach(renderMessage);scrollMessagesToBottom();
 }
 async function renderMessage(m){
   if(!activeChat||m.chat_id!==activeChat.id)return;
@@ -172,7 +173,7 @@ async function renderMessage(m){
     }else{const unavailable=document.createElement("span");unavailable.textContent="Media unavailable";bubble.append(unavailable);}
   }
   if(m.body&&!((m.attachment_type==="image"&&m.body==="📷 Photo")||(m.attachment_type==="video"&&m.body==="🎬 Video")||(m.attachment_type==="audio"&&m.body==="🎙 Voice memo"))){const caption=document.createElement("div");linkifyText(m.body,caption);bubble.append(caption);}
-  requestAnimationFrame(()=>{const area=$("messages");area.scrollTop=area.scrollHeight;});
+  scrollMessagesToBottom();
 }
 $("message-form").addEventListener("submit",async e=>{
   e.preventDefault();if(!activeChat)return;const input=$("message-input"),body=input.value.trim();if(!body)return;
@@ -273,8 +274,10 @@ $("join-form").addEventListener("submit",async e=>{
 });
 $("settings-btn").addEventListener("click",()=>openDialog("settings-dialog"));
 $("settings-close-btn").addEventListener("click",()=>closeDialog("settings-dialog"));
+$("settings-edit-profile-btn").addEventListener("click",()=>{closeDialog("settings-dialog");$("profile-username").value=username;$("profile-bio").value=window.myProfile?.bio||"";$("avatar-input").value="";openDialog("profile-dialog");});
 $("settings-gallery-btn").addEventListener("click",()=>{closeDialog("settings-dialog");showLocalGallery();});
-$("settings-notifications-btn").addEventListener("click",async()=>{if(localStorage.getItem("quietchat-notifications-enabled")==="yes"){localStorage.setItem("quietchat-notifications-enabled","no");toast("Notifications turned off.");return;}if(!("Notification" in window)){toast("This browser does not support notifications.");return;}try{const permission=await Notification.requestPermission();if(permission==="granted"){localStorage.setItem("quietchat-notifications-enabled","yes");toast("Notifications enabled while QuietChat is open in this browser.");}else{localStorage.setItem("quietchat-notifications-enabled","no");toast("Notifications were not allowed.");}}catch{toast("Could not enable notifications.");}});
+$("settings-notifications-yes").addEventListener("click",async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return;}try{const permission=await Notification.requestPermission();if(permission==="granted"){localStorage.setItem("quietchat-notifications-enabled","yes");toast("Notifications set to Yes.");}else{localStorage.setItem("quietchat-notifications-enabled","no");toast("Browser permission was denied, so notifications are set to No.");}}catch{toast("Could not enable notifications.");}});
+$("settings-notifications-no").addEventListener("click",()=>{localStorage.setItem("quietchat-notifications-enabled","no");toast("Notifications set to No.");});
 $("settings-all-export-btn").addEventListener("click",()=>{closeDialog("settings-dialog");exportAllChats();});
 $("settings-export-btn").addEventListener("click",()=>{if(!activeChat)return;closeDialog("settings-dialog");window.print();});
 $("media-save-mode").addEventListener("change",async e=>{localStorage.setItem(MEDIA_SAVE_KEY,e.target.value);if(e.target.value==="day")await purgeExpiredLocalMedia();toast(({none:"Automatic media saving is off.",auto:"Media will save automatically and stay until browser data is cleared.",day:"Media copies will be kept for up to 24 hours."})[e.target.value]||"Media setting saved.");closeDialog("gallery-dialog");await showLocalGallery();});
@@ -283,24 +286,25 @@ $("gallery-close-btn").addEventListener("click",()=>closeDialog("gallery-dialog"
 $("warning-continue-btn").addEventListener("click",()=>{localStorage.setItem("quietchat-warning-accepted-v1","yes");closeDialog("safety-warning-dialog");});
 let currentCallUrl="";
 function makeCallUrl(chat){
-  // The room is deterministic, so every member of this chat reaches the same Jitsi room.
+  // A stable room name means both members of this chat receive the same call link.
   const room="QuietChat-"+String(chat.id).replace(/-/g,"");
-  return "https://meet.jit.si/"+room+"#config.prejoinPageEnabled=true&config.startWithAudioMuted=true&config.startWithVideoMuted=true";
+  return "https://talkvoo.com/"+encodeURIComponent(room);
 }
 async function startCallForChat(chat,sendInvite=true){
   if(!chat)return;
   activeChat=chat;
   currentCallUrl=makeCallUrl(chat);
-  $("call-frame").src=currentCallUrl;
+  // This provider does not require an account. Keep the call in its own tab because
+  // third-party meeting sites can block iframe embedding and camera/mic permissions.
   openDialog("call-dialog");
+  window.open(currentCallUrl,"_blank","noopener,noreferrer");
   if(sendInvite){
-    // App deep link opens QuietChat and automatically starts the same call after sign-in.
     const appUrl=new URL(window.location.href);
     appUrl.searchParams.set("call",chat.id);
     appUrl.hash="";
-    const inviteText="📞 Join my QuietChat call in the app: "+appUrl.toString()+"\nIf that does not open, join directly: "+currentCallUrl;
+    const inviteText="📹 Join my QuietChat video call (no account needed): "+currentCallUrl+"\nOpen QuietChat chat: "+appUrl.toString();
     const {error}=await db.from("messages").insert({chat_id:chat.id,sender_id:user.id,body:inviteText});
-    toast(error?"Call opened, but the invite could not be sent to chat.":"Call invite sent in chat.");
+    toast(error?"Call opened, but the invite could not be sent to chat.":"Talkvoo call invite sent in chat.");
   }
 }
 $("call-btn").addEventListener("click",()=>{if(activeChat)startCallForChat(activeChat,true);});
@@ -313,7 +317,7 @@ $("call-share-link-btn").addEventListener("click",async()=>{
   const {error}=await db.from("messages").insert({chat_id:activeChat.id,sender_id:user.id,body:"🎥 Join my other video meeting: "+parsed.href});
   if(error)toast("Could not share that meeting link.");else{toast("Meeting link shared in chat.");window.open(parsed.href,"_blank","noopener,noreferrer");}
 });
-$("end-call-btn").addEventListener("click",()=>{$("call-frame").src="about:blank";closeDialog("call-dialog");});
+$("end-call-btn").addEventListener("click",()=>closeDialog("call-dialog"));
 $("call-dialog").addEventListener("close",()=>{$("call-frame").src="about:blank";});
 // A call invite URL (?call=CHAT_ID) survives sign-in; only chats the user can access will open.
 async function handleCallDeepLink(){
@@ -330,21 +334,12 @@ async function handleCallDeepLink(){
     toast("This call link only works for an account that has joined that chat.");
   }
 }
-$("change-name-btn").addEventListener("click",()=>{$("new-name").value=username;openDialog("name-dialog");});
-$("name-form").addEventListener("submit",async e=>{
-  e.preventDefault();const name=cleanName($("new-name").value);if(name.length<2)return;
-  const {error}=await db.from("profiles").update({username:name}).eq("id",user.id);
-  if(error){toast("Could not change username.");return;}setProfile(name);closeDialog("name-dialog");await loadChats();toast("Username updated.");
-});
 
 async function showAvatar(path){
   const {data,error}=await db.storage.from("profile-pics").createSignedUrl(path,3600);
   if(error||!data?.signedUrl)return;
   const av=$("my-avatar");av.textContent="";const img=document.createElement("img");img.src=data.signedUrl;img.alt="Your profile picture";img.className="profile-avatar-img";av.append(img);
 }
-$("change-name-btn").addEventListener("click",()=>{
-  $("profile-username").value=username;$("profile-bio").value=window.myProfile?.bio||"";$("avatar-input").value="";openDialog("profile-dialog");
-});
 $("profile-edit-form").addEventListener("submit",async e=>{
   e.preventDefault();const name=cleanName($("profile-username").value),bio=$("profile-bio").value.trim().slice(0,160);
   if(name.length<2){toast("Username needs at least 2 characters.");return;}

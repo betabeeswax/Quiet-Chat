@@ -51,3 +51,12 @@
 .call-tools{display:flex;flex-wrap:wrap;gap:.5rem;padding:.65rem 1rem;background:var(--panel, #151923)}
 .call-tools button{font-size:.88rem}
 #call-frame{width:100%;min-height:55vh;border:0;background:#111}
+
+/* Settings controls and notification Yes/No choices */
+.profile-strip #settings-btn{flex-shrink:0;padding:8px 12px;text-align:center;font-size:12px}
+.notification-choice{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px;color:var(--text)}
+.notification-choice>div{display:flex;gap:8px}
+.notification-choice button{min-width:58px;text-align:center}
+.notification-choice button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.call-info{padding:12px 16px}
+#call-frame[hidden]{display:none}

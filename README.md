@@ -10,7 +10,7 @@ A plain HTML/CSS/JavaScript private chat starter using your existing Supabase pr
 - Send any file type up to 5 MiB
 - Record and send voice memos from the microphone (browser permission required)
 - Responsive dark UI
-- Jitsi Meet call links shared in the chat
+- Talkvoo call links shared in the chat
 - Row Level Security (RLS) policies
 
 ## Already set up
@@ -45,7 +45,7 @@ Then send me the repository URL. I'll connect it to Vercel and check the deploym
 - This is not end-to-end encrypted. Supabase project owners can access stored messages.
 - Guest accounts are tied to browser storage; clearing browser data may make a guest account hard to recover. Username/password accounts can sign in on another device with the same username and password, but there is no email-based password reset.
 - Invite codes should be shared privately. Anyone with a valid unused code can join.
-- Jitsi calls use a public meeting service; the link is shared in the chat and is not a guarantee of confidential calls.
+- Talkvoo calls use a public meeting service; the link is shared in the chat and is not a guarantee of confidential calls.
 
 
 ## Latest features (October 2026)
@@ -66,7 +66,7 @@ The export opens a new browser tab. Click **Print / Save as PDF** and choose **S
 
 ## Calls, games, emoji and file sizes
 
-- The call button opens a video call embedded inside QuietChat using Jitsi Meet. FaceTime itself cannot be embedded into a third-party website; Jitsi is the in-app alternative.
+- The call button opens a Talkvoo room in a separate browser tab. Talkvoo advertises browser-based calls without accounts; camera and microphone permission are still required.
 - The chat header stays pinned at the top while you scroll.
 - Emoji picker is built in; GIF search opens Tenor in a new tab so you can copy a GIF URL into chat.
 - Chat uploads are configured for up to 50 MiB per file, subject to the Supabase project-wide upload limit. Supabase Free projects have a maximum global file-size limit of 50 MB; the Pro plan can raise this much higher.
@@ -77,9 +77,9 @@ The export opens a new browser tab. Click **Print / Save as PDF** and choose **S
 - **Local media library:** when a chat attachment is viewed, QuietChat attempts to keep a copy in this browser's IndexedDB. Use **Local media library** to browse cached photos/videos/files by newest date and download copies to your computer. This is browser storage, not a normal Windows folder; browser cleanup can erase it, and each device has its own library.
 - **Clickable links:** URLs in message text are rendered as links and open in a new tab.
 - **Date sorting:** message history is requested oldest-to-newest and is grouped by local calendar date; hovering/tapping a message time can show the full timestamp.
-- **Notifications:** choose **Enable notifications**. This browser notification works when the site is open and the tab is hidden. Reliable notifications when the browser is fully closed require push notifications and a service worker/backend, which are not included here.
+- **Notifications:** choose **Yes** or **No** in Settings. Yes asks the browser for notification permission; No disables QuietChat notifications. Notifications work while the site is open and the tab is hidden. Reliable notifications when the browser is fully closed require push notifications and a service worker/backend, which are not included here.
 - **First-use warning:** the first visit in a browser shows a warning about cloud storage, local copies, and calls.
-- **Calls:** the Jitsi call remains embedded in the website. Jitsi rooms are not authenticated private rooms just because the room name is hard to guess; don't treat this as end-to-end private.
+- **Calls:** QuietChat opens a Talkvoo room in a separate tab because embedded meeting providers may block camera access or require sign-in. The call provider is a separate service; do not post call links publicly.
 
 **Important storage limitation:** this version keeps local copies but still uploads shared chat attachments to Supabase, because that is how the other participant can receive them. It does not delete the cloud originals. A website cannot silently write files to an arbitrary local-drive folder, and deleting the cloud originals before every recipient has a local copy could make those attachments unavailable. To make attachments truly local-only, the app would need to stop sharing them across devices/users or be redesigned around a local desktop app.
 
@@ -87,8 +87,8 @@ The export opens a new browser tab. Click **Print / Save as PDF** and choose **S
 ## October 2026 fixes
 - Fixed the startup JavaScript error caused by a listener being attached to a missing `export-btn` element.
 - Added automatic scroll-to-latest behaviour after message rendering.
-- Call invitations now include a QuietChat deep link (`?call=CHAT_ID`) that opens the same chat and starts the same Jitsi room after the invited person signs in. The recipient must already be a member of that chat.
-- Added an “Open Jitsi in new tab” fallback for browsers that cannot run the embedded call, and a way to share an existing Google Meet, Zoom, or Microsoft Teams meeting URL.
+- Call invitations include the shared Talkvoo room URL. The recipient should already be a member of the QuietChat conversation to receive the invite message.
+- Added an “Open Talkvoo call” button and a way to share an existing Google Meet, Zoom, or Microsoft Teams meeting URL.
 - Added an all-chats export action inside Settings and a persistent notification on/off toggle.
 - Links in messages remain clickable.
 
