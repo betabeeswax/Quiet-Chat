@@ -246,3 +246,9 @@ body.pc-layout .header-action{display:inline-flex!important}
 
 /* Keep the QuietChat logo comfortably inside its tile instead of touching the edges. */
 .brand-mark img{box-sizing:border-box;padding:7px;width:100%;height:100%;object-fit:contain;border-radius:inherit}
+
+
+/* Mobile: lift the profile strip slightly so it sits higher above the bottom edge. */
+@media(max-width:720px){
+  .profile-strip{padding-top:9px;padding-bottom:9px;}
+}
