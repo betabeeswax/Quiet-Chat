@@ -210,8 +210,8 @@
     <div class="settings-section">
       <h3>👤 Your account</h3>
       <button id="settings-edit-profile-btn" class="secondary full">Edit profile <span>›</span></button>
-      <button id="settings-link-account-btn" class="primary full hidden" type="button">🔗 Link a real account</button>
-      <p id="settings-link-account-help" class="tiny muted hidden">Link an email and password so you can sign in on another device and keep access to your chats.</p>
+      <button id="settings-link-account-btn" class="secondary full" type="button">🔗 Link a real account</button>
+      <p id="settings-link-account-help" class="tiny muted">Link an email and password so you can sign in on another device and keep access to your chats.</p>
       <button id="settings-gallery-btn" class="secondary full">Open local media library <span>›</span></button>
     </div>
     <div class="settings-section">
@@ -230,7 +230,7 @@
   <dialog id="link-account-dialog" class="modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
     <div class="modal-icon">🔗</div><h2>Keep your chats safe</h2>
-    <p class="muted">Add an email and password to this guest account. This links your current account instead of making a new one, so your chats stay with it.</p>
+    <p class="muted">Add an email and password to this guest account. QuietChat will upgrade this account, keeping its existing chats, rather than creating a separate account.</p>
     <form id="link-account-form">
       <label for="link-account-email">Email address</label><input id="link-account-email" type="email" autocomplete="email" required placeholder="you@example.com">
       <label for="link-account-password" class="field-gap">Create a password</label><input id="link-account-password" type="password" minlength="8" autocomplete="new-password" required placeholder="At least 8 characters">
