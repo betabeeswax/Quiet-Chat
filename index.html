@@ -210,10 +210,8 @@
     <div class="settings-section">
       <h3>👤 Your account</h3>
       <button id="settings-edit-profile-btn" class="secondary full">Edit profile <span>›</span></button>
-      <button id="settings-link-account-btn" class="secondary full" type="button">🔗 Link a real account</button>
-      <p id="settings-link-account-help" class="tiny muted">Link an email and password so you can sign in on another device and keep access to your chats.</p>
-      <button id="settings-link-google-btn" class="secondary full" type="button">G Link Google account (optional)</button>
-      <p id="settings-link-google-help" class="tiny muted">Optional: connect Google to this account so you can sign in with Google and keep these chats.</p>
+      <button id="settings-link-account-btn" class="secondary full" type="button">🔐 Sign in / create account and save chats</button>
+      <p id="settings-link-account-help" class="tiny muted">Keep your chats when you connect an email or Google account.</p>
       <button id="settings-gallery-btn" class="secondary full">Open local media library <span>›</span></button>
     </div>
     <div class="settings-section">
@@ -238,7 +236,8 @@
       <label for="link-account-password" class="field-gap">Create a password</label><input id="link-account-password" type="password" minlength="8" autocomplete="new-password" required placeholder="At least 8 characters">
       <button id="link-account-submit" class="primary full field-gap" type="submit">Link account →</button>
     </form>
-    <p class="tiny muted">If email confirmation is required, check your inbox. Don't clear this browser's data or sign out until the account link is confirmed.</p>
+    <div class="field-gap"><button id="settings-link-google-btn" class="secondary full" type="button"><span class="google-g" aria-hidden="true">G</span> Continue with Google (save chats)</button></div>
+    <p class="tiny muted">These options link to your current guest account, keeping its chats. Signing into a different existing account cannot merge chats. If email confirmation is required, check your inbox and do not clear this browser data.</p>
   </dialog>
   <dialog id="gallery-dialog" class="modal gallery-modal">
     <div class="gallery-top"><div><h2>Local media library</h2><p class="tiny muted">Saved copies on this browser, newest first.</p><label for="media-save-mode">Automatic saving</label><select id="media-save-mode" class="media-save-mode"><option value="none">No auto</option><option value="auto">Auto</option><option value="day">Save for a day</option></select><p class="tiny muted">Auto keeps copies until browser data is cleared. Save for a day removes local copies after 24 hours.</p></div><button id="gallery-close-btn" class="secondary">Close ✕</button></div>
