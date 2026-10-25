@@ -10,7 +10,7 @@ let db, user, username = "", activeChat = null, chats = [], messageChannel = nul
 const setup = $("setup-screen"), app = $("app-screen");
 function toast(message) { const el=$("toast"); el.textContent=message; el.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove("show"),2800); }
 function showSetup(needsProfile=false){setup.classList.remove("hidden");app.classList.add("hidden");$("auth-options").classList.toggle("hidden",needsProfile);$("profile-setup").classList.toggle("hidden",!needsProfile);}
-function showApp(){setup.classList.add("hidden");app.classList.remove("hidden");$("account-label").textContent=user?.is_anonymous?"Guest account":(user?.email||"Signed-in account");}
+function showApp(){setup.classList.add("hidden");app.classList.remove("hidden");const guest=!!user?.is_anonymous;$("account-label").textContent=guest?"Guest · expires after 7 inactive days":(user?.email||"Signed-in account");$("create-group-btn").disabled=guest;$("create-group-btn").title=guest?"Create an account to create groups":"";$("create-group-btn").textContent=guest?"🔒 Create group (account required)":"＋ Create group chat";$("chat-remove-btn").disabled=guest;}
 function setAuthMode(mode){authMode=mode;const signingUp=mode==="signup";$("signup-username-wrap").classList.toggle("hidden",!signingUp);$("signup-username").required=signingUp;$("email-submit-btn").textContent=signingUp?"Create account →":"Sign in →";$("auth-switch-copy").textContent=signingUp?"Already have an account?":"New to QuietChat?";$("auth-mode-btn").textContent=signingUp?"Sign in":"Create an account";$("auth-password").autocomplete=signingUp?"new-password":"current-password";}
 function setUsernameAuthMode(mode){usernameAuthMode=mode;const signingUp=mode==="signup";$("username-auth-submit").textContent=signingUp?"Create username account →":"Sign in with username →";$("username-auth-password").autocomplete=signingUp?"new-password":"current-password";$("username-auth-password").minLength=8;$("username-auth-switch-copy").textContent=signingUp?"Already have a username account?":"New here without an email?";$("username-auth-mode-btn").textContent=signingUp?"Sign in":"Create username account";}
 function cleanName(s){return s.trim().replace(/\s+/g," ").slice(0,24);}
@@ -76,10 +76,16 @@ async function start(){
     toast("QuietChat startup error: "+(error?.message||"Unknown error"));
   }
 }
+async function touchActivity(){if(!user?.id||!db)return;try{await db.rpc("quietchat_touch_activity");}catch(e){console.warn("Activity timestamp not updated",e);}}
+let lastActivityTouch=0;
+function scheduleActivityTouch(){const now=Date.now();if(now-lastActivityTouch<60000)return;lastActivityTouch=now;touchActivity();}
+document.addEventListener("pointerdown",scheduleActivityTouch,{passive:true});
+document.addEventListener("keydown",scheduleActivityTouch);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)scheduleActivityTouch();});
 async function loadProfile(){
   const {data,error}=await db.from("profiles").select("username,bio,avatar_path").eq("id",user.id).maybeSingle();
   if(error){toast("Could not load your profile: "+error.message);user=null;showSetup(false);return;}
-  if(data?.username){setProfile(data.username);window.myProfile=data;$("profile-bio").value=data.bio||"";if(data.avatar_path)await showAvatar(data.avatar_path);showApp();await loadChats();subscribeChatList();subscribeOnlineUsers();handleInviteLink();}
+  if(data?.username){setProfile(data.username);window.myProfile=data;$("profile-bio").value=data.bio||"";if(data.avatar_path)await showAvatar(data.avatar_path);await touchActivity();showApp();await loadChats();subscribeChatList();subscribeOnlineUsers();handleInviteLink();}
   else {showSetup(true);$("username").focus();}
 }
 $("auth-mode-btn").addEventListener("click",()=>setAuthMode(authMode==="signin"?"signup":"signin"));
@@ -344,10 +350,11 @@ async function toggleVoiceRecording(){
 }
 $("voice-memo-btn")?.addEventListener("click",toggleVoiceRecording);
 
-$("create-group-btn").addEventListener("click",()=>{if(!user){toast("Please sign in first.");showSetup(false);return;}openDialog("group-dialog");});
+$("create-group-btn").addEventListener("click",()=>{if(!user){toast("Please sign in first.");showSetup(false);return;}if(user.is_anonymous){toast("Guest accounts can chat, but creating groups requires a registered account.");return;}openDialog("group-dialog");});
 $("group-form").addEventListener("submit",async e=>{
   e.preventDefault();
   if(!user||!db){toast("Please sign in again, then try creating the group.");return;}
+  if(user.is_anonymous){toast("Guest accounts cannot create groups. Create an account first.");return;}
   const name=cleanName($("group-name-input").value);
   if(name.length<2){toast("Group name must have at least 2 characters.");return;}
   const btn=e.submitter||$("group-form").querySelector('button[type="submit"]');
@@ -390,6 +397,7 @@ $("join-form").addEventListener("submit",async e=>{
 
 $("chat-remove-btn")?.addEventListener("click",async()=>{
   if(!activeChat||!user)return;
+  if(user.is_anonymous){toast("Guest accounts cannot remove chats or leave groups. Create an account to manage your chat list.");return;}
   const chat=activeChat;
   const action=chat.isGroup?"leave this group":"remove this chat from your list";
   if(!window.confirm("Are you sure you want to "+action+"? This removes your membership. It does not delete the other person's copy."))return;
@@ -646,6 +654,7 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
  $("community-create-form")?.addEventListener("submit",async ev=>{
   ev.preventDefault();
   if(!user||!db){toast("Please sign in first, then try again.");return;}
+  if(user.is_anonymous){toast("Guest accounts cannot create communities. Create an account first.");return;}
   const name=cleanName($("community-name").value);
   if(name.length<2){toast("Group name needs at least 2 characters.");return;}
   const form= $("community-create-form"),btn=form.querySelector('button[type="submit"]');
