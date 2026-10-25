@@ -36,9 +36,23 @@ const cussingToggle=$("settings-cussing-filter");
 if(cussingToggle){cussingToggle.checked=cussingFilterEnabled();cussingToggle.addEventListener("change",()=>{try{localStorage.setItem("quietchat-cussing-filter",String(cussingToggle.checked));}catch{};if(activeChat)selectChat(activeChat);toast(cussingToggle.checked?"Cussing filter enabled on this device.":"Cussing filter turned off.");});}
 function checkFirstWarning(){if(!localStorage.getItem("quietchat-warning-accepted-v1"))openDialog("safety-warning-dialog");}
 
-const SWEAR_WORDS=/\\b(fuck(?:ing|ed|er|ers)?|shit(?:ty|ting|s)?|bitch(?:es)?|asshole|bastard|damn|cunt|dickhead|motherfucker|bullshit)\\b/gi;
+// Best-effort profanity filter: catches common spelling, leetspeak, repeated-letter,
+// and punctuation/space-separated variants. No text filter can catch every evasion.
+const SWEAR_PATTERNS=[
+  /\bf[\W_]*[uüv\*4@]+[\W_]*c[\W_]*k(?:[\W_]*(?:i|1|!)[\W_]*n[\W_]*g|[\W_]*e[\W_]*d|[\W_]*e[\W_]*r|[\W_]*e[\W_]*r[\W_]*s)?\b/gi,
+  /\bs[\W_]*h[\W_]*[i1!|]+[\W_]*t(?:[\W_]*t[\W_]*y|[\W_]*t[\W_]*i[\W_]*n[\W_]*g|[\W_]*s)?\b/gi,
+  /\bb[\W_]*[i1!|]+[\W_]*t[\W_]*c[\W_]*h(?:[\W_]*e[\W_]*s)?\b/gi,
+  /\ba[\W_]*s[\W_]*s[\W_]*h[\W_]*[o0]+[\W_]*l[\W_]*e\b/gi,
+  /\bb[\W_]*[a@4]+[\W_]*s[\W_]*t[\W_]*[a@4]+[\W_]*r[\W_]*d\b/gi,
+  /\bd[\W_]*[a@4]+[\W_]*m[\W_]*n\b/gi,
+  /\bc[\W_]*[uüv\*]+[\W_]*n[\W_]*t\b/gi,
+  /\bd[\W_]*[i1!|]+[\W_]*c[\W_]*k(?:[\W_]*h[\W_]*e[\W_]*a[\W_]*d)?\b/gi,
+  /\bm[\W_]*[o0]+[\W_]*t[\W_]*h[\W_]*e[\W_]*r[\W_]*f[\W_]*[uüv]+[\W_]*c[\W_]*k[\W_]*e[\W_]*r\b/gi,
+  /\bb[\W_]*[uüv]+[\W_]*l[\W_]*l[\W_]*s[\W_]*h[\W_]*[i1!|]+[\W_]*t\b/gi,
+  /\b(?:w[\W_]*h[\W_]*o[\W_]*r[\W_]*e|s[\W_]*l[\W_]*u[\W_]*t|p[\W_]*i[\W_]*s[\W_]*s|d[\W_]*[i1!|]+[\W_]*l[\W_]*d[\W_]*o|c[\W_]*o[\W_]*c[\W_]*k|t[\W_]*w[\W_]*a[\W_]*t)\b/gi
+];
 function cussingFilterEnabled(){try{return localStorage.getItem("quietchat-cussing-filter")==="true";}catch{return false;}}
-function filterCussing(text){return cussingFilterEnabled()?String(text).replace(SWEAR_WORDS,"••••"):String(text);}
+function filterCussing(text){if(!cussingFilterEnabled())return String(text);return SWEAR_PATTERNS.reduce((value,pattern)=>value.replace(pattern,"••••"),String(text));}
 function setProfile(name){username=name;$("my-name").textContent=name;$("my-avatar").textContent=initials(name);}
 function openDialog(id){$(id).showModal();}
 function scrollMessagesToBottom(){const area=$("messages");if(!area)return;requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;});});}
