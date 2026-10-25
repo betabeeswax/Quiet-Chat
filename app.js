@@ -667,7 +667,8 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
   try{
     const isPublic=$("community-is-public")?.checked||false;
     const description=$("community-description")?.value||"";
-    const isAdult=$("community-is-adult")?.checked||false;\n    const {data,error}=await db.rpc("create_group_chat",{group_name:name,is_public:isPublic,group_description:description,is_adult:isAdult});
+    const isAdult=$("community-is-adult")?.checked||false;
+    const {data,error}=await db.rpc("create_group_chat",{group_name:name,is_public:isPublic,group_description:description,is_adult:isAdult});
     if(error){toast("Could not create community: "+error.message+". If the function is missing, run the latest supabase-setup.sql in Supabase.");return;}
     toast(isPublic?"Public community created!":"Private community created! Use Add people to invite friends.");
     form.reset();closeDialog("communities-dialog");await loadChats();
