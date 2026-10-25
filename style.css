@@ -252,3 +252,9 @@ body.pc-layout .header-action{display:inline-flex!important}
 @media(max-width:720px){
   .profile-strip{padding-top:9px;padding-bottom:9px;}
 }
+
+
+/* Mobile profile placement: visibly lift the profile section 20px. */
+@media(max-width:720px){
+  .sidebar .profile-strip{position:relative;top:-20px;margin-bottom:-20px;}
+}
