@@ -187,7 +187,7 @@ function renderChats(){
     const t=document.createElement("div");t.className="chat-item-text";
     const strong=document.createElement("strong");strong.textContent=chat.title;
     const preview=document.createElement("span");preview.className="preview";preview.textContent=chat.isGroup?`${chat.memberCount} members · Group chat`:chat.memberCount<2?"Invite sent · waiting to join":"Private conversation";
-    t.append(strong,preview);b.append(av,t);b.dataset.chatId=chat.id;b.addEventListener("click",()=>selectChat(chat));list.append(b);
+    t.append(strong,preview);b.append(av,t);b.dataset.chatId=chat.id;b.addEventListener("click",()=>selectChat(chat));b.addEventListener("contextmenu",async e=>{e.preventDefault();await selectChat(chat);if(window.confirm((chat.isGroup?"Leave this group":"Remove this chat from your list")+"?"))$("chat-remove-btn").click();});list.append(b);
     const memberData=rowProfileForChat(chat.id);
     if(!chat.isGroup&&memberData?.avatar_path){db.storage.from("profile-pics").createSignedUrl(memberData.avatar_path,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="";img.className="profile-avatar-img";av.replaceChildren(img);}});}
   });
@@ -388,7 +388,24 @@ $("chat-remove-btn")?.addEventListener("click",async()=>{
   toast("Chat removed from your list.");
 });
 
-$("settings-btn").addEventListener("click",()=>openDialog("settings-dialog"));
+$("settings-btn").addEventListener("click",()=>{updateAccountLinkButton();openDialog("settings-dialog");});
+function updateAccountLinkButton(){const guest=!!user?.is_anonymous;$("settings-link-account-btn")?.classList.toggle("hidden",!guest);$("settings-link-account-help")?.classList.toggle("hidden",!guest);}
+$("settings-link-account-btn")?.addEventListener("click",()=>{closeDialog("settings-dialog");$("link-account-email").value="";$("link-account-password").value="";openDialog("link-account-dialog");});
+$("link-account-form")?.addEventListener("submit",async e=>{
+  e.preventDefault();if(!user?.is_anonymous){toast("This account is already linked or you need to sign in again.");return;}
+  const email=$("link-account-email").value.trim(),password=$("link-account-password").value;
+  if(password.length<8){toast("Use a password with at least 8 characters.");return;}
+  const btn=$("link-account-submit");btn.disabled=true;btn.textContent="Linking…";
+  try{
+    const {data,error}=await db.auth.updateUser({email,password});
+    if(error){toast("Couldn't link account: "+error.message);return;}
+    user=data.user||user;
+    $("account-label").textContent=user.email||"Account linked — confirm email";
+    closeDialog("link-account-dialog");updateAccountLinkButton();
+    toast(data.user?.email_confirmed_at?"Account linked! Your chats stay on this account.":"Link requested. Check your email to confirm; keep this browser data until confirmed.");
+  }catch(err){toast("Couldn't link account. Please try again.");}
+  finally{btn.disabled=false;btn.textContent="Link account →";}
+});
 $("settings-close-btn").addEventListener("click",()=>closeDialog("settings-dialog"));
  $("settings-signout-btn")?.addEventListener("click",async()=>{if(!db)return;const {error}=await db.auth.signOut();if(error){toast("Sign out failed: "+error.message);return;}user=null;activeChat=null;chats=[];if(messageChannel)db.removeChannel(messageChannel);if(listChannel)db.removeChannel(listChannel);showSetup(false);setAuthMode("signin");setUsernameAuthMode("signin");toast("Signed out.");});
  $("settings-delete-account-btn")?.addEventListener("click",()=>toast("Permanent account deletion is not configured yet. Nothing has been deleted."));
