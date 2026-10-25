@@ -393,21 +393,44 @@ function updateAccountLinkButton(){const guest=!!user?.is_anonymous;$("settings-
 function updateGoogleLinkButton(){const guest=!!user?.is_anonymous;const b=$("settings-link-google-btn"),help=$("settings-link-google-help");if(!b)return;b.classList.remove("hidden");if(guest){b.disabled=false;b.textContent="G Link Google account (optional)";if(help)help.textContent="Optional: connect Google to this guest account so your existing chats stay attached.";}else{b.disabled=true;b.textContent="Google linking available for guest accounts";if(help)help.textContent="If you signed in with Google already, your Google account is connected. Other signed-in accounts cannot be merged automatically.";}}
 $("settings-link-account-btn")?.addEventListener("click",()=>{if(!user?.is_anonymous){toast("This account is already linked. You don't need to make another account.");return;}closeDialog("settings-dialog");$("link-account-email").value="";$("link-account-password").value="";openDialog("link-account-dialog");});
 $("settings-link-google-btn")?.addEventListener("click",async()=>{if(!user?.is_anonymous){toast("Google can only be linked to your current guest account here. Accounts cannot be merged automatically.");return;}if(!db?.auth?.linkIdentity){toast("Google linking is not supported by the current auth setup. You can still link email and password.");return;}const {error}=await db.auth.linkIdentity({provider:"google",options:{redirectTo:window.location.origin}});if(error)toast("Could not start Google linking: "+error.message+". Check that Google sign-in is enabled in Supabase.");});
+let linkAccountMode="signup";
+function setLinkAccountMode(mode){
+  linkAccountMode=mode;
+  const signingIn=mode==="signin";
+  $("link-account-mode-copy").textContent=signingIn?"Need a new account?":"Already have an account?";
+  $("link-account-mode-btn").textContent=signingIn?"Create account instead":"Sign in instead";
+  $("link-account-submit").textContent=signingIn?"Sign in →":"Create account and save chats →";
+  $("link-account-password").autocomplete=signingIn?"current-password":"new-password";
+  $("link-account-password").minLength=signingIn?0:8;
+  $("link-account-password").placeholder=signingIn?"Your password":"At least 8 characters";
+}
+$("link-account-mode-btn")?.addEventListener("click",()=>setLinkAccountMode(linkAccountMode==="signin"?"signup":"signin"));
 $("link-account-form")?.addEventListener("submit",async e=>{
-  e.preventDefault();if(!user?.is_anonymous){toast("This account is already linked or you need to sign in again.");return;}
+  e.preventDefault();
   const email=$("link-account-email").value.trim(),password=$("link-account-password").value;
-  if(password.length<8){toast("Use a password with at least 8 characters.");return;}
-  const btn=$("link-account-submit");btn.disabled=true;btn.textContent="Linking…";
+  if(linkAccountMode==="signin"&&user?.is_anonymous&&!window.confirm("Signing in will switch to the existing account. Chats belonging to this guest account will NOT merge into it. To keep these chats, choose Create account instead. Continue?"))return;
+  if(linkAccountMode==="signup"&&!user?.is_anonymous){toast("This account is already linked. Sign out first if you need another account.");return;}
+  if(linkAccountMode==="signup"&&password.length<8){toast("Use a password with at least 8 characters.");return;}
+  const btn=$("link-account-submit");btn.disabled=true;btn.textContent=linkAccountMode==="signin"?"Signing in…":"Creating account…";
   try{
-    const {data,error}=await db.auth.updateUser({email,password});
-    if(error){toast("Couldn't link account: "+error.message);return;}
-    user=data.user||user;
-    $("account-label").textContent=user.email||"Account linked — confirm email";
-    closeDialog("link-account-dialog");updateAccountLinkButton();
-    toast("Your guest account is being upgraded, not replaced. Keep this browser data until any email confirmation is complete.");
-  }catch(err){toast("Couldn't link account. Please try again.");}
-  finally{btn.disabled=false;btn.textContent="Link account →";}
+    const result=linkAccountMode==="signin"
+      ? await db.auth.signInWithPassword({email,password})
+      : await db.auth.updateUser({email,password});
+    if(result.error){toast((linkAccountMode==="signin"?"Sign-in failed: ":"Couldn't create/link account: ")+result.error.message);return;}
+    if(linkAccountMode==="signup"){
+      user=result.data.user||user;
+      $("account-label").textContent=user.email||"Account linked — confirm email";
+      closeDialog("link-account-dialog");updateAccountLinkButton();
+      toast("Your guest account is being upgraded, so its chats stay attached. Keep this browser data until any email confirmation is complete.");
+    }else{
+      closeDialog("link-account-dialog");
+      toast("Signed in. Existing account chats are loading.");
+      location.reload();
+    }
+  }catch(err){toast("Couldn't complete that action: "+(err?.message||"Please try again."));}
+  finally{btn.disabled=false;setLinkAccountMode(linkAccountMode);}
 });
+
 $("settings-close-btn").addEventListener("click",()=>closeDialog("settings-dialog"));
  $("settings-signout-btn")?.addEventListener("click",async()=>{if(!db)return;const {error}=await db.auth.signOut();if(error){toast("Sign out failed: "+error.message);return;}user=null;activeChat=null;chats=[];if(messageChannel)db.removeChannel(messageChannel);if(listChannel)db.removeChannel(listChannel);showSetup(false);setAuthMode("signin");setUsernameAuthMode("signin");toast("Signed out.");});
  $("settings-delete-account-btn")?.addEventListener("click",()=>toast("Permanent account deletion is not configured yet. Nothing has been deleted."));
