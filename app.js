@@ -389,8 +389,8 @@ $("chat-remove-btn")?.addEventListener("click",async()=>{
 });
 
 $("settings-btn").addEventListener("click",()=>{updateAccountLinkButton();openDialog("settings-dialog");});
-function updateAccountLinkButton(){const guest=!!user?.is_anonymous;$("settings-link-account-btn")?.classList.toggle("hidden",!guest);$("settings-link-account-help")?.classList.toggle("hidden",!guest);}
-$("settings-link-account-btn")?.addEventListener("click",()=>{closeDialog("settings-dialog");$("link-account-email").value="";$("link-account-password").value="";openDialog("link-account-dialog");});
+function updateAccountLinkButton(){const guest=!!user?.is_anonymous;$("settings-link-account-btn")?.classList.remove("hidden");$("settings-link-account-help")?.classList.remove("hidden");$("settings-link-account-btn").textContent=guest?"🔗 Link a real account":"Account already linked";$("settings-link-account-btn").disabled=!guest;$("settings-link-account-help").textContent=guest?"Upgrade this guest account with an email and password. Your existing chats stay on this account.":"This account is already linked. Sign in with this account on another device to access its chats.";}
+$("settings-link-account-btn")?.addEventListener("click",()=>{if(!user?.is_anonymous){toast("This account is already linked. You don't need to make another account.");return;}closeDialog("settings-dialog");$("link-account-email").value="";$("link-account-password").value="";openDialog("link-account-dialog");});
 $("link-account-form")?.addEventListener("submit",async e=>{
   e.preventDefault();if(!user?.is_anonymous){toast("This account is already linked or you need to sign in again.");return;}
   const email=$("link-account-email").value.trim(),password=$("link-account-password").value;
@@ -402,7 +402,7 @@ $("link-account-form")?.addEventListener("submit",async e=>{
     user=data.user||user;
     $("account-label").textContent=user.email||"Account linked — confirm email";
     closeDialog("link-account-dialog");updateAccountLinkButton();
-    toast(data.user?.email_confirmed_at?"Account linked! Your chats stay on this account.":"Link requested. Check your email to confirm; keep this browser data until confirmed.");
+    toast("Your guest account is being upgraded, not replaced. Keep this browser data until any email confirmation is complete.");
   }catch(err){toast("Couldn't link account. Please try again.");}
   finally{btn.disabled=false;btn.textContent="Link account →";}
 });
