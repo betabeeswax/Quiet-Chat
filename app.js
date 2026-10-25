@@ -666,6 +666,7 @@ document.addEventListener("click",e=>{
  if(action==="layout-auto"){document.body.classList.remove("pc-layout","compact-layout");localStorage.removeItem("quietchat-layout");}
  if(action==="layout-mobile"){document.body.classList.remove("pc-layout");document.body.classList.add("compact-layout");localStorage.setItem("quietchat-layout","mobile");}
  if(action==="layout-pc"){document.body.classList.remove("compact-layout");document.body.classList.add("pc-layout");localStorage.setItem("quietchat-layout","pc");}
+ if(action==="profile"){ $("profile-username").value=username||""; $("profile-bio").value=window.myProfile?.bio||""; $("avatar-input").value=""; openDialog("profile-dialog"); }
  if(action==="notifications")$("chat-notification-btn")?.click();
  if(action==="settings")$("group-settings-btn")?.click();
  if(action==="invite")$("add-people-btn")?.click();
