@@ -702,6 +702,7 @@ function subscribeOnlineUsers(){
 async function handleInviteLink(){
  const url=new URL(window.location.href),code=url.searchParams.get("invite");
  if(!code||!user)return;
+ if(!window.confirm("Before joining: this invite may lead to a group marked 18+. If the group is marked 18+, it is for adults only; do not join if you are under 18. Continue to open this invite?")){url.searchParams.delete("invite");history.replaceState({}, "", url.toString());return;}
  url.searchParams.delete("invite");history.replaceState({}, "", url.toString());
  const {data,error}=await db.rpc("join_chat_with_invite",{invite_code:code.trim().toUpperCase()});
  if(error){toast("Invite link could not be joined: "+error.message);return;}
