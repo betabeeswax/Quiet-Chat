@@ -210,6 +210,8 @@
     <div class="settings-section">
       <h3>👤 Your account</h3>
       <button id="settings-edit-profile-btn" class="secondary full">Edit profile <span>›</span></button>
+      <button id="settings-link-account-btn" class="primary full hidden" type="button">🔗 Link a real account</button>
+      <p id="settings-link-account-help" class="tiny muted hidden">Link an email and password so you can sign in on another device and keep access to your chats.</p>
       <button id="settings-gallery-btn" class="secondary full">Open local media library <span>›</span></button>
     </div>
     <div class="settings-section">
@@ -224,6 +226,17 @@
       <button id="settings-delete-account-btn" class="secondary full" type="button">Delete account and data…</button>
       <p class="tiny muted">Permanent deletion must be completed by the secure server-side process.</p>
     </div>
+  </dialog>
+  <dialog id="link-account-dialog" class="modal">
+    <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+    <div class="modal-icon">🔗</div><h2>Keep your chats safe</h2>
+    <p class="muted">Add an email and password to this guest account. This links your current account instead of making a new one, so your chats stay with it.</p>
+    <form id="link-account-form">
+      <label for="link-account-email">Email address</label><input id="link-account-email" type="email" autocomplete="email" required placeholder="you@example.com">
+      <label for="link-account-password" class="field-gap">Create a password</label><input id="link-account-password" type="password" minlength="8" autocomplete="new-password" required placeholder="At least 8 characters">
+      <button id="link-account-submit" class="primary full field-gap" type="submit">Link account →</button>
+    </form>
+    <p class="tiny muted">If email confirmation is required, check your inbox. Don't clear this browser's data or sign out until the account link is confirmed.</p>
   </dialog>
   <dialog id="gallery-dialog" class="modal gallery-modal">
     <div class="gallery-top"><div><h2>Local media library</h2><p class="tiny muted">Saved copies on this browser, newest first.</p><label for="media-save-mode">Automatic saving</label><select id="media-save-mode" class="media-save-mode"><option value="none">No auto</option><option value="auto">Auto</option><option value="day">Save for a day</option></select><p class="tiny muted">Auto keeps copies until browser data is cleared. Save for a day removes local copies after 24 hours.</p></div><button id="gallery-close-btn" class="secondary">Close ✕</button></div>
