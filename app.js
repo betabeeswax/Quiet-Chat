@@ -8,6 +8,10 @@ const $ = (id) => document.getElementById(id);
 let db, user, username = "", activeChat = null, chats = [], messageChannel = null, listChannel = null, messageRefreshTimer = null, toastTimer, authMode = "signin", usernameAuthMode = "signin", mediaRecorder = null, recordingChunks = [], recordingChatId = null, lastRenderedDay = "";
 
 const setup = $("setup-screen"), app = $("app-screen");
+const QUIETCHAT_ADMIN_ID = "6690d263-46ff-4cb3-a257-c4235fcb9ae1";
+function isQuietChatAdmin(){return !!user?.id && user.id===QUIETCHAT_ADMIN_ID;}
+function canManageCommunity(chat=activeChat){return !!chat?.isGroup && (isQuietChatAdmin() || chat.createdBy===user?.id);}
+function isGifFile(file){return /\.gif$/i.test(file?.name||"") && (!file.type || file.type.toLowerCase()==="image/gif");}
 function toast(message) { const el=$("toast"); el.textContent=message; el.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove("show"),2800); }
 function showSetup(needsProfile=false){setup.classList.remove("hidden");app.classList.add("hidden");$("auth-options").classList.toggle("hidden",needsProfile);$("profile-setup").classList.toggle("hidden",!needsProfile);}
 function showApp(){setup.classList.add("hidden");app.classList.remove("hidden");const guest=!!user?.is_anonymous;$("account-label").textContent=guest?"Guest · expires after 47 inactive days":(user?.email||"Signed-in account");$("create-group-btn").disabled=false;$("create-group-btn").title="";$("create-group-btn").textContent="＋ Create group chat";$("chat-remove-btn").disabled=guest;}
@@ -300,6 +304,8 @@ async function sendAttachment(file, forcedType=null){
   if(!activeChat||!file)return;
   const type=forcedType || (file.type.startsWith("image/")?"image":file.type.startsWith("video/")?"video":file.type.startsWith("audio/")?"audio":"file");
   const actualType=type;
+  if(activeChat.isGroup && activeChat.createdBy!==user?.id && !isQuietChatAdmin() && !isGifFile(file)){toast("This community only allows GIF uploads. Other file types are disabled.");$("media-input").value="";return;}
+  if(activeChat.isGroup && isQuietChatAdmin() && activeChat.createdBy!==user?.id && !isGifFile(file)){toast("Your admin account can upload files in communities you created. Other communities allow GIFs only.");$("media-input").value="";return;}
   if(file.size>5*1024*1024){toast("That file is too big. The limit is 5 MB.");$("media-input").value="";return;}
   let ext=(file.name?.split(".").pop()||"").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,8);
   if(!ext) ext=type==="audio"?(file.type.includes("mp4")?"m4a":file.type.includes("ogg")?"ogg":"webm"):type==="video"?"mp4":type==="image"?"jpg":"bin";
@@ -654,7 +660,6 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
  $("community-create-form")?.addEventListener("submit",async ev=>{
   ev.preventDefault();
   if(!user||!db){toast("Please sign in first, then try again.");return;}
-  if(user.is_anonymous){toast("Guest accounts cannot create communities. Create an account first.");return;}
   const name=cleanName($("community-name").value);
   if(name.length<2){toast("Group name needs at least 2 characters.");return;}
   const form= $("community-create-form"),btn=form.querySelector('button[type="submit"]');
@@ -672,7 +677,7 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
 });
  $("save-group-settings")?.addEventListener("click",async()=>{
   if(!activeChat?.isGroup)return;
-  if(activeChat.createdBy!==user.id){toast("Only the community owner can save changes.");return;}
+  if(!canManageCommunity(activeChat)){toast("Only the community owner or QuietChat admin can save changes.");return;}
   const isPublic=document.querySelector('input[name="existing-group-visibility"]:checked')?.value==="public";
   const allowGifs=$("group-allow-gifs").checked,removeInactive=$("group-inactivity-rule").checked;
   const newName=cleanName($("group-name-edit").value);
@@ -704,8 +709,8 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
   toast(muted.includes(activeChat.id)?"Notifications muted for this chat.":"Notifications enabled for this chat.");
  });
  
- $("group-settings-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup)return;document.querySelectorAll('input[name="existing-group-visibility"]').forEach(x=>x.checked=(x.value==="public"&&activeChat.isPublic)||(x.value==="private"&&!activeChat.isPublic));$("group-allow-gifs").checked=!!activeChat.allowGifs;$("group-inactivity-rule").checked=activeChat.removeInactive!==false;$("group-name-edit").value=activeChat.title||"";const select=$("transfer-owner-select");select.replaceChildren(new Option("Keep current owner",""));(activeChat.memberIds||[]).filter(m=>m.id!==user.id).forEach(m=>select.add(new Option(m.name,m.id)));openDialog("group-settings-dialog");});
- $("delete-group-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup){toast("Open a group first.");return;}if(!confirm('Delete "'+activeChat.title+'" and its group chat? This cannot be undone.'))return;const id=activeChat.id;const {error}=await db.rpc("delete_group_chat",{target_chat:id});if(error){toast("Could not delete group: "+error.message+" (secure delete function may need installing)");return;}if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}activeChat=null;$("app-screen").classList.remove("chat-open");$("welcome-panel").classList.remove("hidden");$("messages").classList.add("hidden");$("composer-wrap").classList.add("hidden");await loadChats();await loadMyCommunities();toast("Group deleted.");});
+ $("group-settings-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup)return;if(!canManageCommunity(activeChat)){toast("Only the community owner or QuietChat admin can manage this community.");return;}document.querySelectorAll('input[name="existing-group-visibility"]').forEach(x=>x.checked=(x.value==="public"&&activeChat.isPublic)||(x.value==="private"&&!activeChat.isPublic));$("group-allow-gifs").checked=!!activeChat.allowGifs;$("group-inactivity-rule").checked=activeChat.removeInactive!==false;$("group-name-edit").value=activeChat.title||"";const select=$("transfer-owner-select");select.replaceChildren(new Option("Keep current owner",""));(activeChat.memberIds||[]).filter(m=>m.id!==user.id).forEach(m=>select.add(new Option(m.name,m.id)));openDialog("group-settings-dialog");});
+ $("delete-group-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup){toast("Open a group first.");return;}if(!canManageCommunity(activeChat)){toast("Only the community owner or QuietChat admin can delete this community.");return;}if(!confirm('Delete "'+activeChat.title+'" and its group chat? This cannot be undone.'))return;const id=activeChat.id;const {error}=await db.rpc("delete_group_chat",{target_chat:id});if(error){toast("Could not delete group: "+error.message+" (secure delete function may need installing)");return;}if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}activeChat=null;$("app-screen").classList.remove("chat-open");$("welcome-panel").classList.remove("hidden");$("messages").classList.add("hidden");$("composer-wrap").classList.add("hidden");await loadChats();await loadMyCommunities();toast("Group deleted.");});
  $("mobile-back").addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");});
 let onlineChannel=null;
 function subscribeOnlineUsers(){
