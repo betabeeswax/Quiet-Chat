@@ -314,6 +314,11 @@ async function sendAttachment(file, forcedType=null){
   if(!activeChat||!file)return;
   const type=forcedType || (file.type.startsWith("image/")?"image":file.type.startsWith("video/")?"video":file.type.startsWith("audio/")?"audio":"file");
   const actualType=type;
+  if(activeChat.isGroup && (!user?.email || user.is_anonymous)){
+    toast("Use an email-based account to upload attachments in communities. Link your account in Settings.");
+    $("media-input").value="";
+    return;
+  }
   // Community uploads: only the beta-beeswax account can upload arbitrary files,
   // and only in communities that account created. Other communities are GIF-only.
   if(activeChat.isGroup && !(isQuietChatAdmin() && activeChat.createdBy===user?.id) && !isGifFile(file)){
@@ -454,6 +459,25 @@ $("chat-remove-btn")?.addEventListener("click",async()=>{
   toast("Chat removed from your list.");
 });
 
+function applyAppearanceSettings(){
+  const root=document.documentElement;
+  const ui=localStorage.getItem("quietchat-ui-version")||"fresh";
+  let mode=localStorage.getItem("quietchat-device-mode")||"auto";
+  const accent=localStorage.getItem("quietchat-accent-color")||"#8b7cff";
+  if(mode==="pc" && window.innerWidth<900){mode="auto";localStorage.setItem("quietchat-device-mode","auto");}
+  root.dataset.ui=ui;root.dataset.deviceMode=mode;root.style.setProperty("--accent",accent);
+  if($("settings-ui-version"))$("settings-ui-version").value=ui;
+  if($("settings-device-mode"))$("settings-device-mode").value=mode;
+  if($("settings-accent-color"))$("settings-accent-color").value=accent;
+}
+$("settings-ui-version")?.addEventListener("change",e=>{localStorage.setItem("quietchat-ui-version",e.target.value);applyAppearanceSettings();});
+$("settings-device-mode")?.addEventListener("change",e=>{
+  if(e.target.value==="pc"&&window.innerWidth<900){e.target.value="auto";localStorage.setItem("quietchat-device-mode","auto");applyAppearanceSettings();toast("PC mode needs a screen at least 900px wide. Reverted to Automatic.");return;}
+  localStorage.setItem("quietchat-device-mode",e.target.value);applyAppearanceSettings();
+});
+$("settings-accent-color")?.addEventListener("input",e=>{localStorage.setItem("quietchat-accent-color",e.target.value);applyAppearanceSettings();});
+window.addEventListener("resize",()=>{if(localStorage.getItem("quietchat-device-mode")==="pc"&&window.innerWidth<900){localStorage.setItem("quietchat-device-mode","auto");applyAppearanceSettings();toast("PC mode did not fit, so QuietChat reverted to Automatic.");}});
+applyAppearanceSettings();
 $("settings-btn").addEventListener("click",()=>{updateAccountLinkButton();updateGoogleLinkButton();openDialog("settings-dialog");});
 function updateAccountLinkButton(){const guest=!!user?.is_anonymous;$("settings-link-account-btn")?.classList.remove("hidden");$("settings-link-account-help")?.classList.remove("hidden");$("settings-link-account-btn").textContent=guest?"🔗 Link a real account":"Account already linked";$("settings-link-account-btn").disabled=!guest;$("settings-link-account-help").textContent=guest?"Upgrade this guest account with an email and password. Your existing chats stay on this account.":"This account is already linked. Sign in with this account on another device to access its chats.";}
 function updateGoogleLinkButton(){const guest=!!user?.is_anonymous;const b=$("settings-link-google-btn"),help=$("settings-link-google-help");if(!b)return;b.classList.remove("hidden");if(guest){b.disabled=false;b.textContent="G Link Google account (optional)";if(help)help.textContent="Optional: connect Google to this guest account so your existing chats stay attached.";}else{b.disabled=true;b.textContent="Google linking available for guest accounts";if(help)help.textContent="If you signed in with Google already, your Google account is connected. Other signed-in accounts cannot be merged automatically.";}}
@@ -693,6 +717,7 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
  $("community-create-form")?.addEventListener("submit",async ev=>{
   ev.preventDefault();
   if(!user||!db){toast("Please sign in first, then try again.");return;}
+  if(!user.email || user.is_anonymous){toast("Creating a community requires an email-based account. Link your account in Settings first.");return;}
   const name=cleanName($("community-name").value);
   if(name.length<2){toast("Group name needs at least 2 characters.");return;}
   const form= $("community-create-form"),btn=form.querySelector('button[type="submit"]');
