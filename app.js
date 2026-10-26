@@ -314,8 +314,6 @@ async function sendAttachment(file, forcedType=null){
   if(!activeChat||!file)return;
   const type=forcedType || (file.type.startsWith("image/")?"image":file.type.startsWith("video/")?"video":file.type.startsWith("audio/")?"audio":"file");
   const actualType=type;
-  if(activeChat.isGroup && activeChat.createdBy!==user?.id && !isQuietChatAdmin() && !isGifFile(file)){toast("This community only allows GIF uploads. Other file types are disabled.");$("media-input").value="";return;}
-  if(activeChat.isGroup && isQuietChatAdmin() && activeChat.createdBy!==user?.id && !isGifFile(file)){toast("Your admin account can upload files in communities you created. Other communities allow GIFs only.");$("media-input").value="";return;}
   if(file.size>5*1024*1024){toast("That file is too big. The limit is 5 MB.");$("media-input").value="";return;}
   let ext=(file.name?.split(".").pop()||"").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,8);
   if(!ext) ext=type==="audio"?(file.type.includes("mp4")?"m4a":file.type.includes("ogg")?"ogg":"webm"):type==="video"?"mp4":type==="image"?"jpg":"bin";
@@ -323,16 +321,31 @@ async function sendAttachment(file, forcedType=null){
   let path="";
   toast(actualType==="audio"?"Sending voice memo…":"Uploading file…");
   const contentType=(file.type|| (type==="audio"?"audio/webm":"application/octet-stream")).split(";")[0];
-  const {data:ticket,error:ticketError}=await db.functions.invoke("r2-media",{body:{action:"upload",chatId,fileName:file.name,contentType}});
-  if(ticketError||!ticket?.url||!ticket?.path){toast("Cloud media setup failed. Your existing Supabase media is unchanged.");$("media-input").value="";return;}
-  path="r2:"+ticket.path;
-  const uploadResponse=await fetch(ticket.url,{method:"PUT",headers:{"Content-Type":contentType},body:file});
-  if(!uploadResponse.ok){toast("Cloud upload failed. Please try again.");$("media-input").value="";return;}
-  const body=actualType==="image"?"📷 Photo":actualType==="video"?"🎬 Video":actualType==="audio"?"🎙 Voice memo":"📎 File: "+file.name.slice(0,180);
-  const {error}=await db.from("messages").insert({chat_id:chatId,sender_id:user.id,body,attachment_path:path,attachment_type:actualType,attachment_name:file.name.slice(0,255)});
-  if(error){toast("Uploaded, but the message failed to save. The unused cloud file can be removed later.");}
-  else toast(actualType==="audio"?"Voice memo sent!":actualType==="image"?"Photo sent!":actualType==="video"?"Video sent!":"File sent!");
-  $("media-input").value="";
+  try {
+    const {data:ticket,error:ticketError}=await db.functions.invoke("r2-media",{body:{action:"upload",chatId,fileName:file.name,contentType}});
+    if(ticketError||!ticket?.url||!ticket?.path){
+      console.error("R2 upload ticket failed",ticketError,ticket);
+      toast("Could not prepare upload: "+(ticketError?.message||ticket?.error||"check the r2-media function and Supabase secrets"));
+      $("media-input").value="";return;
+    }
+    path="r2:"+ticket.path;
+    const uploadResponse=await fetch(ticket.url,{method:"PUT",headers:{"Content-Type":contentType},body:file});
+    if(!uploadResponse.ok){
+      const detail=await uploadResponse.text().catch(()=>"");
+      console.error("R2 PUT failed",uploadResponse.status,detail);
+      toast("Cloud upload failed ("+uploadResponse.status+"). Check the R2 CORS rule and bucket credentials.");
+      $("media-input").value="";return;
+    }
+    const body=actualType==="image"?"📷 Photo":actualType==="video"?"🎬 Video":actualType==="audio"?"🎙 Voice memo":"📎 File: "+file.name.slice(0,180);
+    const {error}=await db.from("messages").insert({chat_id:chatId,sender_id:user.id,body,attachment_path:path,attachment_type:actualType,attachment_name:file.name.slice(0,255)});
+    if(error){console.error("Message save after upload failed",error);toast("Uploaded, but the message failed to save: "+error.message);}
+    else toast(actualType==="audio"?"Voice memo sent!":actualType==="image"?"Photo sent!":actualType==="video"?"Video sent!":"File sent!");
+  } catch(err) {
+    console.error("Attachment upload error",err);
+    toast("Upload error: "+(err?.message||"check your connection and R2 settings"));
+  } finally {
+    $("media-input").value="";
+  }
 }
 $("media-input").addEventListener("change",e=>{const file=e.target.files?.[0];if(file)sendMedia(file);});
 
