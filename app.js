@@ -322,20 +322,19 @@ async function sendAttachment(file, forcedType=null){
   toast(actualType==="audio"?"Sending voice memo…":"Uploading file…");
   const contentType=(file.type|| (type==="audio"?"audio/webm":"application/octet-stream")).split(";")[0];
   try {
-    const {data:ticket,error:ticketError}=await db.functions.invoke("r2-media",{body:{action:"upload",chatId,fileName:file.name,contentType}});
-    if(ticketError||!ticket?.url||!ticket?.path){
-      console.error("R2 upload ticket failed",ticketError,ticket);
-      toast("Could not prepare upload: "+(ticketError?.message||ticket?.error||"check the r2-media function and Supabase secrets"));
+    const formData=new FormData();
+    formData.append("action","upload");
+    formData.append("chatId",chatId);
+    formData.append("fileName",file.name||"attachment");
+    formData.append("contentType",contentType);
+    formData.append("file",file,file.name||"attachment");
+    const {data:ticket,error:ticketError}=await db.functions.invoke("r2-media",{body:formData});
+    if(ticketError||!ticket?.uploaded||!ticket?.path){
+      console.error("R2 upload failed",ticketError,ticket);
+      toast("Upload failed: "+(ticketError?.message||ticket?.error||"check the r2-media function and R2 credentials"));
       $("media-input").value="";return;
     }
     path="r2:"+ticket.path;
-    const uploadResponse=await fetch(ticket.url,{method:"PUT",headers:{"Content-Type":contentType},body:file});
-    if(!uploadResponse.ok){
-      const detail=await uploadResponse.text().catch(()=>"");
-      console.error("R2 PUT failed",uploadResponse.status,detail);
-      toast("Cloud upload failed ("+uploadResponse.status+"). Check the R2 CORS rule and bucket credentials.");
-      $("media-input").value="";return;
-    }
     const body=actualType==="image"?"📷 Photo":actualType==="video"?"🎬 Video":actualType==="audio"?"🎙 Voice memo":"📎 File: "+file.name.slice(0,180);
     const {error}=await db.from("messages").insert({chat_id:chatId,sender_id:user.id,body,attachment_path:path,attachment_type:actualType,attachment_name:file.name.slice(0,255)});
     if(error){console.error("Message save after upload failed",error);toast("Uploaded, but the message failed to save: "+error.message);}
