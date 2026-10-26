@@ -719,14 +719,14 @@ function subscribeOnlineUsers(){
  const root=$("online-people");if(!root)return;
  onlineChannel=db.channel("quietchat-online-presence",{config:{presence:{key:user.id}}})
  .on("presence",{event:"sync"},()=>{
-   const state=onlineChannel.presenceState(),people=[];
-   Object.entries(state).forEach(([id,entries])=>{const p=entries?.[0]||{};if(id!==user.id)people.push({id,name:p.username||"Member"});});
-   root.replaceChildren();$("online-count").textContent=String(people.length);
-   if(!people.length){root.textContent="No one else online right now.";root.classList.add("tiny","muted");return;}
-   root.classList.remove("tiny","muted");
-   people.forEach(p=>{const chip=document.createElement("span");chip.className="online-person";const dot=document.createElement("i");dot.className="online-dot";const name=document.createElement("span");name.textContent=p.name;chip.append(dot,name);root.append(chip);});
+   const state=onlineChannel.presenceState();
+   const count=Object.keys(state).filter(id=>id!==user.id).length;
+   $("online-count").textContent=String(count);
+   root.replaceChildren();
+   root.textContent=count===0?"No one else online right now.":count===1?"1 person is online.":count+" people are online.";
+   root.classList.add("tiny","muted");
  })
- .subscribe(async status=>{if(status==="SUBSCRIBED")await onlineChannel.track({username:username||"Member",online_at:new Date().toISOString()});});
+ .subscribe(async status=>{if(status==="SUBSCRIBED")await onlineChannel.track({online_at:new Date().toISOString()});});
 }
 async function handleInviteLink(){
  const url=new URL(window.location.href),code=url.searchParams.get("invite");
