@@ -280,7 +280,15 @@ async function renderMessage(m){
   if(m.attachment_path){
     const cached=await localMediaGet(m.id).catch(()=>null);
     let mediaUrl=cached?URL.createObjectURL(cached.blob):null;
-    if(!mediaUrl){const {data:media,error}=await db.storage.from("chat-media").createSignedUrl(m.attachment_path,3600);if(!error&&media?.signedUrl){mediaUrl=media.signedUrl;cacheMedia(m,mediaUrl);} }
+    if(!mediaUrl){
+      if(String(m.attachment_path).startsWith("r2:")){
+        const {data:ticket,error}=await db.functions.invoke("r2-media",{body:{action:"download",chatId:m.chat_id,path:m.attachment_path.slice(3)}});
+        if(!error&&ticket?.url){mediaUrl=ticket.url;cacheMedia(m,mediaUrl);}
+      }else{
+        const {data:media,error}=await db.storage.from("chat-media").createSignedUrl(m.attachment_path,3600);
+        if(!error&&media?.signedUrl){mediaUrl=media.signedUrl;cacheMedia(m,mediaUrl);}
+      }
+    }
     if(mediaUrl){
       if(m.attachment_type==="image"){const img=document.createElement("img");img.src=mediaUrl;img.alt=m.attachment_name||"Photo sent in chat";img.className="chat-media-image";img.loading="lazy";img.addEventListener("click",()=>{const v=window.open("","_blank","noopener");if(v){const image=v.document.createElement("img");image.src=img.src;image.style="max-width:100%;height:auto";v.document.body.append(image);}});bubble.append(img);}
       else if(m.attachment_type==="video"){const video=document.createElement("video");video.src=mediaUrl;video.controls=true;video.preload="metadata";video.className="chat-media-video";bubble.append(video);}
@@ -312,13 +320,17 @@ async function sendAttachment(file, forcedType=null){
   let ext=(file.name?.split(".").pop()||"").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,8);
   if(!ext) ext=type==="audio"?(file.type.includes("mp4")?"m4a":file.type.includes("ogg")?"ogg":"webm"):type==="video"?"mp4":type==="image"?"jpg":"bin";
   const chatId=activeChat.id;
-  const path=`${chatId}/${user.id}/${crypto.randomUUID()}.${ext}`;
+  let path="";
   toast(actualType==="audio"?"Sending voice memo…":"Uploading file…");
-  const {error:uploadError}=await db.storage.from("chat-media").upload(path,file,{contentType:(file.type|| (type==="audio"?"audio/webm":"application/octet-stream")).split(";")[0],upsert:false});
-  if(uploadError){toast("Upload failed. Check your connection and media storage setup.");$("media-input").value="";return;}
+  const contentType=(file.type|| (type==="audio"?"audio/webm":"application/octet-stream")).split(";")[0];
+  const {data:ticket,error:ticketError}=await db.functions.invoke("r2-media",{body:{action:"upload",chatId,fileName:file.name,contentType}});
+  if(ticketError||!ticket?.url||!ticket?.path){toast("Cloud media setup failed. Your existing Supabase media is unchanged.");$("media-input").value="";return;}
+  path="r2:"+ticket.path;
+  const uploadResponse=await fetch(ticket.url,{method:"PUT",headers:{"Content-Type":contentType},body:file});
+  if(!uploadResponse.ok){toast("Cloud upload failed. Please try again.");$("media-input").value="";return;}
   const body=actualType==="image"?"📷 Photo":actualType==="video"?"🎬 Video":actualType==="audio"?"🎙 Voice memo":"📎 File: "+file.name.slice(0,180);
   const {error}=await db.from("messages").insert({chat_id:chatId,sender_id:user.id,body,attachment_path:path,attachment_type:actualType,attachment_name:file.name.slice(0,255)});
-  if(error){await db.storage.from("chat-media").remove([path]);toast("Uploaded, but the message failed to save. Please try again.");}
+  if(error){toast("Uploaded, but the message failed to save. The unused cloud file can be removed later.");}
   else toast(actualType==="audio"?"Voice memo sent!":actualType==="image"?"Photo sent!":actualType==="video"?"Video sent!":"File sent!");
   $("media-input").value="";
 }
