@@ -314,6 +314,13 @@ async function sendAttachment(file, forcedType=null){
   if(!activeChat||!file)return;
   const type=forcedType || (file.type.startsWith("image/")?"image":file.type.startsWith("video/")?"video":file.type.startsWith("audio/")?"audio":"file");
   const actualType=type;
+  // Community uploads: only the beta-beeswax account can upload arbitrary files,
+  // and only in communities that account created. Other communities are GIF-only.
+  if(activeChat.isGroup && !(isQuietChatAdmin() && activeChat.createdBy===user?.id) && !isGifFile(file)){
+    toast("This community only allows GIF uploads. Full file uploads are enabled only in communities created by beta-beeswax.");
+    $("media-input").value="";
+    return;
+  }
   if(file.size>5*1024*1024){toast("That file is too big. The limit is 5 MB.");$("media-input").value="";return;}
   let ext=(file.name?.split(".").pop()||"").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,8);
   if(!ext) ext=type==="audio"?(file.type.includes("mp4")?"m4a":file.type.includes("ogg")?"ogg":"webm"):type==="video"?"mp4":type==="image"?"jpg":"bin";
