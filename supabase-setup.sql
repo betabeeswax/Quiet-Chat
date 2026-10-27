@@ -349,10 +349,17 @@ grant execute on function public.create_group_chat(text,boolean,text) to authent
 create or replace function public.update_group_settings(target_chat uuid, make_public boolean, p_allow_gifs boolean, p_remove_inactive boolean)
 returns void language plpgsql security definer set search_path=public as $$
 begin
- if auth.uid() is null then raise exception 'Sign in required'; end if;
- if not exists(select 1 from public.chats where id=target_chat and created_by=auth.uid()) then raise exception 'Only the community creator can change settings'; end if;
- update public.chats set is_public=make_public, allow_gifs=p_allow_gifs,
- remove_inactive=p_remove_inactive where id=target_chat;
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
+  if not exists(
+    select 1 from public.chats
+    where id=target_chat
+      and (created_by=auth.uid() or auth.uid() in (
+        '6690d263-46ff-4cb3-a257-c4235fcb9ae1'::uuid,
+        '33101fc2-e3f1-4b32-adb6-85c17a099aac'::uuid
+      ))
+  ) then raise exception 'Only the community creator or a QuietChat admin can change settings'; end if;
+  update public.chats set is_public=make_public, allow_gifs=p_allow_gifs,
+  remove_inactive=p_remove_inactive where id=target_chat;
 end; $$;
 revoke all on function public.update_group_settings(uuid,boolean,boolean,boolean) from public;
 grant execute on function public.update_group_settings(uuid,boolean,boolean,boolean) to authenticated;
@@ -360,9 +367,16 @@ grant execute on function public.update_group_settings(uuid,boolean,boolean,bool
 create or replace function public.delete_group_chat(target_chat uuid) returns void
 language plpgsql security definer set search_path=public as $$
 begin
- if auth.uid() is null then raise exception 'Sign in required'; end if;
- if not exists(select 1 from public.chats where id=target_chat and created_by=auth.uid() and name is not null) then raise exception 'Only the community creator can delete this group'; end if;
- delete from public.chats where id=target_chat;
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
+  if not exists(
+    select 1 from public.chats
+    where id=target_chat and name is not null
+      and (created_by=auth.uid() or auth.uid() in (
+        '6690d263-46ff-4cb3-a257-c4235fcb9ae1'::uuid,
+        '33101fc2-e3f1-4b32-adb6-85c17a099aac'::uuid
+      ))
+  ) then raise exception 'Only the community creator or a QuietChat admin can delete this group'; end if;
+  delete from public.chats where id=target_chat;
 end; $$;
 revoke all on function public.delete_group_chat(uuid) from public;
 grant execute on function public.delete_group_chat(uuid) to authenticated;
