@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 let db, user, username = "", activeChat = null, chats = [], messageChannel = null, listChannel = null, messageRefreshTimer = null, toastTimer, authMode = "signin", usernameAuthMode = "signin", mediaRecorder = null, recordingChunks = [], recordingChatId = null, lastRenderedDay = "";
 
 const setup = $("setup-screen"), app = $("app-screen");
-const QUIETCHAT_ADMIN_ID = "6690d263-46ff-4cb3-a257-c4235fcb9ae1";
+const QUIETCHAT_ADMIN_ID = "33101fc2-e3f1-4b32-adb6-85c17a099aac";
 function isQuietChatAdmin(){return !!user?.id && user.id===QUIETCHAT_ADMIN_ID;}
 function canManageCommunity(chat=activeChat){return !!chat?.isGroup && (isQuietChatAdmin() || chat.createdBy===user?.id);}
 function isGifFile(file){return /\.gif$/i.test(file?.name||"") && (!file.type || file.type.toLowerCase()==="image/gif");}
