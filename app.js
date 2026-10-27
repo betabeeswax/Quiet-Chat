@@ -319,6 +319,11 @@ async function sendAttachment(file, forcedType=null){
     $("media-input").value="";
     return;
   }
+  if(activeChat.isGroup && (!user?.email || user.is_anonymous)){
+    toast("Use an email-based account to upload attachments in communities. Link your account in Settings.");
+    $("media-input").value="";
+    return;
+  }
   // Community uploads: only the beta-beeswax account can upload arbitrary files,
   // and only in communities that account created. Other communities are GIF-only.
   if(activeChat.isGroup && !(isQuietChatAdmin() && activeChat.createdBy===user?.id) && !isGifFile(file)){
