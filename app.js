@@ -8,8 +8,8 @@ const $ = (id) => document.getElementById(id);
 let db, user, username = "", activeChat = null, chats = [], messageChannel = null, listChannel = null, messageRefreshTimer = null, toastTimer, authMode = "signin", usernameAuthMode = "signin", mediaRecorder = null, recordingChunks = [], recordingChatId = null, lastRenderedDay = "";
 
 const setup = $("setup-screen"), app = $("app-screen");
-const QUIETCHAT_ADMIN_ID = "33101fc2-e3f1-4b32-adb6-85c17a099aac";
-function isQuietChatAdmin(){return !!user?.id && user.id===QUIETCHAT_ADMIN_ID;}
+const QUIETCHAT_ADMIN_IDS = ["6690d263-46ff-4cb3-a257-c4235fcb9ae1","33101fc2-e3f1-4b32-adb6-85c17a099aac"];
+function isQuietChatAdmin(){return !!user?.id && QUIETCHAT_ADMIN_IDS.includes(user.id);}
 function canManageCommunity(chat=activeChat){return !!chat?.isGroup && (isQuietChatAdmin() || chat.createdBy===user?.id);}
 function isGifFile(file){return /\.gif$/i.test(file?.name||"") && (!file.type || file.type.toLowerCase()==="image/gif");}
 function toast(message) { const el=$("toast"); el.textContent=message; el.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove("show"),2800); }
@@ -324,10 +324,9 @@ async function sendAttachment(file, forcedType=null){
     $("media-input").value="";
     return;
   }
-  // Community uploads: only the beta-beeswax account can upload arbitrary files,
-  // and only in communities that account created. Other communities are GIF-only.
+  // Community uploads: QuietChat admins can upload arbitrary files in communities they created. Other communities are GIF-only.
   if(activeChat.isGroup && !(isQuietChatAdmin() && activeChat.createdBy===user?.id) && !isGifFile(file)){
-    toast("This community only allows GIF uploads. Full file uploads are enabled only in communities created by beta-beeswax.");
+    toast("This community only allows GIF uploads. Full file uploads are enabled only in communities created by a QuietChat admin.");
     $("media-input").value="";
     return;
   }
