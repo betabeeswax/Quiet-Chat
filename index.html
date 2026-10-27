@@ -194,6 +194,17 @@
   <dialog id="settings-dialog" class="modal">
     <div class="dialog-head"><div><p class="eyebrow">PREFERENCES</p><h2>Settings</h2></div><button id="settings-close-btn" class="icon-button" aria-label="Close settings">×</button></div>
     <p class="muted settings-intro">Make QuietChat work the way you like. Your preferences are saved on this device.</p>
+    <div class="settings-section appearance-settings">
+      <h3>🎨 Appearance & layout</h3>
+      <label for="settings-ui-version">Interface design</label>
+      <select id="settings-ui-version" class="setting-select"><option value="fresh">Fresh QuietChat</option><option value="classic">Classic QuietChat</option></select>
+      <p class="tiny muted">Switch between the refreshed design and the classic interface.</p>
+      <label for="settings-device-mode" class="field-gap">Device layout</label>
+      <select id="settings-device-mode" class="setting-select"><option value="auto">Automatic (recommended)</option><option value="mobile">Mobile mode</option><option value="pc">PC mode</option></select>
+      <p class="tiny muted">PC mode is automatically rejected and reset to Automatic when the window is too narrow.</p>
+      <label for="settings-accent-color" class="field-gap">Accent colour</label>
+      <div class="accent-picker-row"><input id="settings-accent-color" type="color" value="#8b7cff" aria-label="Choose accent colour"><span class="tiny muted">Personalise buttons and highlights on this device.</span></div>
+    </div>
     <div class="settings-section">
       <h3>🎥 Video calls</h3>
       <p class="tiny muted">Choose where calls open when you press Call.</p>
