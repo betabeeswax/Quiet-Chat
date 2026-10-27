@@ -223,7 +223,7 @@ function renderChats(){
 }
 async function selectChat(chat){
   activeChat=chat;try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members${chat.memberNames?.length?" · "+chat.memberNames.join(", "):""} · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
-  $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";$("chat-remove-btn").disabled=false;  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
+  $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";$("chat-remove-btn").disabled=!!user?.is_anonymous&&chat.isGroup;  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
   requestAnimationFrame(()=>{const item=$(`chat-list`).querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
   if(messageRefreshTimer){clearInterval(messageRefreshTimer);messageRefreshTimer=null;}
@@ -314,7 +314,11 @@ async function sendAttachment(file, forcedType=null){
   if(!activeChat||!file)return;
   const type=forcedType || (file.type.startsWith("image/")?"image":file.type.startsWith("video/")?"video":file.type.startsWith("audio/")?"audio":"file");
   const actualType=type;
-  
+  if(activeChat.isGroup && (!user?.email || user.is_anonymous)){
+    toast("Use an email-based account to upload attachments in communities. Link your account in Settings.");
+    $("media-input").value="";
+    return;
+  }
   // Community uploads: only the beta-beeswax account can upload arbitrary files,
   // and only in communities that account created. Other communities are GIF-only.
   if(activeChat.isGroup && !(isQuietChatAdmin() && activeChat.createdBy===user?.id) && !isGifFile(file)){
@@ -390,10 +394,11 @@ async function toggleVoiceRecording(){
 }
 $("voice-memo-btn")?.addEventListener("click",toggleVoiceRecording);
 
-$("create-group-btn").addEventListener("click",()=>{if(!user){toast("Please sign in first.");showSetup(false);return;}openDialog("group-dialog");});
+$("create-group-btn").addEventListener("click",()=>{if(!user){toast("Please sign in first.");showSetup(false);return;}if(user.is_anonymous){toast("Guest accounts can chat, but creating groups requires a registered account.");return;}openDialog("group-dialog");});
 $("group-form").addEventListener("submit",async e=>{
   e.preventDefault();
   if(!user||!db){toast("Please sign in again, then try creating the group.");return;}
+  if(user.is_anonymous){toast("Guest accounts cannot create groups. Create an account first.");return;}
   const name=cleanName($("group-name-input").value);
   if(name.length<2){toast("Group name must have at least 2 characters.");return;}
   const btn=e.submitter||$("group-form").querySelector('button[type="submit"]');
@@ -436,6 +441,7 @@ $("join-form").addEventListener("submit",async e=>{
 
 $("chat-remove-btn")?.addEventListener("click",async()=>{
   if(!activeChat||!user)return;
+  if(user.is_anonymous&&activeChat.isGroup){toast("Guest accounts cannot leave groups yet. Sign in with a registered account to leave this group.");return;}
   const chat=activeChat;
   const action=chat.isGroup?"leave this group":"remove this chat from your list";
   if(!window.confirm("Are you sure you want to "+action+"? This removes your membership. It does not delete the other person's copy."))return;
@@ -714,6 +720,7 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
  $("community-create-form")?.addEventListener("submit",async ev=>{
   ev.preventDefault();
   if(!user||!db){toast("Please sign in first, then try again.");return;}
+  if(!user.email || user.is_anonymous){toast("Creating a community requires an email-based account. Link your account in Settings first.");return;}
   const name=cleanName($("community-name").value);
   if(name.length<2){toast("Group name needs at least 2 characters.");return;}
   const form= $("community-create-form"),btn=form.querySelector('button[type="submit"]');
