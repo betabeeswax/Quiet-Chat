@@ -464,8 +464,11 @@ function applyAppearanceSettings(){
   const ui=localStorage.getItem("quietchat-ui-version")||"fresh";
   let mode=localStorage.getItem("quietchat-device-mode")||"auto";
   const accent=localStorage.getItem("quietchat-accent-color")||"#8b7cff";
+  // Reject PC mode when the actual viewport is too narrow; revert immediately.
   if(mode==="pc" && window.innerWidth<900){mode="auto";localStorage.setItem("quietchat-device-mode","auto");}
   root.dataset.ui=ui;root.dataset.deviceMode=mode;root.style.setProperty("--accent",accent);
+  document.body.classList.toggle("pc-layout",mode==="pc");
+  document.body.classList.toggle("compact-layout",mode==="mobile");
   if($("settings-ui-version"))$("settings-ui-version").value=ui;
   if($("settings-device-mode"))$("settings-device-mode").value=mode;
   if($("settings-accent-color"))$("settings-accent-color").value=accent;
