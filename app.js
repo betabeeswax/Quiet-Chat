@@ -290,7 +290,7 @@ async function showEmptyChatInvite(chat,messageCount){
 $("empty-chat-copy-code")?.addEventListener("click",()=>copyInviteText($("empty-chat-invite-code").textContent,"Invite code"));
 $("empty-chat-copy-link")?.addEventListener("click",()=>copyInviteText($("empty-chat-invite-link").value,"Invite link"));
 async function selectChat(chat){
-  activeChat=chat;emptyChatInviteRequest++;$("empty-chat-invite")?.classList.add("hidden");try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
+  activeChat=chat;closeArcadeInChat();emptyChatInviteRequest++;$("empty-chat-invite")?.classList.add("hidden");try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
   $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";$("chat-remove-btn").disabled=!!user?.is_anonymous&&chat.isGroup;  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=!!chat.isGroup;$("call-btn").classList.toggle("hidden",!!chat.isGroup);$("settings-export-btn").disabled=false;$("game-btn").disabled=!!chat.isGroup;$("game-btn").classList.toggle("hidden",!!chat.isGroup);document.querySelectorAll('[data-menu-action="games"]').forEach(b=>b.classList.toggle("hidden",!!chat.isGroup));$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
   requestAnimationFrame(()=>{const item=document.querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
@@ -808,13 +808,26 @@ function renderRps(state){
   const last=state.last;if(last){const label=id=>id===user.id?"You":"Friend";const move=m=>({rock:"🪨 Rock",paper:"📄 Paper",scissors:"✂️ Scissors"}[m]||m);const winner=last.winner==="tie"?"It's a tie!":label(last.winner)+" won the round!";$("rps-last").textContent=`${label(last.p1)} chose ${move(last.m1)} · ${label(last.p2)} chose ${move(last.m2)}. ${winner}`;}else{$("rps-last").textContent=Object.keys(state.moves||{}).length?"Move received — waiting for your friend…":"Choose rock, paper, or scissors to start.";}
 }
 async function refreshRps(){if(!activeChat)return;const {data,error}=await db.from("chat_games").select("state").eq("chat_id",activeChat.id).eq("game_type","rps").maybeSingle();if(!error)renderRps(data?.state);}
+function openArcadeInChat(){
+  if(!activeChat)return;
+  const frame=$("arcade-inline-frame");const arcadeUrl=new URL("/games/",window.location.origin);arcadeUrl.searchParams.set("chat",activeChat.id);
+  $("welcome-panel").classList.add("hidden");$("empty-chat-invite").classList.add("hidden");$("messages").classList.add("hidden");$("composer-wrap").classList.add("hidden");$("go-to-bottom-btn").classList.add("hidden");
+  $("arcade-inline").classList.remove("hidden");frame.src=arcadeUrl.pathname+arcadeUrl.search;
+  $("game-btn").textContent="← Back to chat";$("chat-subtitle").textContent="Playing QuietChat Arcade";
+}
+function closeArcadeInChat(){
+  $("arcade-inline").classList.add("hidden");$("arcade-inline-frame").src="about:blank";
+  $("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");
+  $("game-btn").textContent="🎮 Games";
+  if(activeChat){$("chat-subtitle").textContent=activeChat.isGroup?activeChat.memberCount+" members · Messages are live":(activeChat.bio||"Private chat · messages are live");scrollMessagesToBottom(true);}
+}
 $("game-btn").addEventListener("click",()=>{
-  const frame=$("game-night-frame");
-  if(frame){const arcadeUrl=new URL("/games/",window.location.origin);if(activeChat?.id)arcadeUrl.searchParams.set("chat",activeChat.id);frame.src=arcadeUrl.pathname+arcadeUrl.search;}
-  openDialog("game-dialog");
+  if(!$("arcade-inline").classList.contains("hidden")){closeArcadeInChat();return;}
+  openArcadeInChat();
 });
+$("arcade-back-chat")?.addEventListener("click",closeArcadeInChat);
 window.addEventListener("message",async(event)=>{
-  if(event.origin!==window.location.origin||event.source!==$("game-night-frame")?.contentWindow)return;
+  if(event.origin!==window.location.origin||event.source!==$("arcade-inline-frame")?.contentWindow)return;
   const data=event.data;if(data?.type!=="quietchat-arcade-invite"||!user||!activeChat||data.chatId!==activeChat.id)return;
   const message="🎮 "+username+" started "+data.game+" in QuietChat Arcade! Join up to 4 players: "+data.url+" (Room code: "+data.roomCode+")";
   const {error}=await db.from("messages").insert({chat_id:activeChat.id,sender_id:user.id,body:message});
