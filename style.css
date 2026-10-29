@@ -958,3 +958,44 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
     content:"✉"!important;font-size:20px!important;line-height:1!important;
   }
 }
+
+
+/* Ubuntu-inspired compact/expanded sidebar controls and perfectly centred rail icons. */
+@media (min-width:721px) {
+  .app-shell.sidebar-icons-only .sidebar {align-items:center!important}
+  .app-shell.sidebar-icons-only .sidebar-top,
+  .app-shell.sidebar-icons-only .sidebar-actions,
+  .app-shell.sidebar-icons-only .chat-list-tabs,
+  .app-shell.sidebar-icons-only .chat-list-panel,
+  .app-shell.sidebar-icons-only .profile-strip {
+    width:100%!important;box-sizing:border-box!important;align-items:center!important;
+  }
+  .app-shell.sidebar-icons-only .sidebar-top {position:relative!important;padding:8px 0!important}
+  .app-shell.sidebar-icons-only .brand-row {justify-content:center!important;margin:0 auto!important}
+  .app-shell.sidebar-icons-only .brand-mark.small {margin:0 auto!important}
+  .app-shell.sidebar-icons-only .sidebar-top-tools {display:flex!important;position:absolute!important;right:4px!important;top:4px!important;flex-direction:column!important;gap:3px!important}
+  .app-shell.sidebar-icons-only #new-chat-btn {display:none!important}
+  .app-shell.sidebar-icons-only #close-sidebar-btn {
+    display:grid!important;place-items:center!important;
+    width:22px!important;height:22px!important;min-width:22px!important;
+    padding:0!important;border-radius:7px!important;font-size:0!important;
+  }
+  .app-shell.sidebar-icons-only #close-sidebar-btn::before {
+    content:"☰";font-size:12px!important;line-height:1!important;
+  }
+  .app-shell.sidebar-icons-only .sidebar-actions {padding:5px 0 8px!important}
+  .app-shell.sidebar-icons-only #sidebar-discover-btn,
+  .app-shell.sidebar-icons-only #show-servers-btn,
+  .app-shell.sidebar-icons-only #show-dms-btn {margin-left:auto!important;margin-right:auto!important}
+  .app-shell.sidebar-icons-only .chat-list-tabs {padding-left:0!important;padding-right:0!important;justify-items:center!important}
+  .app-shell.sidebar-icons-only .chat-list-panel {padding-left:0!important;padding-right:0!important}
+  .app-shell.sidebar-icons-only .chat-list-panel .chat-list {width:100%!important;box-sizing:border-box!important;padding-left:0!important;padding-right:0!important}
+  .app-shell.sidebar-icons-only .chat-item {width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important;padding:5px 0!important}
+  .app-shell.sidebar-icons-only .chat-item .avatar {margin-left:auto!important;margin-right:auto!important;flex:0 0 48px!important}
+  .app-shell.sidebar-icons-only .profile-strip {justify-content:center!important;padding-left:0!important;padding-right:0!important}
+  .app-shell.sidebar-icons-only .profile-strip .avatar {margin:0 auto!important}
+}
+@media (min-width:721px) {
+  .app-shell:not(.sidebar-icons-only) #close-sidebar-btn {font-size:0!important;width:30px!important;height:30px!important;padding:0!important;display:grid!important;place-items:center!important}
+  .app-shell:not(.sidebar-icons-only) #close-sidebar-btn::before {content:"☰";font-size:16px!important;line-height:1!important}
+}
