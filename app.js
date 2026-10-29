@@ -916,3 +916,38 @@ $("messages")?.addEventListener("scroll",updateGoBottomButton,{passive:true});
 if($("messages")&&typeof MutationObserver!=="undefined"){new MutationObserver(()=>requestAnimationFrame(updateGoBottomButton)).observe($("messages"),{childList:true,subtree:true});}
 window.addEventListener("resize",updateGoBottomButton);
 $("settings-btn")?.addEventListener("click",()=>{if($("settings-compact-sidebar"))$("settings-compact-sidebar").checked=app.classList.contains("sidebar-icons-only");if($("settings-auto-scroll"))$("settings-auto-scroll").checked=getAutoScroll();});
+
+
+// Game Night integration: external rooms are created by Game Night itself.
+(function setupGameNight(){
+  const byId=id=>document.getElementById(id);
+  const frame=byId("game-night-frame");
+  const start=byId("game-night-start");
+  const panel=byId("game-night-player-panel");
+  const note=byId("game-night-mode-note");
+  const launch=(mode)=>{
+    start.classList.add("hidden");
+    panel.classList.remove("hidden");
+    note.textContent=mode==="ai"
+      ? "AI mode: choose a game on Game Night, then select its AI opponent option."
+      : "Real-player mode: choose a game, create a private room, and share its code/link with friends.";
+    if(frame.src==="about:blank") frame.src="https://gamenight.zone/";
+    byId("game-night-room-link").focus();
+  };
+  byId("game-night-ai")?.addEventListener("click",()=>launch("ai"));
+  byId("game-night-players")?.addEventListener("click",()=>launch("players"));
+  byId("game-night-back")?.addEventListener("click",()=>{panel.classList.add("hidden");start.classList.remove("hidden");});
+  byId("game-night-open-tab")?.addEventListener("click",()=>window.open("https://gamenight.zone/","_blank","noopener,noreferrer"));
+  byId("game-night-exit")?.addEventListener("click",()=>{frame.src="about:blank";panel.classList.add("hidden");start.classList.remove("hidden");closeDialog("game-dialog");});
+  byId("game-night-send-invite")?.addEventListener("click",async()=>{
+    const link=byId("game-night-room-link").value.trim();
+    if(!activeChat||!user){toast("Open a chat before sending a game invite.");return;}
+    let url;try{url=new URL(link);}catch{toast("Paste a valid Game Night room invite link first.");return;}
+    if(url.protocol!=="https:"||url.hostname!=="gamenight.zone"&&!url.hostname.endsWith(".gamenight.zone")){toast("Please paste a secure Game Night invite link.");return;}
+    const {error}=await db.from("messages").insert({chat_id:activeChat.id,sender_id:user.id,body:"🎮 Join my Game Night room: "+url.href});
+    if(error){toast("Couldn't send the invite. Try again.");return;}
+    byId("game-night-room-link").value="";
+    await refreshActiveChatMessages(activeChat.id);
+    toast("Game Night invite sent to this chat.");
+  });
+})();
