@@ -59,7 +59,11 @@ function cussingFilterEnabled(){try{return localStorage.getItem("quietchat-cussi
 function filterCussing(text){if(!cussingFilterEnabled())return String(text);return SWEAR_PATTERNS.reduce((value,pattern)=>value.replace(pattern,"••••"),String(text));}
 function setProfile(name){username=name;$("my-name").textContent=name;$("my-avatar").textContent=initials(name);}
 function openDialog(id){$(id).showModal();}
-function scrollMessagesToBottom(){const area=$("messages");if(!area)return;requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;});});}
+const AUTO_SCROLL_KEY="quietchat-auto-scroll-v1";
+function getAutoScroll(){try{return localStorage.getItem(AUTO_SCROLL_KEY)!=="off";}catch{return true;}}
+function isNearMessageBottom(area){return area.scrollHeight-area.scrollTop-area.clientHeight<120;}
+function updateGoBottomButton(){const area=$("messages"),btn=$("go-to-bottom-btn");if(!area||!btn)return;btn.classList.toggle("hidden",area.classList.contains("hidden")||isNearMessageBottom(area));}
+function scrollMessagesToBottom(force=false){const area=$("messages");if(!area)return;if(!force&&!getAutoScroll()&&!isNearMessageBottom(area)){updateGoBottomButton();return;}requestAnimationFrame(()=>{area.scrollTo({top:area.scrollHeight,behavior:"smooth"});requestAnimationFrame(()=>{if(getAutoScroll()||force)area.scrollTop=area.scrollHeight;updateGoBottomButton();});});}
 function closeDialog(id){$(id).close();}
 
 async function start(){
@@ -875,8 +879,18 @@ function setSidebarCollapsed(collapsed){
   $("open-sidebar-btn")?.setAttribute("aria-expanded",String(!collapsed));
   try{localStorage.setItem("quietchat-sidebar-collapsed",collapsed?"yes":"no");}catch{}
 }
+function setSidebarCollapsed(compact){
+  app.classList.toggle("sidebar-icons-only",compact);
+  app.classList.remove("sidebar-collapsed");
+  $("close-sidebar-btn")?.setAttribute("aria-expanded",String(!compact));
+  $("open-sidebar-btn")?.setAttribute("aria-expanded",String(!compact));
+  try{localStorage.setItem("quietchat-sidebar-collapsed",compact?"yes":"no");}catch{}
+}
 $("close-sidebar-btn")?.addEventListener("click",()=>setSidebarCollapsed(true));
-$("open-sidebar-btn")?.addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");setSidebarCollapsed(false);});
-try{
-  if(localStorage.getItem("quietchat-sidebar-collapsed")==="yes")setSidebarCollapsed(true);
-}catch{}
+$("open-sidebar-btn")?.addEventListener("click",()=>{app.classList.remove("chat-open");setSidebarCollapsed(false);});
+try{if(localStorage.getItem("quietchat-sidebar-collapsed")==="yes")setSidebarCollapsed(true);}catch{}
+$("settings-compact-sidebar")?.addEventListener("change",e=>setSidebarCollapsed(e.target.checked));
+$("settings-auto-scroll")?.addEventListener("change",e=>{try{localStorage.setItem(AUTO_SCROLL_KEY,e.target.checked?"on":"off");}catch{}if(e.target.checked)scrollMessagesToBottom(true);else updateGoBottomButton();});
+$("go-to-bottom-btn")?.addEventListener("click",()=>scrollMessagesToBottom(true));
+$("messages")?.addEventListener("scroll",updateGoBottomButton,{passive:true});
+$("settings-btn")?.addEventListener("click",()=>{if($("settings-compact-sidebar"))$("settings-compact-sidebar").checked=app.classList.contains("sidebar-icons-only");if($("settings-auto-scroll"))$("settings-auto-scroll").checked=getAutoScroll();});
