@@ -60,10 +60,10 @@ function filterCussing(text){if(!cussingFilterEnabled())return String(text);retu
 function setProfile(name){username=name;$("my-name").textContent=name;$("my-avatar").textContent=initials(name);}
 function openDialog(id){$(id).showModal();}
 const AUTO_SCROLL_KEY="quietchat-auto-scroll-v1";
-function getAutoScroll(){try{return localStorage.getItem(AUTO_SCROLL_KEY)!=="off";}catch{return true;}}
-function isNearMessageBottom(area){return area.scrollHeight-area.scrollTop-area.clientHeight<120;}
-function updateGoBottomButton(){const area=$("messages"),btn=$("go-to-bottom-btn");if(!area||!btn)return;btn.classList.toggle("hidden",area.classList.contains("hidden")||isNearMessageBottom(area));}
-function scrollMessagesToBottom(force=false){const area=$("messages");if(!area)return;if(!force&&!getAutoScroll()&&!isNearMessageBottom(area)){updateGoBottomButton();return;}requestAnimationFrame(()=>{area.scrollTo({top:area.scrollHeight,behavior:"smooth"});requestAnimationFrame(()=>{if(getAutoScroll()||force)area.scrollTop=area.scrollHeight;updateGoBottomButton();});});}
+function getAutoScroll(){try{return localStorage.getItem(AUTO_SCROLL_KEY)==="on";}catch{return false;}}
+function isNearMessageBottom(area){return area.scrollHeight-area.scrollTop-area.clientHeight<80;}
+function updateGoBottomButton(){const area=$("messages"),btn=$("go-to-bottom-btn");if(!area||!btn)return;const away=area.scrollHeight-area.scrollTop-area.clientHeight>=80;btn.classList.toggle("hidden",area.classList.contains("hidden")||!away);}
+function scrollMessagesToBottom(force=false){const area=$("messages");if(!area)return;if(!force&&!getAutoScroll()){updateGoBottomButton();return;}requestAnimationFrame(()=>{area.scrollTo({top:area.scrollHeight,behavior:"smooth"});requestAnimationFrame(()=>{if(force||getAutoScroll())area.scrollTop=area.scrollHeight;updateGoBottomButton();});});}
 function closeDialog(id){$(id).close();}
 
 async function start(){
@@ -893,4 +893,6 @@ $("settings-compact-sidebar")?.addEventListener("change",e=>setSidebarCollapsed(
 $("settings-auto-scroll")?.addEventListener("change",e=>{try{localStorage.setItem(AUTO_SCROLL_KEY,e.target.checked?"on":"off");}catch{}if(e.target.checked)scrollMessagesToBottom(true);else updateGoBottomButton();});
 $("go-to-bottom-btn")?.addEventListener("click",()=>scrollMessagesToBottom(true));
 $("messages")?.addEventListener("scroll",updateGoBottomButton,{passive:true});
+if($("messages")&&typeof MutationObserver!=="undefined"){new MutationObserver(()=>requestAnimationFrame(updateGoBottomButton)).observe($("messages"),{childList:true,subtree:true});}
+window.addEventListener("resize",updateGoBottomButton);
 $("settings-btn")?.addEventListener("click",()=>{if($("settings-compact-sidebar"))$("settings-compact-sidebar").checked=app.classList.contains("sidebar-icons-only");if($("settings-auto-scroll"))$("settings-auto-scroll").checked=getAutoScroll();});
