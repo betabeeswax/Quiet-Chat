@@ -810,8 +810,16 @@ function renderRps(state){
 async function refreshRps(){if(!activeChat)return;const {data,error}=await db.from("chat_games").select("state").eq("chat_id",activeChat.id).eq("game_type","rps").maybeSingle();if(!error)renderRps(data?.state);}
 $("game-btn").addEventListener("click",()=>{
   const frame=$("game-night-frame");
-  if(frame&&(!frame.getAttribute("src")||frame.getAttribute("src")==="about:blank"))frame.src="/games/";
+  if(frame){const arcadeUrl=new URL("/games/",window.location.origin);if(activeChat?.id)arcadeUrl.searchParams.set("chat",activeChat.id);frame.src=arcadeUrl.pathname+arcadeUrl.search;}
   openDialog("game-dialog");
+});
+window.addEventListener("message",async(event)=>{
+  if(event.origin!==window.location.origin||event.source!==$("game-night-frame")?.contentWindow)return;
+  const data=event.data;if(data?.type!=="quietchat-arcade-invite"||!user||!activeChat||data.chatId!==activeChat.id)return;
+  const message="🎮 "+username+" started "+data.game+" in QuietChat Arcade! Join up to 4 players: "+data.url+" (Room code: "+data.roomCode+")";
+  const {error}=await db.from("messages").insert({chat_id:activeChat.id,sender_id:user.id,body:message});
+  if(error)toast("Room was created, but the invite couldn't be sent to this chat.");
+  else toast("Arcade invite sent to "+(activeChat.title||"this chat")+"!");
 });
 document.querySelectorAll("[data-embed-game]").forEach(button=>button.addEventListener("click",()=>{
   const frame=$("game-night-frame");
