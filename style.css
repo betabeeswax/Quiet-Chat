@@ -1260,3 +1260,12 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
 .invite-link-row button{flex:0 0 auto;white-space:nowrap}
 #invite-copy-fallback textarea{font-size:12px;overflow-wrap:anywhere}
 @media(max-width:420px){.invite-link-row{flex-direction:column}.invite-link-row button{width:100%}}
+
+/* Native QuietChat right-click menu */
+.chat-context-menu{position:fixed;z-index:10000;width:224px;padding:7px;background:var(--panel,#202234);border:1px solid var(--border,#3b3d50);border-radius:12px;box-shadow:0 14px 42px #0008;display:flex;flex-direction:column;gap:3px}
+.chat-context-menu.hidden{display:none}
+.chat-context-menu button{width:100%;text-align:left;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:var(--text,#f4f4fa);font:inherit;cursor:pointer}
+.chat-context-menu button:hover{background:var(--surface,#34364b)}
+.chat-context-menu button.danger{color:#ff8585}
+.context-menu-title{padding:7px 10px 9px;font-size:12px;font-weight:700;color:var(--muted,#a5a7bb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.context-menu-divider{height:1px;background:var(--border,#3b3d50);margin:3px 4px}
