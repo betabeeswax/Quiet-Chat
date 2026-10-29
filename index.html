@@ -107,6 +107,14 @@
         <p class="muted">Create a private chat and share its one-time invite code with someone you trust.</p>
         <button id="welcome-create" class="primary">＋ Create a private chat</button>
       </div>
+      <section id="empty-chat-invite" class="empty-chat-invite hidden" aria-live="polite">
+        <div class="empty-chat-invite-icon">🔗</div>
+        <div class="empty-chat-invite-copy"><strong>This chat is empty</strong><p id="empty-chat-invite-note">Share this invite link to bring someone into the conversation.</p></div>
+        <div id="empty-chat-invite-controls" class="empty-chat-invite-controls hidden">
+          <div class="empty-chat-invite-code-row"><code id="empty-chat-invite-code"></code><button id="empty-chat-copy-code" class="secondary" type="button">Copy code</button></div>
+          <div class="empty-chat-invite-link-row"><input id="empty-chat-invite-link" readonly aria-label="Chat invite link"><button id="empty-chat-copy-link" class="primary" type="button">Copy link</button></div>
+        </div>
+      </section>
       <div id="messages" class="messages hidden"></div>
       <button id="go-to-bottom-btn" class="go-to-bottom hidden" type="button">↓ Go to bottom</button>
       <div id="composer-wrap" class="composer-wrap hidden">
