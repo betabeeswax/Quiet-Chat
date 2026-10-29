@@ -484,13 +484,15 @@ function applyAppearanceSettings(){
   const ui=localStorage.getItem("quietchat-ui-version")||"fresh";
   let mode=localStorage.getItem("quietchat-device-mode")||"auto";
   const accent=localStorage.getItem("quietchat-accent-color")||"#8b7cff";
+  const sidebarPosition=localStorage.getItem("quietchat-sidebar-position")||"left";
   // Reject PC mode when the actual viewport is too narrow; revert immediately.
   if(mode==="pc" && window.innerWidth<900){mode="auto";localStorage.setItem("quietchat-device-mode","auto");}
-  root.dataset.ui=ui;root.dataset.deviceMode=mode;root.style.setProperty("--accent",accent);
+  root.dataset.ui=ui;root.dataset.deviceMode=mode;root.dataset.sidebarPosition=sidebarPosition;root.style.setProperty("--accent",accent);
   document.body.classList.toggle("pc-layout",mode==="pc");
   document.body.classList.toggle("compact-layout",mode==="mobile");
   if($("settings-ui-version"))$("settings-ui-version").value=ui;
   if($("settings-device-mode"))$("settings-device-mode").value=mode;
+  if($("settings-sidebar-position"))$("settings-sidebar-position").value=sidebarPosition;
   if($("settings-accent-color"))$("settings-accent-color").value=accent;
 }
 $("settings-ui-version")?.addEventListener("change",e=>{localStorage.setItem("quietchat-ui-version",e.target.value);applyAppearanceSettings();});
@@ -499,6 +501,7 @@ $("settings-device-mode")?.addEventListener("change",e=>{
   localStorage.setItem("quietchat-device-mode",e.target.value);applyAppearanceSettings();
 });
 $("settings-accent-color")?.addEventListener("input",e=>{localStorage.setItem("quietchat-accent-color",e.target.value);applyAppearanceSettings();});
+$("settings-sidebar-position")?.addEventListener("change",e=>{localStorage.setItem("quietchat-sidebar-position",e.target.value);applyAppearanceSettings();});
 window.addEventListener("resize",()=>{if(localStorage.getItem("quietchat-device-mode")==="pc"&&window.innerWidth<900){localStorage.setItem("quietchat-device-mode","auto");applyAppearanceSettings();toast("PC mode did not fit, so QuietChat reverted to Automatic.");}});
 applyAppearanceSettings();
 $("settings-btn").addEventListener("click",()=>{updateAccountLinkButton();updateGoogleLinkButton();openDialog("settings-dialog");});
