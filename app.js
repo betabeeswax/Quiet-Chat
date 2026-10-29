@@ -790,7 +790,7 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
  
  $("group-settings-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup)return;if(!canManageCommunity(activeChat)){toast("Only the community owner or QuietChat admin can manage this community.");return;}document.querySelectorAll('input[name="existing-group-visibility"]').forEach(x=>x.checked=(x.value==="public"&&activeChat.isPublic)||(x.value==="private"&&!activeChat.isPublic));$("group-allow-gifs").checked=!!activeChat.allowGifs;$("group-inactivity-rule").checked=activeChat.removeInactive!==false;$("group-name-edit").value=activeChat.title||"";const select=$("transfer-owner-select");select.replaceChildren(new Option("Keep current owner",""));(activeChat.memberIds||[]).filter(m=>m.id!==user.id).forEach(m=>select.add(new Option(m.name,m.id)));openDialog("group-settings-dialog");});
  $("delete-group-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup){toast("Open a group first.");return;}if(!canManageCommunity(activeChat)){toast("Only the community owner or QuietChat admin can delete this community.");return;}if(!confirm('Delete "'+activeChat.title+'" and its group chat? This cannot be undone.'))return;const id=activeChat.id;const {error}=await db.rpc("delete_group_chat",{target_chat:id});if(error){toast("Could not delete group: "+error.message+" (secure delete function may need installing)");return;}if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}activeChat=null;$("app-screen").classList.remove("chat-open");$("welcome-panel").classList.remove("hidden");$("messages").classList.add("hidden");$("composer-wrap").classList.add("hidden");await loadChats();await loadMyCommunities();toast("Group deleted.");});
- $("mobile-back").addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");});
+ $("mobile-back").addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");setSidebarCollapsed(false);});
 let onlineChannel=null;
 function subscribeOnlineUsers(){
   if(onlineChannel){db.removeChannel(onlineChannel);onlineChannel=null;}
@@ -876,7 +876,7 @@ function setSidebarCollapsed(collapsed){
   try{localStorage.setItem("quietchat-sidebar-collapsed",collapsed?"yes":"no");}catch{}
 }
 $("close-sidebar-btn")?.addEventListener("click",()=>setSidebarCollapsed(true));
-$("open-sidebar-btn")?.addEventListener("click",()=>setSidebarCollapsed(false));
+$("open-sidebar-btn")?.addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");setSidebarCollapsed(false);});
 try{
   if(localStorage.getItem("quietchat-sidebar-collapsed")==="yes")setSidebarCollapsed(true);
 }catch{}
