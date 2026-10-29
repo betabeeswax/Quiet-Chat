@@ -905,3 +905,24 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
  }
  .app-shell.sidebar-icons-only .chat-item{flex-shrink:0!important}
 }
+
+
+/* Compact rail: icon-only community shortcut, visible server/DM toggles,
+   and scrollable lists that give communities most of the available height. */
+@media(min-width:721px){
+ .app-shell.sidebar-icons-only .sidebar{height:100dvh!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+ .app-shell.sidebar-icons-only .sidebar-top,.app-shell.sidebar-icons-only .sidebar-actions,.app-shell.sidebar-icons-only .chat-list-tabs,.app-shell.sidebar-icons-only .profile-strip{flex:0 0 auto!important}
+ .app-shell.sidebar-icons-only .sidebar-actions .community-action{width:48px!important;height:48px!important;min-height:48px!important;padding:0!important;overflow:hidden!important;color:transparent!important;font-size:0!important;position:relative!important}
+ .app-shell.sidebar-icons-only .sidebar-actions .community-action *{display:none!important}
+ .app-shell.sidebar-icons-only #sidebar-discover-btn:before{content:"◈"!important;display:block!important;color:var(--text)!important;font-size:24px!important;line-height:1!important}
+ .app-shell.sidebar-icons-only .chat-list-tabs{display:grid!important;grid-template-columns:1fr!important;gap:5px!important;padding:5px 14px!important;margin:0!important}
+ .app-shell.sidebar-icons-only .chat-list-tab{display:grid!important;place-items:center!important;width:48px!important;height:42px!important;padding:0!important;font-size:0!important;border-radius:12px!important}
+ .app-shell.sidebar-icons-only #show-servers-btn:before{content:"▦";font-size:19px!important}
+ .app-shell.sidebar-icons-only #show-dms-btn:before{content:"✉";font-size:19px!important}
+ .app-shell.sidebar-icons-only .chat-list-panel,.app-shell.sidebar-icons-only .chat-list-panel.hidden{display:flex!important;flex-direction:column!important;width:100%!important;min-height:0!important;overflow:hidden!important;flex:0 1 auto!important}
+ .app-shell.sidebar-icons-only #server-list-panel{flex:1 1 75%!important;max-height:none!important;min-height:0!important}
+ .app-shell.sidebar-icons-only #direct-list-panel{flex:0 1 25%!important;max-height:25%!important;min-height:0!important}
+ .app-shell.sidebar-icons-only .chat-list-panel .chat-list{flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;padding:4px 7px!important;overscroll-behavior:contain}
+ .app-shell.sidebar-icons-only .chat-item{flex:0 0 auto!important}
+ .app-shell.sidebar-icons-only .profile-strip{margin-top:auto!important}
+}
