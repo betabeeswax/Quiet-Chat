@@ -505,7 +505,7 @@ $("settings-sidebar-position")?.addEventListener("change",e=>{localStorage.setIt
 window.addEventListener("resize",()=>{if(localStorage.getItem("quietchat-device-mode")==="pc"&&window.innerWidth<900){localStorage.setItem("quietchat-device-mode","auto");applyAppearanceSettings();toast("PC mode did not fit, so QuietChat reverted to Automatic.");}});
 applyAppearanceSettings();
 $("settings-btn").addEventListener("click",()=>{updateAccountLinkButton();updateGoogleLinkButton();openDialog("settings-dialog");});
-function openAccountSettings(){updateAccountLinkButton();updateGoogleLinkButton();if($("settings-compact-sidebar"))$("settings-compact-sidebar").checked=app.classList.contains("sidebar-icons-only");if($("settings-auto-scroll"))$("settings-auto-scroll").checked=getAutoScroll();openDialog("settings-dialog");}
+function openAccountSettings(){if($("settings-edit-profile-btn")){$("settings-edit-profile-btn").click();return;}openDialog("profile-dialog");}
 $("my-avatar")?.addEventListener("click",openAccountSettings);
 $("my-avatar")?.setAttribute("title","Open profile and settings");
 $("my-avatar")?.setAttribute("role","button");
