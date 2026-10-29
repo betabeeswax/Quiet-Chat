@@ -438,25 +438,58 @@ $("add-people-btn").addEventListener("click",async()=>{
   if(!activeChat?.isGroup)return;
   const {data,error}=await db.rpc("create_chat_invite_for",{target_chat:activeChat.id});
   if(error){toast("Couldn't make an invite for this group.");return;}
-  window.currentInviteCode=String(data);$("invite-code").textContent=window.currentInviteCode;const url=new URL(window.location.href);url.searchParams.set("invite",window.currentInviteCode);window.currentInviteUrl=url.toString();openDialog("invite-dialog");
+  setInviteDetails(data);openDialog("invite-dialog");
 });
 
+async function copyInviteText(value,label){
+  try{
+    if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(value);}
+    else{
+      const field=document.createElement("textarea");field.value=value;field.setAttribute("readonly","");field.style.position="fixed";field.style.opacity="0";document.body.append(field);field.select();
+      const copied=document.execCommand("copy");field.remove();if(!copied)throw new Error("Copy not available");
+    }
+    toast(label+" copied!");
+  }catch(error){
+    const field=document.createElement("textarea");field.value=value;field.style.width="100%";field.style.minHeight="70px";field.style.marginTop="8px";
+    const host=$("invite-copy-fallback");if(host){host.replaceChildren(document.createTextNode("Copy this "+label.toLowerCase()+":"),field);field.focus();field.select();}
+    toast("Select the text and copy it.");
+  }
+}
+function setInviteDetails(code){
+  window.currentInviteCode=String(code||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+  window.currentInviteUrl=window.location.origin+window.location.pathname+"?invite="+encodeURIComponent(window.currentInviteCode);
+  $("invite-code").textContent=window.currentInviteCode;
+  $("invite-link").value=window.currentInviteUrl;
+  $("invite-copy-fallback")?.replaceChildren();
+}
+async function handleInviteLink(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get("invite");
+  if(!code)return;
+  $("invite-input").value=code.toUpperCase().replace(/[^A-Z0-9]/g,"");
+  openDialog("join-dialog");
+}
 async function createInvite(){
   const btns=[$("create-invite-btn"),$("new-chat-btn"),$("welcome-create")];btns.forEach(b=>b.disabled=true);
-  const {data,error}=await db.rpc("create_chat_invite");
-  btns.forEach(b=>b.disabled=false);
-  if(error){toast("Couldn't create invite. Check that you ran supabase-setup.sql.");return;}
-  window.currentInviteCode=String(data);$("invite-code").textContent=window.currentInviteCode;const url=new URL(window.location.href);url.searchParams.set("invite",window.currentInviteCode);window.currentInviteUrl=url.toString();openDialog("invite-dialog");await loadChats();
+  try{
+    const {data,error}=await db.rpc("create_chat_invite");
+    if(error){toast("Couldn't create invite: "+error.message);return;}
+    setInviteDetails(data);openDialog("invite-dialog");await loadChats();
+  }finally{btns.forEach(b=>b.disabled=false);}
 }
 $("create-invite-btn").addEventListener("click",createInvite);$("new-chat-btn").addEventListener("click",createInvite);$("welcome-create").addEventListener("click",createInvite);
-$("copy-code-btn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(window.currentInviteUrl||$("invite-code").textContent);toast(window.currentInviteUrl?"Invite link copied!":"Invite code copied!");}catch{toast("Select and copy the invite shown above.");}});
+$("copy-code-btn").addEventListener("click",()=>copyInviteText(window.currentInviteCode||$("invite-code").textContent,"Invite code"));
+$("copy-link-btn").addEventListener("click",()=>copyInviteText(window.currentInviteUrl||$("invite-link").value,"Invite link"));
 $("invite-done-btn").addEventListener("click",()=>closeDialog("invite-dialog"));
 $("join-invite-btn").addEventListener("click",()=>openDialog("join-dialog"));
 $("join-form").addEventListener("submit",async e=>{
-  e.preventDefault();const code=$("invite-input").value.trim().toUpperCase().replace(/\s/g,"");
+  e.preventDefault();const code=$("invite-input").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(code.length!==10){toast("Invite codes must be 10 characters.");return;}
   const {data,error}=await db.rpc("join_chat_with_invite",{invite_code:code});
-  if(error){toast("That code is invalid, expired, or already used.");return;}
-  closeDialog("join-dialog");$("invite-input").value="";await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);toast("You joined the private chat!");
+  if(error){toast("Couldn't join with that invite: "+error.message);return;}
+  closeDialog("join-dialog");$("invite-input").value="";
+  const cleanUrl=new URL(window.location.href);cleanUrl.searchParams.delete("invite");window.history.replaceState({},document.title,cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
+  await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);toast("You joined the private chat!");
 });
 
 $("chat-remove-btn")?.addEventListener("click",async()=>{
