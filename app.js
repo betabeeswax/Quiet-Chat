@@ -260,8 +260,37 @@ function renderChats(){
   };
   groups.forEach(chat=>renderOne(chat,servers));directs.forEach(chat=>renderOne(chat,list));
 }
+let emptyChatInviteRequest=0;
+async function showEmptyChatInvite(chat,messageCount){
+  const panel=$("empty-chat-invite"),controls=$("empty-chat-invite-controls");
+  if(!panel)return;
+  panel.classList.add("hidden");controls?.classList.add("hidden");
+  if(messageCount>0||!chat)return;
+  const request=++emptyChatInviteRequest;
+  panel.classList.remove("hidden");
+  $("empty-chat-invite-note").textContent=chat.isGroup
+    ?"This community has no messages yet. Share an invite link so people can join."
+    :"This private chat has no messages yet. Share the link with one person to start your one-on-one chat.";
+  $("empty-chat-invite-note").dataset.status="loading";
+  $("empty-chat-invite-note").textContent+=" Creating an invite link…";
+  const {data,error}=await db.rpc("create_chat_invite_for",{target_chat:chat.id});
+  if(request!==emptyChatInviteRequest||activeChat?.id!==chat.id)return;
+  if(error){
+    $("empty-chat-invite-note").textContent=error.message?.includes("already has two people")
+      ?"This one-on-one chat already has two people, so it cannot invite a third person."
+      :"Couldn't create an invite link: "+error.message;
+    return;
+  }
+  const code=String(data||"").trim().toUpperCase();
+  const link=window.location.origin+window.location.pathname+"?invite="+encodeURIComponent(code);
+  $("empty-chat-invite-code").textContent=code;
+  $("empty-chat-invite-link").value=link;
+  controls?.classList.remove("hidden");
+}
+$("empty-chat-copy-code")?.addEventListener("click",()=>copyInviteText($("empty-chat-invite-code").textContent,"Invite code"));
+$("empty-chat-copy-link")?.addEventListener("click",()=>copyInviteText($("empty-chat-invite-link").value,"Invite link"));
 async function selectChat(chat){
-  activeChat=chat;try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
+  activeChat=chat;emptyChatInviteRequest++;$("empty-chat-invite")?.classList.add("hidden");try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
   $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";$("chat-remove-btn").disabled=!!user?.is_anonymous&&chat.isGroup;  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=!!chat.isGroup;$("call-btn").classList.toggle("hidden",!!chat.isGroup);$("settings-export-btn").disabled=false;$("game-btn").disabled=!!chat.isGroup;$("game-btn").classList.toggle("hidden",!!chat.isGroup);document.querySelectorAll('[data-menu-action="games"]').forEach(b=>b.classList.toggle("hidden",!!chat.isGroup));$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
   requestAnimationFrame(()=>{const item=document.querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
@@ -279,6 +308,7 @@ async function selectChat(chat){
     })
     .subscribe();
   await loadMessages();
+  if(activeChat?.id===selectedChatId){const count=$("messages").querySelectorAll(".message").length;await showEmptyChatInvite(chat,count);}
   // Poll the newest messages every 2.5 seconds as a reliable fallback for missed realtime events.
   messageRefreshTimer=setInterval(()=>refreshActiveChatMessages(selectedChatId),2500);
 }
@@ -311,6 +341,7 @@ async function loadMessages(){
 async function renderMessage(m){
   if(!activeChat||m.chat_id!==activeChat.id)return;
   if($("messages").querySelector(`[data-message-id="${CSS.escape(m.id)}"]`))return;
+  $("empty-chat-invite")?.classList.add("hidden");
   const date=new Date(m.created_at),dayKey=date.toLocaleDateString();
   if(dayKey!==lastRenderedDay){const label=document.createElement("div");label.className="day-label";label.textContent=date.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric",year:"numeric"});$("messages").append(label);lastRenderedDay=dayKey;}
   const mine=m.sender_id===user.id,wrap=document.createElement("article");wrap.className="message"+(mine?" mine":"");wrap.dataset.messageId=m.id;
