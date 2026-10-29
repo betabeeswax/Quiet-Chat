@@ -856,3 +856,30 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
  .app-shell.sidebar-icons-only .sidebar-actions{display:grid!important}
  .app-shell.sidebar-icons-only .brand-row>div:last-child{display:block!important}
 }
+
+/* Discord-style compact rail: app logo, community shortcut, community icons and DM icons. */
+@media(min-width:721px){
+ .app-shell.sidebar-icons-only{grid-template-columns:76px minmax(0,1fr)!important}
+ .app-shell.sidebar-icons-only .sidebar{width:76px!important;min-width:76px!important;overflow:hidden!important;align-items:stretch}
+ .app-shell.sidebar-icons-only .sidebar-top{width:100%;padding:10px 8px!important;justify-content:center!important}
+ .app-shell.sidebar-icons-only .brand-row{width:100%;justify-content:center!important}
+ .app-shell.sidebar-icons-only .brand-row>div:last-child,.app-shell.sidebar-icons-only .sidebar-top-tools,.app-shell.sidebar-icons-only .online-summary,.app-shell.sidebar-icons-only .chat-list-tabs,.app-shell.sidebar-icons-only .section-label,.app-shell.sidebar-icons-only .profile-name,.app-shell.sidebar-icons-only #settings-btn{display:none!important}
+ .app-shell.sidebar-icons-only .sidebar-actions{display:flex!important;flex-direction:column!important;align-items:center;padding:4px 7px 8px!important;gap:7px}
+ .app-shell.sidebar-icons-only .sidebar-actions .secondary{display:none!important}
+ .app-shell.sidebar-icons-only .sidebar-actions .community-action{display:grid!important;width:48px;height:48px;min-height:48px;padding:0!important;place-items:center;border-radius:16px;font-size:0!important;grid-column:auto!important}
+ .app-shell.sidebar-icons-only .sidebar-actions .community-action span,.app-shell.sidebar-icons-only .sidebar-actions .community-action small{display:none!important}
+ .app-shell.sidebar-icons-only #sidebar-discover-btn:before{content:"◈";font-size:24px;line-height:1}
+ .app-shell.sidebar-icons-only .chat-list-panel,.app-shell.sidebar-icons-only .chat-list-panel.hidden{display:flex!important;flex:0 1 auto;min-height:0;overflow:hidden;border-top:1px solid var(--line);padding-top:7px}
+ .app-shell.sidebar-icons-only #server-list-panel{max-height:42%;flex:0 1 auto}
+ .app-shell.sidebar-icons-only #direct-list-panel{flex:1;min-height:0}
+ .app-shell.sidebar-icons-only .chat-list-panel .chat-list{padding:0 7px!important;max-height:none!important;overflow-y:auto!important;flex:1;min-height:0}
+ .app-shell.sidebar-icons-only .chat-item{display:flex!important;justify-content:center!important;width:100%;padding:5px 0!important;margin:0 0 6px!important;background:transparent;border:0;box-shadow:none}
+ .app-shell.sidebar-icons-only .chat-item .avatar{width:48px!important;height:48px!important;border-radius:16px!important;transition:border-radius .15s,background .15s}
+ .app-shell.sidebar-icons-only .chat-item:hover .avatar,.app-shell.sidebar-icons-only .chat-item.active .avatar{border-radius:12px!important;background:var(--accent)!important;color:#101820!important}
+ .app-shell.sidebar-icons-only .chat-item-text,.app-shell.sidebar-icons-only .empty-small{display:none!important}
+ .app-shell.sidebar-icons-only .profile-strip{display:flex!important;justify-content:center;padding:8px 5px!important;border-top:1px solid var(--line)}
+ .app-shell.sidebar-icons-only .profile-strip .avatar{width:42px;height:42px}
+ .app-shell.sidebar-icons-only #settings-btn{display:none!important}
+ .app-shell.sidebar-icons-only .brand-mark.small{width:52px!important;height:52px!important;min-width:52px!important}
+ .app-shell.sidebar-icons-only .brand-mark.small img{width:48px!important;height:48px!important}
+}
