@@ -1283,3 +1283,29 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
 .empty-chat-invite-link-row input{min-width:0;flex:1}
 .empty-chat-invite-controls button{white-space:nowrap}
 @media(max-width:520px){.empty-chat-invite{margin:10px;padding:12px}.empty-chat-invite-code-row,.empty-chat-invite-link-row{flex-wrap:wrap}.empty-chat-invite-controls button{flex:1}}
+
+/* Keep direct-message shortcuts visible in the compact mini rail. */
+@media(min-width:721px){
+  .app-shell.sidebar-icons-only #server-list-panel{
+    flex:1 1 62%!important;
+    min-height:80px!important;
+    max-height:none!important;
+  }
+  .app-shell.sidebar-icons-only #direct-list-panel{
+    display:flex!important;
+    flex:1 1 38%!important;
+    min-height:120px!important;
+    max-height:none!important;
+    border-top:1px solid var(--line)!important;
+  }
+  .app-shell.sidebar-icons-only #direct-list-panel .chat-list{
+    display:flex!important;
+    flex-direction:column!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+  }
+  .app-shell.sidebar-icons-only #direct-list-panel .chat-item{
+    display:flex!important;
+    flex:0 0 auto!important;
+  }
+}
