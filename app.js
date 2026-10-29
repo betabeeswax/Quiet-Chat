@@ -809,10 +809,9 @@ function renderRps(state){
 }
 async function refreshRps(){if(!activeChat)return;const {data,error}=await db.from("chat_games").select("state").eq("chat_id",activeChat.id).eq("game_type","rps").maybeSingle();if(!error)renderRps(data?.state);}
 $("game-btn").addEventListener("click",()=>{
-  if(!activeChat)return;
-  openDialog("game-dialog");
-  const frame=$("game-night-frame");
-  if(frame&&(!frame.src||frame.src==="about:blank"))frame.src="https://gamenight.zone/";
+  // Game Night blocks iframe embedding. Open it as the top-level page instead,
+  // which also works in Android WebViews that allow normal page navigation.
+  window.location.assign("https://gamenight.zone/");
 });
 document.querySelectorAll("[data-rps]").forEach(btn=>btn.addEventListener("click",async()=>{if(!activeChat)return;const {data,error}=await db.rpc("play_rps",{target_chat:activeChat.id,chosen_move:btn.dataset.rps});if(error){toast("Game failed to update. Run the latest SQL setup.");return;}renderRps(data);}));
 const emojiList="😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😍 🥰 😎 🤩 🥳 😭 😡 🤔 🙄 😴 🤯 🥺 😇 🤗 🤝 👍 👎 👏 🙌 💪 🫶 ❤️ 🧡 💛 💚 💙 💜 🖤 🤍 💔 💯 🔥 ✨ ⭐ 🌈 ☀️ 🌙 ⚡ 🎉 🎊 🎮 🎲 🏆 🥇 ⚽ 🏀 🚗 🐱 🐶 🐸 🦊 🐼 🐵 🍕 🍔 🍟 🍎 🍌 🍓 🍪 ☕ 🎂".split(" ");
