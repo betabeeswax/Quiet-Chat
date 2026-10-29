@@ -209,20 +209,15 @@
   </dialog>
   <dialog id="game-dialog" class="modal game-modal game-night-modal">
     <div class="game-night-top">
-      <div><div class="modal-icon">🎮</div><h2>Games</h2><p class="muted">Games that are designed to run inside QuietChat.</p></div>
-      <button id="game-night-exit" class="icon-button" type="button" aria-label="Exit Games">✕ Exit</button>
+      <div><div class="modal-icon">🎮</div><h2>Game Hub</h2><p class="muted">Play multiplayer board and party games on a different game platform.</p></div>
+      <button id="game-night-exit" class="icon-button" type="button" aria-label="Exit Game Hub">✕ Exit</button>
     </div>
-    <div class="game-night-mode-grid" id="embedded-game-picker">
-      <button class="game-night-mode-card" type="button" data-embed-game="tic-tac-toe"><span>⭕</span><strong>Tic-Tac-Toe</strong><small>Quick classic</small></button>
-      <button class="game-night-mode-card" type="button" data-embed-game="reversi"><span>⚫</span><strong>Reversi</strong><small>Strategy</small></button>
-      <button class="game-night-mode-card" type="button" data-embed-game="air-hockey"><span>🏒</span><strong>Air Hockey</strong><small>Arcade</small></button>
-      <button class="game-night-mode-card" type="button" data-embed-game="reaction-duel"><span>⚡</span><strong>Reaction Duel</strong><small>Fast reflexes</small></button>
-      <button class="game-night-mode-card" type="button" data-embed-game="2048"><span>🔢</span><strong>2048</strong><small>Puzzle</small></button>
-      <button class="game-night-mode-card" type="button" data-embed-game="checkers"><span>♟️</span><strong>Checkers</strong><small>Board game</small></button>
+    <div class="game-night-mode-grid">
+      <a class="game-night-mode-card" href="https://gamenest-4kww.onrender.com/" target="_blank" rel="noopener noreferrer"><span>🎲</span><strong>GameNest</strong><small>34 games including Connect Four, Chess, Checkers, Reversi, UNO and Battleship-style games. Multiplayer room codes.</small></a>
+      <a class="game-night-mode-card" href="https://boardgames.zone/" target="_blank" rel="noopener noreferrer"><span>♟️</span><strong>Boardgames.zone</strong><small>55 browser board games with online multiplayer and bots. No account required.</small></a>
     </div>
-    <iframe id="game-night-frame" title="QuietChat embedded game" src="about:blank" allow="fullscreen; autoplay; gamepad" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-    <p class="tiny muted">Games are provided by PlayBolt. Online multiplayer depends on the game; QuietChat's chat-based Rock Paper Scissors is available for multiplayer.</p>
-    <p class="tiny"><a href="https://playbolt.app/" target="_blank" rel="noopener noreferrer">Browse PlayBolt games</a></p>
+    <div class="game-night-howto"><p><strong>Why these platforms?</strong> Game Night blocks being displayed inside QuietChat, so Game Hub opens a different provider that offers many of the same kinds of games. Choose a platform above; it opens in a new tab so the games and multiplayer can work normally.</p></div>
+    <p class="tiny muted">QuietChat's built-in Rock Paper Scissors game is still available in chats.</p>
   </dialog>
   <dialog id="safety-warning-dialog" class="modal warning-modal">
     <div class="modal-icon">⚠️</div><h2>Before you use QuietChat</h2>
