@@ -14,6 +14,11 @@
   <script defer src="app.js"></script>
 
   <style>
+    .arcade-inline{width:100%;height:calc(100% - 10px);min-height:560px;display:flex;flex-direction:column;gap:8px;padding:10px 0}
+    .arcade-inline.hidden{display:none!important}
+    .arcade-inline-bar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    #arcade-inline-frame{width:100%;height:calc(100vh - 230px);min-height:520px;border:1px solid var(--line);border-radius:14px;background:#10131b}
+    @media(max-width:700px){.arcade-inline{min-height:520px}#arcade-inline-frame{height:calc(100dvh - 230px);min-height:460px}}
     .game-night-modal{width:min(1100px,98vw)!important;max-width:98vw!important;height:min(92dvh,900px)!important;max-height:96dvh!important;overflow:auto!important}
     .game-night-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;text-align:left}
     .game-night-top>div{flex:1}.game-night-top h2,.game-night-top p{text-align:left!important}
@@ -116,6 +121,10 @@
         </div>
       </section>
       <div id="messages" class="messages hidden"></div>
+      <section id="arcade-inline" class="arcade-inline hidden" aria-label="QuietChat Arcade">
+        <div class="arcade-inline-bar"><strong>🎮 QuietChat Arcade</strong><button id="arcade-back-chat" class="secondary" type="button">← Back to chat</button></div>
+        <iframe id="arcade-inline-frame" title="QuietChat Arcade" src="about:blank" allow="fullscreen; autoplay; gamepad; clipboard-read; clipboard-write" allowfullscreen></iframe>
+      </section>
       <button id="go-to-bottom-btn" class="go-to-bottom hidden" type="button">↓ Go to bottom</button>
       <div id="composer-wrap" class="composer-wrap hidden">
         <form id="message-form" class="composer">
