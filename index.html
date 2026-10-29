@@ -62,7 +62,7 @@
     <aside class="sidebar">
       <div class="sidebar-top">
         <div class="brand-row"><div class="brand-mark small"><img src="icon-512.png?v=2" alt="QuietChat logo"></div><div><strong>QuietChat</strong><div class="tiny muted">your little corner</div></div></div>
-        <button id="new-chat-btn" class="icon-button" title="Create invite" aria-label="Create invite">＋</button>
+        <div class="sidebar-top-tools"><button id="new-chat-btn" class="icon-button" title="Create invite" aria-label="Create invite">＋</button><button id="close-sidebar-btn" class="icon-button sidebar-toggle" type="button" title="Close sidebar" aria-label="Close sidebar">‹</button></div>
       </div>
       <div class="sidebar-actions">
         <button id="create-invite-btn" class="secondary">＋ New private chat</button>
@@ -79,7 +79,7 @@
 
     <section class="conversation">
       <header class="chat-header">
-        <button id="mobile-back" class="icon-button mobile-only" aria-label="Back to chats">←</button>
+        <button id="open-sidebar-btn" class="icon-button sidebar-toggle" type="button" title="Open sidebar" aria-label="Open sidebar">☰</button><button id="mobile-back" class="icon-button mobile-only" aria-label="Back to chats">←</button>
         <div class="avatar" id="chat-avatar">✦</div>
         <div class="chat-heading"><strong id="chat-title">Your messages</strong><span id="chat-subtitle" class="tiny muted">Choose a chat or start a new one</span></div>
         <button id="chat-notification-btn" class="secondary header-action" type="button">🔔 Notifications</button><button id="chat-remove-btn" class="secondary header-action" type="button" title="Remove this chat from your list">Remove chat</button><button id="group-settings-btn" class="secondary header-action hidden" type="button">⚙ Group settings</button><button id="add-people-btn" class="secondary header-action hidden" disabled>＋ Add people</button>
