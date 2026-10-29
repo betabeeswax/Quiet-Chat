@@ -207,6 +207,11 @@ async function loadChats(){
   }
 }
 function rowProfileForChat(chatId){return window.chatProfileLookup?.[chatId]||null;}
+function setChatListView(view){const servers=view==="servers";$("server-list-panel")?.classList.toggle("hidden",!servers);$("direct-list-panel")?.classList.toggle("hidden",servers);$("show-servers-btn")?.classList.toggle("active",servers);$("show-dms-btn")?.classList.toggle("active",!servers);$("show-servers-btn")?.setAttribute("aria-pressed",String(servers));$("show-dms-btn")?.setAttribute("aria-pressed",String(!servers));try{localStorage.setItem("quietchat-list-view",view);}catch{}}
+$("show-servers-btn")?.addEventListener("click",()=>setChatListView("servers"));
+$("show-dms-btn")?.addEventListener("click",()=>setChatListView("dms"));
+setChatListView(localStorage.getItem("quietchat-list-view")==="dms"?"dms":"servers");
+
 function renderChats(){
   const servers=$("server-list"),list=$("chat-list");
   if(!servers||!list)return;
@@ -229,7 +234,7 @@ function renderChats(){
   groups.forEach(chat=>renderOne(chat,servers));directs.forEach(chat=>renderOne(chat,list));
 }
 async function selectChat(chat){
-  activeChat=chat;try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members${chat.memberNames?.length?" · "+chat.memberNames.join(", "):""} · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
+  activeChat=chat;try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
   $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";$("chat-remove-btn").disabled=!!user?.is_anonymous&&chat.isGroup;  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=!!chat.isGroup;$("call-btn").classList.toggle("hidden",!!chat.isGroup);$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
   requestAnimationFrame(()=>{const item=document.querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
