@@ -216,11 +216,34 @@ $("show-servers-btn")?.addEventListener("click",()=>setChatListView("servers"));
 $("show-dms-btn")?.addEventListener("click",()=>setChatListView("dms"));
 setChatListView(localStorage.getItem("quietchat-list-view")==="dms"?"dms":"servers");
 
+const CHAT_PIN_KEY="quietchat-pinned-chats-v1";
+function getPinnedChats(){try{return JSON.parse(localStorage.getItem(CHAT_PIN_KEY)||"[]");}catch{return [];}}
+function isChatMuted(chatId){try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chatId);}catch{return false;}}
+function showChatContextMenu(event,chat){
+  const menu=$("chat-context-menu");if(!menu)return;
+  menu.dataset.chatId=chat.id;menu.dataset.isGroup=String(!!chat.isGroup);
+  $("context-menu-title").textContent=chat.title;
+  $("context-open-chat").textContent="Open chat";
+  $("context-pin-chat").textContent=getPinnedChats().includes(chat.id)?"Unpin chat":"Pin chat";
+  $("context-mute-chat").textContent=isChatMuted(chat.id)?"Unmute notifications":"Mute notifications";
+  $("context-remove-chat").textContent=chat.isGroup?"Leave community":"Remove chat";
+  menu.classList.remove("hidden");menu.style.left="0px";menu.style.top="0px";
+  const rect=menu.getBoundingClientRect(),x=Math.min(event.clientX,window.innerWidth-rect.width-10),y=Math.min(event.clientY,window.innerHeight-rect.height-10);
+  menu.style.left=Math.max(10,x)+"px";menu.style.top=Math.max(10,y)+"px";
+}
+function closeChatContextMenu(){ $("chat-context-menu")?.classList.add("hidden"); }
+document.addEventListener("click",e=>{if(!e.target.closest("#chat-context-menu"))closeChatContextMenu();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeChatContextMenu();});
+$("context-open-chat")?.addEventListener("click",()=>{const chat=chats.find(c=>c.id===$("chat-context-menu").dataset.chatId);closeChatContextMenu();if(chat)selectChat(chat);});
+$("context-pin-chat")?.addEventListener("click",()=>{const id=$("chat-context-menu").dataset.chatId;let ids=getPinnedChats();ids=ids.includes(id)?ids.filter(x=>x!==id):[id,...ids];localStorage.setItem(CHAT_PIN_KEY,JSON.stringify(ids));closeChatContextMenu();renderChats();toast(ids.includes(id)?"Chat pinned.":"Chat unpinned.");});
+$("context-mute-chat")?.addEventListener("click",()=>{const id=$("chat-context-menu").dataset.chatId,key="quietchat-muted-chats-"+user.id;let ids=[];try{ids=JSON.parse(localStorage.getItem(key)||"[]");}catch{}const muted=ids.includes(id);ids=muted?ids.filter(x=>x!==id):[...ids,id];localStorage.setItem(key,JSON.stringify(ids));closeChatContextMenu();toast(muted?"Notifications unmuted.":"Notifications muted.");});
+$("context-remove-chat")?.addEventListener("click",async()=>{const id=$("chat-context-menu").dataset.chatId;const chat=chats.find(c=>c.id===id);closeChatContextMenu();if(!chat)return;await selectChat(chat);$("chat-remove-btn").click();});
+$("context-report-chat")?.addEventListener("click",()=>{const id=$("chat-context-menu").dataset.chatId,chat=chats.find(c=>c.id===id);closeChatContextMenu();if(!chat)return;const subject=encodeURIComponent("QuietChat report: "+chat.title),body=encodeURIComponent("QuietChat report\nChat: "+chat.title+"\nChat ID: "+chat.id+"\nType: "+(chat.isGroup?"Community":"Private chat")+"\nReported by: "+(username||"Unknown")+"\n\nPlease review this report.");window.location.href="mailto:imandrewbrake@gmail.com?subject="+subject+"&body="+body;});
 function renderChats(){
   const servers=$("server-list"),list=$("chat-list");
   if(!servers||!list)return;
   servers.replaceChildren();list.replaceChildren();
-  const groups=chats.filter(chat=>chat.isGroup),directs=chats.filter(chat=>!chat.isGroup);
+  const pinned=getPinnedChats();const orderPinned=(items)=>items.sort((a,b)=>Number(pinned.includes(b.id))-Number(pinned.includes(a.id)));const groups=orderPinned(chats.filter(chat=>chat.isGroup)),directs=orderPinned(chats.filter(chat=>!chat.isGroup));
   if(!groups.length){const d=document.createElement("div");d.className="empty-small server-empty";d.textContent="No servers yet. Join or create a community.";servers.append(d);}
   if(!directs.length){const d=document.createElement("div");d.className="empty-small";d.textContent="No private chats yet.";list.append(d);}
   const renderOne=(chat,target)=>{
@@ -231,7 +254,7 @@ function renderChats(){
     const t=document.createElement("div");t.className="chat-item-text";
     const strong=document.createElement("strong");strong.textContent=chat.title;
     const preview=document.createElement("span");preview.className="preview";preview.textContent=chat.isGroup?`${chat.memberCount} members · Community`:chat.memberCount<2?"Invite sent · waiting to join":"Private conversation";
-    t.append(strong,preview);b.append(av,t);b.dataset.chatId=chat.id;b.addEventListener("click",()=>selectChat(chat));b.addEventListener("contextmenu",async e=>{e.preventDefault();e.stopPropagation();const choice=window.prompt((chat.isGroup?"Community":"Chat")+" menu for “"+chat.title+"”\n\n1 — "+(chat.isGroup?"Leave community":"Remove chat")+"\n2 — Report chat\n\nEnter 1 or 2:");if(choice==="1"){await selectChat(chat);$("chat-remove-btn").click();}else if(choice==="2"){const reason=window.prompt("What are you reporting this "+(chat.isGroup?"community":"chat")+" for?");if(!reason||!reason.trim())return;const subject=encodeURIComponent("QuietChat report: "+chat.title);const body=encodeURIComponent("QuietChat report\nChat: "+chat.title+"\nChat ID: "+chat.id+"\nReported by: "+(user?.user_metadata?.username||user?.email||"Unknown")+(chat.isGroup?"\nCommunity":"\nPrivate chat")+"\nReason: "+reason.trim()+"\n\nPlease review this report.");window.location.href="mailto:imandrewbrake@gmail.com?subject="+subject+"&body="+body;}});target.append(b);
+    t.append(strong,preview);b.append(av,t);b.dataset.chatId=chat.id;b.addEventListener("click",()=>selectChat(chat));b.addEventListener("contextmenu",e=>{e.preventDefault();e.stopPropagation();showChatContextMenu(e,chat);});target.append(b);
     const memberData=rowProfileForChat(chat.id);
     if(!chat.isGroup&&memberData?.avatar_path){db.storage.from("profile-pics").createSignedUrl(memberData.avatar_path,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="";img.className="profile-avatar-img";av.replaceChildren(img);}});}
   };
