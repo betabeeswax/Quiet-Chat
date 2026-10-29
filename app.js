@@ -208,23 +208,30 @@ async function loadChats(){
 }
 function rowProfileForChat(chatId){return window.chatProfileLookup?.[chatId]||null;}
 function renderChats(){
-  const list=$("chat-list");list.replaceChildren();
-  if(!chats.length){const d=document.createElement("div");d.className="empty-small";d.textContent="No chats yet. Create an invite or join a friend.";list.append(d);return;}
-  chats.forEach(chat=>{
+  const servers=$("server-list"),list=$("chat-list");
+  if(!servers||!list)return;
+  servers.replaceChildren();list.replaceChildren();
+  const groups=chats.filter(chat=>chat.isGroup),directs=chats.filter(chat=>!chat.isGroup);
+  if(!groups.length){const d=document.createElement("div");d.className="empty-small server-empty";d.textContent="No servers yet. Join or create a community.";servers.append(d);}
+  if(!directs.length){const d=document.createElement("div");d.className="empty-small";d.textContent="No private chats yet.";list.append(d);}
+  const renderOne=(chat,target)=>{
     const b=document.createElement("button");b.className="chat-item"+(activeChat?.id===chat.id?" active":"");
-    const av=document.createElement("div");av.className="avatar";av.textContent=initials(chat.title);if(chat.isGroup&&chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";av.replaceChildren(img);}});}
+    if(chat.isGroup)b.classList.add("server-item");
+    const av=document.createElement("div");av.className="avatar";av.textContent=initials(chat.title);
+    if(chat.isGroup&&chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";av.replaceChildren(img);}});}
     const t=document.createElement("div");t.className="chat-item-text";
     const strong=document.createElement("strong");strong.textContent=chat.title;
-    const preview=document.createElement("span");preview.className="preview";preview.textContent=chat.isGroup?`${chat.memberCount} members · Group chat`:chat.memberCount<2?"Invite sent · waiting to join":"Private conversation";
-    t.append(strong,preview);b.append(av,t);b.dataset.chatId=chat.id;b.addEventListener("click",()=>selectChat(chat));b.addEventListener("contextmenu",async e=>{e.preventDefault();e.stopPropagation();const choice=window.prompt((chat.isGroup?"Community":"Chat")+" menu for “"+chat.title+"”\n\n1 — "+(chat.isGroup?"Leave community":"Remove chat")+"\n2 — Report chat\n\nEnter 1 or 2:");if(choice==="1"){await selectChat(chat);$("chat-remove-btn").click();}else if(choice==="2"){const reason=window.prompt("What are you reporting this "+(chat.isGroup?"community":"chat")+" for?");if(!reason||!reason.trim())return;const subject=encodeURIComponent("QuietChat report: "+chat.title);const body=encodeURIComponent("QuietChat report\nChat: "+chat.title+"\nChat ID: "+chat.id+"\nReported by: "+(user?.user_metadata?.username||user?.email||"Unknown")+(chat.isGroup?"\nCommunity":"\nPrivate chat")+"\nReason: "+reason.trim()+"\n\nPlease review this report.");window.location.href="mailto:imandrewbrake@gmail.com?subject="+subject+"&body="+body;}});list.append(b);
+    const preview=document.createElement("span");preview.className="preview";preview.textContent=chat.isGroup?`${chat.memberCount} members · Community`:chat.memberCount<2?"Invite sent · waiting to join":"Private conversation";
+    t.append(strong,preview);b.append(av,t);b.dataset.chatId=chat.id;b.addEventListener("click",()=>selectChat(chat));b.addEventListener("contextmenu",async e=>{e.preventDefault();e.stopPropagation();const choice=window.prompt((chat.isGroup?"Community":"Chat")+" menu for “"+chat.title+"”\n\n1 — "+(chat.isGroup?"Leave community":"Remove chat")+"\n2 — Report chat\n\nEnter 1 or 2:");if(choice==="1"){await selectChat(chat);$("chat-remove-btn").click();}else if(choice==="2"){const reason=window.prompt("What are you reporting this "+(chat.isGroup?"community":"chat")+" for?");if(!reason||!reason.trim())return;const subject=encodeURIComponent("QuietChat report: "+chat.title);const body=encodeURIComponent("QuietChat report\nChat: "+chat.title+"\nChat ID: "+chat.id+"\nReported by: "+(user?.user_metadata?.username||user?.email||"Unknown")+(chat.isGroup?"\nCommunity":"\nPrivate chat")+"\nReason: "+reason.trim()+"\n\nPlease review this report.");window.location.href="mailto:imandrewbrake@gmail.com?subject="+subject+"&body="+body;}});target.append(b);
     const memberData=rowProfileForChat(chat.id);
     if(!chat.isGroup&&memberData?.avatar_path){db.storage.from("profile-pics").createSignedUrl(memberData.avatar_path,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="";img.className="profile-avatar-img";av.replaceChildren(img);}});}
-  });
+  };
+  groups.forEach(chat=>renderOne(chat,servers));directs.forEach(chat=>renderOne(chat,list));
 }
 async function selectChat(chat){
   activeChat=chat;try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members${chat.memberNames?.length?" · "+chat.memberNames.join(", "):""} · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
   $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";$("chat-remove-btn").disabled=!!user?.is_anonymous&&chat.isGroup;  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=false;$("settings-export-btn").disabled=false;$("game-btn").disabled=false;$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
-  requestAnimationFrame(()=>{const item=$(`chat-list`).querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
+  requestAnimationFrame(()=>{const item=document.querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
   if(messageRefreshTimer){clearInterval(messageRefreshTimer);messageRefreshTimer=null;}
   // Realtime gives instant updates when enabled by the Supabase project.
@@ -780,18 +787,15 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
  $("mobile-back").addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");});
 let onlineChannel=null;
 function subscribeOnlineUsers(){
- if(onlineChannel){db.removeChannel(onlineChannel);onlineChannel=null;}
- const root=$("online-people");if(!root)return;
- onlineChannel=db.channel("quietchat-online-presence",{config:{presence:{key:user.id}}})
- .on("presence",{event:"sync"},()=>{
-   const state=onlineChannel.presenceState();
-   const count=Object.keys(state).filter(id=>id!==user.id).length;
-   $("online-count").textContent=String(count);
-   root.replaceChildren();
-   root.textContent=count===0?"No one else online right now.":count===1?"1 person is online.":count+" people are online.";
-   root.classList.add("tiny","muted");
- })
- .subscribe(async status=>{if(status==="SUBSCRIBED")await onlineChannel.track({online_at:new Date().toISOString()});});
+  if(onlineChannel){db.removeChannel(onlineChannel);onlineChannel=null;}
+  const countLabel=$("online-count");if(!countLabel)return;
+  onlineChannel=db.channel("quietchat-online-presence",{config:{presence:{key:user.id}}})
+  .on("presence",{event:"sync"},()=>{
+    const state=onlineChannel.presenceState();
+    const count=Object.keys(state).filter(id=>id!==user.id).length;
+    countLabel.textContent=String(count);
+  })
+  .subscribe(async status=>{if(status==="SUBSCRIBED")await onlineChannel.track({online_at:new Date().toISOString()});});
 }
 async function handleInviteLink(){
  const url=new URL(window.location.href),code=url.searchParams.get("invite");
