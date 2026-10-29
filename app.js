@@ -809,10 +809,15 @@ function renderRps(state){
 }
 async function refreshRps(){if(!activeChat)return;const {data,error}=await db.from("chat_games").select("state").eq("chat_id",activeChat.id).eq("game_type","rps").maybeSingle();if(!error)renderRps(data?.state);}
 $("game-btn").addEventListener("click",()=>{
-  // Game Night blocks iframe embedding. Open it as the top-level page instead,
-  // which also works in Android WebViews that allow normal page navigation.
-  window.location.assign("https://gamenight.zone/");
+  openDialog("game-dialog");
+  const frame=$("game-night-frame");
+  if(frame&&(!frame.src||frame.src==="about:blank"))frame.src="https://playbolt.app/play/tic-tac-toe/";
 });
+document.querySelectorAll("[data-embed-game]").forEach(button=>button.addEventListener("click",()=>{
+  const frame=$("game-night-frame");
+  const game=button.dataset.embedGame;
+  if(frame)frame.src="https://playbolt.app/play/"+encodeURIComponent(game)+"/";
+}));
 document.querySelectorAll("[data-rps]").forEach(btn=>btn.addEventListener("click",async()=>{if(!activeChat)return;const {data,error}=await db.rpc("play_rps",{target_chat:activeChat.id,chosen_move:btn.dataset.rps});if(error){toast("Game failed to update. Run the latest SQL setup.");return;}renderRps(data);}));
 const emojiList="😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😍 🥰 😎 🤩 🥳 😭 😡 🤔 🙄 😴 🤯 🥺 😇 🤗 🤝 👍 👎 👏 🙌 💪 🫶 ❤️ 🧡 💛 💚 💙 💜 🖤 🤍 💔 💯 🔥 ✨ ⭐ 🌈 ☀️ 🌙 ⚡ 🎉 🎊 🎮 🎲 🏆 🥇 ⚽ 🏀 🚗 🐱 🐶 🐸 🦊 🐼 🐵 🍕 🍔 🍟 🍎 🍌 🍓 🍪 ☕ 🎂".split(" ");
 const eg=$("emoji-grid");emojiList.forEach(emoji=>eg.append(gameButton(emoji,()=>{const input=$("message-input");input.value+=emoji;input.focus();closeDialog("emoji-dialog");}))); 
