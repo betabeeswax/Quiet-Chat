@@ -1269,3 +1269,17 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
 .chat-context-menu button.danger{color:#ff8585}
 .context-menu-title{padding:7px 10px 9px;font-size:12px;font-weight:700;color:var(--muted,#a5a7bb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .context-menu-divider{height:1px;background:var(--border,#3b3d50);margin:3px 4px}
+
+/* Empty chat invite card */
+.empty-chat-invite{margin:14px 18px 8px;padding:16px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--border,#3b3d50);border-radius:14px;background:var(--panel,#202234);max-width:760px}
+.empty-chat-invite.hidden{display:none}
+.empty-chat-invite-icon{font-size:23px}
+.empty-chat-invite-copy strong{font-size:15px}
+.empty-chat-invite-copy p{margin:5px 0 0;color:var(--muted,#a5a7bb);font-size:13px}
+.empty-chat-invite-controls{display:flex;flex-direction:column;gap:8px}
+.empty-chat-invite-controls.hidden{display:none}
+.empty-chat-invite-code-row,.empty-chat-invite-link-row{display:flex;gap:8px;align-items:center;min-width:0}
+.empty-chat-invite-code-row code{font-size:15px;letter-spacing:1px;padding:9px 12px;background:var(--surface,#34364b);border-radius:8px;flex:1}
+.empty-chat-invite-link-row input{min-width:0;flex:1}
+.empty-chat-invite-controls button{white-space:nowrap}
+@media(max-width:520px){.empty-chat-invite{margin:10px;padding:12px}.empty-chat-invite-code-row,.empty-chat-invite-link-row{flex-wrap:wrap}.empty-chat-invite-controls button{flex:1}}
