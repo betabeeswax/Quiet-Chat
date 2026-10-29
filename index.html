@@ -70,11 +70,10 @@
         <button id="join-invite-btn" class="secondary">↗ Join with code</button>
         <button id="sidebar-discover-btn" class="sidebar-action community-action" type="button"><span>◈ Communities</span><small>Open your groups or create one</small></button>
       </div>
-      <div class="online-summary"><span class="online-dot"></span><span>ONLINE NOW</span><strong id="online-count">0</strong></div>
-      <div class="section-label list-section-label">YOUR SERVERS</div>
-      <div id="server-list" class="chat-list server-list"><div class="empty-small">Your groups and communities will appear here.</div></div>
-      <div class="section-label list-section-label">DIRECT MESSAGES</div>
-      <div id="chat-list" class="chat-list direct-list"><div class="empty-small">Your private chats will appear here.</div></div>
+      <div class="online-summary"><span class="online-dot"></span><span>PEOPLE ONLINE</span><strong id="online-count">0</strong></div>
+      <div class="chat-list-tabs" role="group" aria-label="Chat list"><button id="show-servers-btn" class="chat-list-tab active" type="button" aria-pressed="true">▦ Servers</button><button id="show-dms-btn" class="chat-list-tab" type="button" aria-pressed="false">✉ Direct messages</button></div>
+      <div id="server-list-panel" class="chat-list-panel"><div class="section-label list-section-label">YOUR SERVERS</div><div id="server-list" class="chat-list server-list"><div class="empty-small">Your groups and communities will appear here.</div></div></div>
+      <div id="direct-list-panel" class="chat-list-panel hidden"><div class="section-label list-section-label">DIRECT MESSAGES</div><div id="chat-list" class="chat-list direct-list"><div class="empty-small">Your private chats will appear here.</div></div></div>
       <div class="profile-strip"><div class="avatar" id="my-avatar">?</div><div class="profile-name"><strong id="my-name">You</strong><span class="tiny muted" id="account-label">Signed in</span></div><button id="settings-btn" class="secondary" title="Settings">Settings</button></div>
     </aside>
 
