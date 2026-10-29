@@ -12,6 +12,23 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="app.js"></script>
+
+  <style>
+    .game-night-modal{width:min(1100px,98vw)!important;max-width:98vw!important;height:min(92dvh,900px)!important;max-height:96dvh!important;overflow:auto!important}
+    .game-night-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;text-align:left}
+    .game-night-top>div{flex:1}.game-night-top h2,.game-night-top p{text-align:left!important}
+    .game-night-top #game-night-exit{flex:0 0 auto}
+    .game-night-mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0}
+    .game-night-mode-card{display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 14px;border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--text);cursor:pointer}
+    .game-night-mode-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+    .game-night-mode-card>span{font-size:32px}.game-night-mode-card strong{font-size:17px}.game-night-mode-card small{color:var(--muted);line-height:1.5}
+    .game-night-howto{padding:14px;border-radius:12px;background:var(--panel);margin-bottom:14px;text-align:left}
+    .game-night-howto p{text-align:left!important;margin-bottom:0}
+    .game-night-share{display:flex;gap:8px;margin:12px 0}
+    .game-night-share input{flex:1;min-width:0}
+    #game-night-frame{display:block;width:100%;height:calc(92dvh - 230px);min-height:360px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    @media(max-width:600px){.game-night-mode-grid{grid-template-columns:1fr}.game-night-top{align-items:center}.game-night-share{flex-direction:column}#game-night-frame{height:65dvh;min-height:300px}}
+  </style>
 </head>
 <body>
   <main id="setup-screen" class="setup-wrap">
@@ -179,13 +196,26 @@
     <label for="gif-search" class="field-gap">Find a GIF</label><div class="gif-search-row"><input id="gif-search" placeholder="funny cat, happy dance…"><button id="gif-search-btn" class="primary">Search</button></div>
     <div id="gif-results" class="gif-results"><p class="tiny muted">GIF search opens Tenor in a new tab. Copy a GIF link and paste it into your message.</p></div>
   </dialog>
-  <dialog id="game-dialog" class="modal game-modal">
-    <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
-    <div class="modal-icon">🎮</div><h2>Game corner</h2>
-    <p class="muted">Pick a game. Most games here are local pass-and-play for two people on the same device; Rock Paper Scissors is synced with your chat.</p>
-    <div id="game-picker" class="game-picker"></div>
-    <div id="game-board" class="game-board"><p class="muted">Choose a game to start.</p></div>
-    <div id="online-rps" class="online-rps hidden"><div class="rps-score" id="rps-score">Loading game…</div><div class="rps-last" id="rps-last">Choose your move to start a round.</div><div class="rps-buttons"><button type="button" data-rps="rock">🪨 Rock</button><button type="button" data-rps="paper">📄 Paper</button><button type="button" data-rps="scissors">✂️ Scissors</button></div></div>
+  <dialog id="game-dialog" class="modal game-modal game-night-modal">
+    <div class="game-night-top">
+      <div><div class="modal-icon">🎮</div><h2>QuietChat Game Night</h2><p class="muted">Play against AI or make a room for real players. No Game Night account needed.</p></div>
+      <button id="game-night-exit" class="icon-button" type="button" aria-label="Exit Game Night">✕ Exit</button>
+    </div>
+    <div id="game-night-start" class="game-night-start">
+      <div class="game-night-mode-grid">
+        <button id="game-night-ai" class="game-night-mode-card" type="button"><span>🤖</span><strong>Play vs AI</strong><small>Choose a game and play against Game Night's AI.</small></button>
+        <button id="game-night-players" class="game-night-mode-card" type="button"><span>👥</span><strong>Play with real players</strong><small>Create a private room, then share its room link or code.</small></button>
+      </div>
+      <div class="game-night-howto"><strong>How rooms work</strong><p>Choose a game on Game Night, create the room there, and copy its invite link. Paste the link below to send it into your currently open QuietChat conversation.</p></div>
+      <button id="game-night-open-tab" class="primary full" type="button">Open Game Night in a new tab ↗</button>
+      <p class="tiny muted">If the embedded game does not load, use the new-tab button. Game Night controls room creation, so QuietChat cannot create its room automatically.</p>
+    </div>
+    <div id="game-night-player-panel" class="hidden">
+      <button id="game-night-back" class="secondary" type="button">← Back to modes</button>
+      <p id="game-night-mode-note" class="tiny muted">Choose your game below.</p>
+      <div class="game-night-share"><input id="game-night-room-link" type="url" placeholder="Paste Game Night room link here" aria-label="Game Night room invite link"><button id="game-night-send-invite" class="primary" type="button">Send invite to chat</button></div>
+      <iframe id="game-night-frame" title="Game Night board games" src="about:blank" allow="fullscreen; autoplay; clipboard-read; clipboard-write" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
   </dialog>
   <dialog id="safety-warning-dialog" class="modal warning-modal">
     <div class="modal-icon">⚠️</div><h2>Before you use QuietChat</h2>
