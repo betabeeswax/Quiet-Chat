@@ -883,3 +883,25 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
  .app-shell.sidebar-icons-only .brand-mark.small{width:52px!important;height:52px!important;min-width:52px!important}
  .app-shell.sidebar-icons-only .brand-mark.small img{width:48px!important;height:48px!important}
 }
+
+
+/* Give communities the most room in the compact Discord-style rail. */
+@media(min-width:721px){
+ .app-shell.sidebar-icons-only #server-list-panel{
+   flex:0 1 68%!important;
+   max-height:68%!important;
+   min-height:0!important;
+ }
+ .app-shell.sidebar-icons-only #direct-list-panel{
+   flex:1 1 32%!important;
+   max-height:32%!important;
+   min-height:0!important;
+ }
+ .app-shell.sidebar-icons-only #server-list-panel .chat-list,
+ .app-shell.sidebar-icons-only #direct-list-panel .chat-list{
+   min-height:0!important;
+   overflow-y:auto!important;
+   overscroll-behavior:contain;
+ }
+ .app-shell.sidebar-icons-only .chat-item{flex-shrink:0!important}
+}
