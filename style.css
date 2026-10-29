@@ -1253,3 +1253,10 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
 .community-hero{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;gap:10px!important}
 .community-hero .modal-icon{display:grid!important;place-items:center!important;margin:0 auto!important;align-self:center!important}
 .community-hero>div:last-child{width:100%!important;text-align:center!important}
+
+/* Invite sharing controls */
+.invite-link-row{display:flex;align-items:stretch;gap:8px;margin:8px 0 12px}
+.invite-link-row input{min-width:0;font-size:12px;padding:10px}
+.invite-link-row button{flex:0 0 auto;white-space:nowrap}
+#invite-copy-fallback textarea{font-size:12px;overflow-wrap:anywhere}
+@media(max-width:420px){.invite-link-row{flex-direction:column}.invite-link-row button{width:100%}}
