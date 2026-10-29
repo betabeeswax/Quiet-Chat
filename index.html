@@ -125,8 +125,11 @@
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
     <div class="modal-icon">✉</div><h2>Your invite code</h2>
     <p class="muted">Send this one-time code to a friend. For group chats, make a separate code for each person. Codes expire in 24 hours.</p>
-    <div class="code-box"><code id="invite-code">--------</code><button id="copy-code-btn" class="secondary">Copy</button></div>
-    <p class="tiny muted">Anyone who gets this code may join, so share it privately.</p>
+    <div class="code-box"><code id="invite-code">----------</code><button id="copy-code-btn" class="secondary" type="button">Copy code</button></div>
+    <label for="invite-link" class="field-gap">Invite link</label>
+    <div class="invite-link-row"><input id="invite-link" type="text" readonly aria-label="Invite link"><button id="copy-link-btn" class="secondary" type="button">Copy link</button></div>
+    <div id="invite-copy-fallback"></div>
+    <p class="tiny muted">Anyone who gets this one-time code or link may join, so share it privately. It expires in 24 hours.</p>
     <button id="invite-done-btn" class="primary full">Done</button>
   </dialog>
 
