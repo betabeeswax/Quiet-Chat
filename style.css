@@ -1067,3 +1067,55 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
   :root[data-sidebar-position="top"] .app-shell.sidebar-icons-only .sidebar-actions,
   :root[data-sidebar-position="bottom"] .app-shell.sidebar-icons-only .sidebar-actions {padding:4px!important}
 }
+
+
+/* Fix top/bottom docks so they show community, server, DM and profile icons. */
+@media(min-width:721px){
+ :root[data-sidebar-position="top"] .app-shell,
+ :root[data-sidebar-position="bottom"] .app-shell{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:112px minmax(0,1fr)!important;min-height:100dvh!important;height:100dvh!important}
+ :root[data-sidebar-position="bottom"] .app-shell{grid-template-rows:minmax(0,1fr) 112px!important}
+ :root[data-sidebar-position="top"] .app-shell .sidebar,
+ :root[data-sidebar-position="bottom"] .app-shell .sidebar{width:100%!important;min-width:0!important;height:112px!important;min-height:112px!important;max-height:112px!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;padding:6px 10px!important;overflow:hidden!important}
+ :root[data-sidebar-position="top"] .app-shell .sidebar-top,
+ :root[data-sidebar-position="bottom"] .app-shell .sidebar-top{flex:0 0 auto!important;width:auto!important;min-width:0!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important}
+ :root[data-sidebar-position="top"] .app-shell .brand-row,
+ :root[data-sidebar-position="bottom"] .app-shell .brand-row{justify-content:center!important;margin:0!important}
+ :root[data-sidebar-position="top"] .app-shell .sidebar-actions,
+ :root[data-sidebar-position="bottom"] .app-shell .sidebar-actions{flex:0 0 auto!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;padding:0!important;margin:0!important}
+ :root[data-sidebar-position="top"] .app-shell #sidebar-discover-btn,
+ :root[data-sidebar-position="bottom"] .app-shell #sidebar-discover-btn{display:grid!important;place-items:center!important;flex:0 0 48px!important;width:48px!important;height:48px!important;min-width:48px!important;margin:0!important;padding:0!important;font-size:0!important;color:transparent!important}
+ :root[data-sidebar-position="top"] .app-shell #sidebar-discover-btn:before,
+ :root[data-sidebar-position="bottom"] .app-shell #sidebar-discover-btn:before{content:"◈"!important;display:block!important;color:var(--text)!important;font-size:24px!important;line-height:1!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-list-tabs,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-tabs{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;gap:3px!important;flex:0 0 48px!important;padding:0!important;margin:0!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-list-tab,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-tab{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;min-width:42px!important;padding:0!important;font-size:0!important}
+ :root[data-sidebar-position="top"] .app-shell #show-servers-btn:before{content:"▦"!important;font-size:18px!important}
+ :root[data-sidebar-position="bottom"] .app-shell #show-servers-btn:before{content:"▦"!important;font-size:18px!important}
+ :root[data-sidebar-position="top"] .app-shell #show-dms-btn:before,
+ :root[data-sidebar-position="bottom"] .app-shell #show-dms-btn:before{content:"✉"!important;font-size:18px!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-list-panel,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-panel,
+ :root[data-sidebar-position="top"] .app-shell .chat-list-panel.hidden,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-panel.hidden{display:flex!important;flex:1 1 0!important;min-width:0!important;width:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;flex-direction:row!important;align-items:center!important;padding:0!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-list-panel .chat-list,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-panel .chat-list{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:5px!important;width:100%!important;min-width:0!important;min-height:0!important;max-height:none!important;overflow-x:auto!important;overflow-y:hidden!important;padding:3px!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-item,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-item{display:flex!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;justify-content:center!important;align-items:center!important;margin:0!important;padding:2px!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-item .avatar,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-item .avatar{margin:0 auto!important}
+ :root[data-sidebar-position="top"] .app-shell .profile-strip,
+ :root[data-sidebar-position="bottom"] .app-shell .profile-strip{display:flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;margin:0!important;padding:0 4px!important}
+ :root[data-sidebar-position="top"] .app-shell .sidebar-top-tools,
+ :root[data-sidebar-position="bottom"] .app-shell .sidebar-top-tools{display:flex!important;position:static!important;flex-direction:row!important}
+}
+/* Small dropdown navigation mode: one floating menu button opens the full sidebar. */
+@media(min-width:721px){
+ :root[data-sidebar-position="dropdown"] #open-sidebar-btn{display:grid!important;position:fixed!important;z-index:10000!important;left:12px!important;top:12px!important;width:38px!important;height:38px!important;background:var(--panel)!important;border:1px solid var(--line)!important;border-radius:10px!important;place-items:center!important}
+ :root[data-sidebar-position="dropdown"] #open-sidebar-btn:before{content:"☰"!important;font-size:18px!important}
+ :root[data-sidebar-position="dropdown"] .app-shell .sidebar{display:flex!important;position:fixed!important;z-index:9999!important;left:8px!important;top:58px!important;bottom:auto!important;width:290px!important;height:min(78dvh,700px)!important;max-height:calc(100dvh - 70px)!important;box-shadow:0 12px 40px #0008!important;border:1px solid var(--line)!important;border-radius:14px!important;overflow:hidden!important}
+ :root[data-sidebar-position="dropdown"] .app-shell.sidebar-icons-only .sidebar{width:290px!important;grid-template-columns:none!important}
+ :root[data-sidebar-position="dropdown"] .app-shell:not(.dropdown-menu-open) .sidebar{visibility:hidden!important;pointer-events:none!important;opacity:0!important}
+ :root[data-sidebar-position="dropdown"] .app-shell.dropdown-menu-open .sidebar{visibility:visible!important;pointer-events:auto!important;opacity:1!important}
+ :root[data-sidebar-position="dropdown"] #close-sidebar-btn{display:none!important}
+}
