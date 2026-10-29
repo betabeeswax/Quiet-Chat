@@ -1119,3 +1119,11 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
  :root[data-sidebar-position="dropdown"] .app-shell.dropdown-menu-open .sidebar{visibility:visible!important;pointer-events:auto!important;opacity:1!important}
  :root[data-sidebar-position="dropdown"] #close-sidebar-btn{display:none!important}
 }
+
+
+/* Keep the community shortcut centred in the vertical compact rail. */
+@media(min-width:721px){
+ .app-shell.sidebar-icons-only .sidebar-actions{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;width:100%!important}
+ .app-shell.sidebar-icons-only #sidebar-discover-btn{align-self:center!important;margin:0 auto!important;left:auto!important;right:auto!important;transform:none!important}
+ .app-shell.sidebar-icons-only #sidebar-discover-btn:before{position:static!important;margin:0!important}
+}
