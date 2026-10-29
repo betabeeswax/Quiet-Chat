@@ -91,6 +91,7 @@
         <button id="welcome-create" class="primary">＋ Create a private chat</button>
       </div>
       <div id="messages" class="messages hidden"></div>
+      <button id="go-to-bottom-btn" class="go-to-bottom hidden" type="button">↓ Go to bottom</button>
       <div id="composer-wrap" class="composer-wrap hidden">
         <form id="message-form" class="composer">
           <button id="composer-plus-btn" class="attach-button" type="button" title="More message tools" aria-label="More message tools">＋</button>
@@ -204,8 +205,14 @@
       <label for="settings-device-mode" class="field-gap">Device layout</label>
       <select id="settings-device-mode" class="setting-select"><option value="auto">Automatic (recommended)</option><option value="mobile">Mobile mode</option><option value="pc">PC mode</option></select>
       <p class="tiny muted">PC mode is automatically rejected and reset to Automatic when the window is too narrow.</p>
+      <label class="setting-toggle field-gap"><span><strong>Compact sidebar (icons only)</strong><small>Keep a narrow icon bar instead of hiding the sidebar.</small></span><input id="settings-compact-sidebar" type="checkbox"></label>
       <label for="settings-accent-color" class="field-gap">Accent colour</label>
       <div class="accent-picker-row"><input id="settings-accent-color" type="color" value="#8b7cff" aria-label="Choose accent colour"><span class="tiny muted">Personalise buttons and highlights on this device.</span></div>
+    </div>
+    <div class="settings-section">
+      <h3>💬 Message scrolling</h3>
+      <label class="setting-toggle"><span><strong>Automatically go to newest messages</strong><small>Turn off to read older messages without being pulled to the bottom.</small></span><input id="settings-auto-scroll" type="checkbox" checked></label>
+      <p class="tiny muted">When automatic scrolling is off, use the “Go to bottom” button whenever you want.</p>
     </div>
     <div class="settings-section">
       <h3>🎥 Video calls</h3>
