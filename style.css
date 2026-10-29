@@ -926,3 +926,35 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
  .app-shell.sidebar-icons-only .chat-item{flex:0 0 auto!important}
  .app-shell.sidebar-icons-only .profile-strip{margin-top:auto!important}
 }
+
+
+/* Final icon-only controls for the collapsed desktop rail. */
+@media (min-width:721px) {
+  .app-shell.sidebar-icons-only #sidebar-discover-btn {
+    font-size:0!important;
+    color:transparent!important;
+    width:48px!important;height:48px!important;min-width:48px!important;
+    padding:0!important;display:grid!important;place-items:center!important;
+  }
+  .app-shell.sidebar-icons-only #sidebar-discover-btn span,
+  .app-shell.sidebar-icons-only #sidebar-discover-btn small {
+    display:none!important;
+  }
+  .app-shell.sidebar-icons-only #sidebar-discover-btn::before {
+    content:"◈"!important;display:block!important;
+    color:var(--text)!important;font-size:24px!important;line-height:1!important;
+  }
+  .app-shell.sidebar-icons-only #show-servers-btn,
+  .app-shell.sidebar-icons-only #show-dms-btn {
+    font-size:0!important;line-height:0!important;
+    width:48px!important;height:42px!important;min-width:48px!important;
+    padding:0!important;display:grid!important;place-items:center!important;
+    white-space:nowrap!important;
+  }
+  .app-shell.sidebar-icons-only #show-servers-btn::before {
+    content:"▦"!important;font-size:20px!important;line-height:1!important;
+  }
+  .app-shell.sidebar-icons-only #show-dms-btn::before {
+    content:"✉"!important;font-size:20px!important;line-height:1!important;
+  }
+}
