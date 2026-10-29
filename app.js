@@ -898,6 +898,15 @@ function setSidebarCollapsed(compact){
 }
 $("close-sidebar-btn")?.addEventListener("click",()=>{if(document.documentElement.dataset.sidebarPosition==="dropdown"){app.classList.toggle("dropdown-menu-open");return;}setSidebarCollapsed(!app.classList.contains("sidebar-icons-only"));});
 $("open-sidebar-btn")?.addEventListener("click",()=>{if(document.documentElement.dataset.sidebarPosition==="dropdown"){app.classList.toggle("dropdown-menu-open");return;}app.classList.remove("chat-open");setSidebarCollapsed(false);});
+document.addEventListener("pointerdown",e=>{
+  if(document.documentElement.dataset.sidebarPosition!=="dropdown"||!app.classList.contains("dropdown-menu-open"))return;
+  if(e.target.closest("#open-sidebar-btn")||e.target.closest(".sidebar"))return;
+  app.classList.remove("dropdown-menu-open");
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&document.documentElement.dataset.sidebarPosition==="dropdown")app.classList.remove("dropdown-menu-open");
+});
+
  $("sidebar-logo-toggle")?.addEventListener("click",()=>{if(app.classList.contains("sidebar-icons-only")||app.classList.contains("sidebar-collapsed")){app.classList.remove("chat-open");setSidebarCollapsed(false);}});
 try{if(localStorage.getItem("quietchat-sidebar-collapsed")==="yes")setSidebarCollapsed(true);}catch{}
 $("settings-compact-sidebar")?.addEventListener("change",e=>setSidebarCollapsed(e.target.checked));
