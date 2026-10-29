@@ -889,7 +889,7 @@ function setSidebarCollapsed(compact){
   $("open-sidebar-btn")?.setAttribute("aria-expanded",String(!compact));
   try{localStorage.setItem("quietchat-sidebar-collapsed",compact?"yes":"no");}catch{}
 }
-$("close-sidebar-btn")?.addEventListener("click",()=>setSidebarCollapsed(!app.classList.contains("sidebar-icons-only")));
+$("close-sidebar-btn")?.addEventListener("click",()=>{if(document.documentElement.dataset.sidebarPosition==="dropdown"){app.classList.toggle("dropdown-menu-open");return;}setSidebarCollapsed(!app.classList.contains("sidebar-icons-only"));});
 $("open-sidebar-btn")?.addEventListener("click",()=>{app.classList.remove("chat-open");setSidebarCollapsed(false);});
  $("sidebar-logo-toggle")?.addEventListener("click",()=>{if(app.classList.contains("sidebar-icons-only")||app.classList.contains("sidebar-collapsed")){app.classList.remove("chat-open");setSidebarCollapsed(false);}});
 try{if(localStorage.getItem("quietchat-sidebar-collapsed")==="yes")setSidebarCollapsed(true);}catch{}
