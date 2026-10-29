@@ -517,11 +517,34 @@ function setInviteDetails(code){
   $("invite-copy-fallback")?.replaceChildren();
 }
 async function handleInviteLink(){
-  const params=new URLSearchParams(window.location.search);
-  const code=params.get("invite");
+  const params=new URLSearchParams(window.location.search),code=params.get("invite");
   if(!code)return;
-  $("invite-input").value=code.toUpperCase().replace(/[^A-Z0-9]/g,"");
-  openDialog("join-dialog");
+  const normalized=code.toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(normalized.length!==10){toast("That invite link does not contain a valid 10-character code.");return;}
+  $("invite-input").value=normalized;openDialog("join-dialog");
+  await joinWithInviteRetries(normalized,8);
+}
+async function joinWithInviteRetries(code,maxAttempts=8){
+  const input=$("invite-input"),submit=$("join-form")?.querySelector('button[type="submit"]');
+  if(submit)submit.disabled=true;
+  try{
+    for(let attempt=1;attempt<=maxAttempts;attempt++){
+      const {data,error}=await db.rpc("join_chat_with_invite",{invite_code:code});
+      if(!error){
+        closeDialog("join-dialog");input.value="";
+        const cleanUrl=new URL(window.location.href);cleanUrl.searchParams.delete("invite");
+        window.history.replaceState({},document.title,cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
+        await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);
+        toast("Invite opened — you joined the chat!");return true;
+      }
+      const message=String(error.message||"");
+      if(!/fetch|network|timeout|temporar|502|503|504|500/i.test(message)){
+        toast("Invite could not open: "+message);return false;
+      }
+      if(attempt<maxAttempts){toast("Connection hiccup — retrying invite ("+attempt+"/"+maxAttempts+")…");await new Promise(resolve=>setTimeout(resolve,1200));}
+    }
+    toast("Couldn't connect to open that invite. Check your internet and tap Join again.");return false;
+  }finally{if(submit)submit.disabled=false;}
 }
 async function createInvite(){
   const btns=[$("create-invite-btn"),$("new-chat-btn"),$("welcome-create")];btns.forEach(b=>b.disabled=true);
@@ -539,11 +562,7 @@ $("join-invite-btn").addEventListener("click",()=>openDialog("join-dialog"));
 $("join-form").addEventListener("submit",async e=>{
   e.preventDefault();const code=$("invite-input").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
   if(code.length!==10){toast("Invite codes must be 10 characters.");return;}
-  const {data,error}=await db.rpc("join_chat_with_invite",{invite_code:code});
-  if(error){toast("Couldn't join with that invite: "+error.message);return;}
-  closeDialog("join-dialog");$("invite-input").value="";
-  const cleanUrl=new URL(window.location.href);cleanUrl.searchParams.delete("invite");window.history.replaceState({},document.title,cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
-  await loadChats();const chat=chats.find(c=>c.id===data);if(chat)selectChat(chat);toast("You joined the private chat!");
+  await joinWithInviteRetries(code,8);
 });
 
 $("chat-remove-btn")?.addEventListener("click",async()=>{
@@ -789,7 +808,12 @@ function renderRps(state){
   const last=state.last;if(last){const label=id=>id===user.id?"You":"Friend";const move=m=>({rock:"🪨 Rock",paper:"📄 Paper",scissors:"✂️ Scissors"}[m]||m);const winner=last.winner==="tie"?"It's a tie!":label(last.winner)+" won the round!";$("rps-last").textContent=`${label(last.p1)} chose ${move(last.m1)} · ${label(last.p2)} chose ${move(last.m2)}. ${winner}`;}else{$("rps-last").textContent=Object.keys(state.moves||{}).length?"Move received — waiting for your friend…":"Choose rock, paper, or scissors to start.";}
 }
 async function refreshRps(){if(!activeChat)return;const {data,error}=await db.from("chat_games").select("state").eq("chat_id",activeChat.id).eq("game_type","rps").maybeSingle();if(!error)renderRps(data?.state);}
-$("game-btn").addEventListener("click",()=>{if(!activeChat)return;openDialog("game-dialog");setupGameCorner();});
+$("game-btn").addEventListener("click",()=>{
+  if(!activeChat)return;
+  openDialog("game-dialog");
+  const frame=$("game-night-frame");
+  if(frame&&(!frame.src||frame.src==="about:blank"))frame.src="https://gamenight.zone/";
+});
 document.querySelectorAll("[data-rps]").forEach(btn=>btn.addEventListener("click",async()=>{if(!activeChat)return;const {data,error}=await db.rpc("play_rps",{target_chat:activeChat.id,chosen_move:btn.dataset.rps});if(error){toast("Game failed to update. Run the latest SQL setup.");return;}renderRps(data);}));
 const emojiList="😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😍 🥰 😎 🤩 🥳 😭 😡 🤔 🙄 😴 🤯 🥺 😇 🤗 🤝 👍 👎 👏 🙌 💪 🫶 ❤️ 🧡 💛 💚 💙 💜 🖤 🤍 💔 💯 🔥 ✨ ⭐ 🌈 ☀️ 🌙 ⚡ 🎉 🎊 🎮 🎲 🏆 🥇 ⚽ 🏀 🚗 🐱 🐶 🐸 🦊 🐼 🐵 🍕 🍔 🍟 🍎 🍌 🍓 🍪 ☕ 🎂".split(" ");
 const eg=$("emoji-grid");emojiList.forEach(emoji=>eg.append(gameButton(emoji,()=>{const input=$("message-input");input.value+=emoji;input.focus();closeDialog("emoji-dialog");}))); 
@@ -1007,34 +1031,16 @@ $("settings-btn")?.addEventListener("click",()=>{if($("settings-compact-sidebar"
 
 // Game Night integration: external rooms are created by Game Night itself.
 (function setupGameNight(){
-  const byId=id=>document.getElementById(id);
-  const frame=byId("game-night-frame");
-  const start=byId("game-night-start");
-  const panel=byId("game-night-player-panel");
-  const note=byId("game-night-mode-note");
-  const launch=(mode)=>{
-    start.classList.add("hidden");
-    panel.classList.remove("hidden");
-    note.textContent=mode==="ai"
-      ? "AI mode: choose a game on Game Night, then select its AI opponent option."
-      : "Real-player mode: choose a game, create a private room, and share its code/link with friends.";
-    if(frame.src==="about:blank") frame.src="https://gamenight.zone/";
-    byId("game-night-room-link").focus();
-  };
-  byId("game-night-ai")?.addEventListener("click",()=>launch("ai"));
-  byId("game-night-players")?.addEventListener("click",()=>launch("players"));
-  byId("game-night-back")?.addEventListener("click",()=>{panel.classList.add("hidden");start.classList.remove("hidden");});
-  byId("game-night-open-tab")?.addEventListener("click",()=>window.open("https://gamenight.zone/","_blank","noopener,noreferrer"));
-  byId("game-night-exit")?.addEventListener("click",()=>{frame.src="about:blank";panel.classList.add("hidden");start.classList.remove("hidden");closeDialog("game-dialog");});
+  const byId=id=>document.getElementById(id),frame=byId("game-night-frame");
+  byId("game-night-exit")?.addEventListener("click",()=>closeDialog("game-dialog"));
   byId("game-night-send-invite")?.addEventListener("click",async()=>{
     const link=byId("game-night-room-link").value.trim();
     if(!activeChat||!user){toast("Open a chat before sending a game invite.");return;}
     let url;try{url=new URL(link);}catch{toast("Paste a valid Game Night room invite link first.");return;}
-    if(url.protocol!=="https:"||url.hostname!=="gamenight.zone"&&!url.hostname.endsWith(".gamenight.zone")){toast("Please paste a secure Game Night invite link.");return;}
+    if(url.protocol!=="https:"||(url.hostname!=="gamenight.zone"&&!url.hostname.endsWith(".gamenight.zone"))){toast("Please paste a secure Game Night invite link.");return;}
     const {error}=await db.from("messages").insert({chat_id:activeChat.id,sender_id:user.id,body:"🎮 Join my Game Night room: "+url.href});
     if(error){toast("Couldn't send the invite. Try again.");return;}
-    byId("game-night-room-link").value="";
-    await refreshActiveChatMessages(activeChat.id);
-    toast("Game Night invite sent to this chat.");
+    byId("game-night-room-link").value="";await refreshActiveChatMessages(activeChat.id);toast("Game Night invite sent to this chat.");
   });
+  byId("game-dialog")?.addEventListener("close",()=>{if(frame)frame.src="about:blank";});
 })();
