@@ -1234,3 +1234,22 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
 .community-hero h2,.community-hero p{text-align:center!important}
 .community-action{display:grid!important;place-items:center!important;text-align:center!important}
 .app-shell.sidebar-icons-only .sidebar-actions .community-action:before{left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;margin:0!important}
+
+
+/* Communities is a dedicated logo button, not a text label with a fake icon. */
+#sidebar-discover-btn.community-action{position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:0!important;text-align:center!important;min-height:54px!important;padding:8px!important;overflow:hidden!important}
+#sidebar-discover-btn .community-logo-mark{display:grid!important;place-items:center!important;flex:0 0 38px!important;width:38px!important;height:38px!important;border-radius:12px!important;background:#343653!important;color:#e1e2ff!important;font-size:25px!important;line-height:1!important;margin:0 auto!important}
+#sidebar-discover-btn .community-button-label{display:none!important}
+#sidebar-discover-btn small{display:none!important}
+.app-shell.sidebar-icons-only #sidebar-discover-btn.community-action{width:48px!important;height:48px!important;min-height:48px!important;flex:0 0 48px!important;margin:0 auto!important;padding:0!important;display:grid!important;place-items:center!important}
+.app-shell.sidebar-icons-only #sidebar-discover-btn .community-logo-mark{width:40px!important;height:40px!important;flex:none!important;margin:0!important;font-size:25px!important}
+.app-shell.sidebar-icons-only #sidebar-discover-btn:before{content:none!important;display:none!important}
+:root[data-sidebar-position="top"] #sidebar-discover-btn.community-action,
+:root[data-sidebar-position="bottom"] #sidebar-discover-btn.community-action{width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important;flex:0 0 48px!important;margin:0 auto!important;padding:0!important;display:grid!important;place-items:center!important}
+:root[data-sidebar-position="top"] #sidebar-discover-btn .community-logo-mark,
+:root[data-sidebar-position="bottom"] #sidebar-discover-btn .community-logo-mark{width:40px!important;height:40px!important;margin:0!important}
+:root[data-sidebar-position="top"] #sidebar-discover-btn:before,
+:root[data-sidebar-position="bottom"] #sidebar-discover-btn:before{content:none!important;display:none!important}
+.community-hero{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;gap:10px!important}
+.community-hero .modal-icon{display:grid!important;place-items:center!important;margin:0 auto!important;align-self:center!important}
+.community-hero>div:last-child{width:100%!important;text-align:center!important}
