@@ -828,3 +828,31 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
  .go-to-bottom{right:14px;bottom:82px}
 }
 @media(prefers-reduced-motion:reduce){.go-to-bottom,.app-shell.sidebar-icons-only .sidebar{transition:none!important}}
+
+/* Compact sidebar is a logo-only rail. Tap the logo or the chat-header menu to reopen it. */
+.app-shell.sidebar-icons-only{grid-template-columns:76px minmax(0,1fr)!important}
+.app-shell.sidebar-icons-only .sidebar{width:76px!important;min-width:76px!important;overflow:hidden!important;align-items:center}
+.app-shell.sidebar-icons-only .sidebar-top{width:100%;padding:12px 8px!important;display:flex;justify-content:center!important;align-items:center!important}
+.app-shell.sidebar-icons-only .brand-row{display:flex!important;justify-content:center!important;width:100%;cursor:pointer}
+.app-shell.sidebar-icons-only .brand-mark{width:48px!important;height:48px!important;min-width:48px!important;padding:0!important;border:0!important;background:transparent!important;display:grid!important;place-items:center!important;cursor:pointer;border-radius:13px}
+.app-shell.sidebar-icons-only .brand-mark img{width:44px!important;height:44px!important;object-fit:contain}
+.app-shell.sidebar-icons-only .sidebar-top-tools,
+.app-shell.sidebar-icons-only .sidebar-actions,
+.app-shell.sidebar-icons-only .online-summary,
+.app-shell.sidebar-icons-only .chat-list-tabs,
+.app-shell.sidebar-icons-only .chat-list-panel,
+.app-shell.sidebar-icons-only .profile-strip{display:none!important}
+.app-shell.sidebar-icons-only .brand-row>div:last-child{display:none!important}
+.app-shell.sidebar-icons-only .brand-mark:hover{background:#26352f!important;transform:scale(1.04)}
+@media(max-width:720px){
+ .app-shell.sidebar-icons-only{grid-template-columns:minmax(0,1fr)!important}
+ .app-shell.sidebar-icons-only .sidebar{width:min(88vw,360px)!important;min-width:0!important;align-items:stretch}
+ .app-shell.sidebar-icons-only .sidebar-top{width:100%;padding:13px 14px 10px!important;justify-content:space-between!important}
+ .app-shell.sidebar-icons-only .brand-row{width:auto;justify-content:flex-start!important}
+ .app-shell.sidebar-icons-only .brand-mark{width:38px!important;height:38px!important;min-width:38px!important}
+ .app-shell.sidebar-icons-only .brand-mark img{width:36px!important;height:36px!important}
+ .app-shell.sidebar-icons-only .sidebar-top-tools{display:flex!important;flex-direction:row!important}
+ .app-shell.sidebar-icons-only .sidebar-actions,.app-shell.sidebar-icons-only .online-summary,.app-shell.sidebar-icons-only .chat-list-tabs,.app-shell.sidebar-icons-only .chat-list-panel,.app-shell.sidebar-icons-only .profile-strip{display:initial!important}
+ .app-shell.sidebar-icons-only .sidebar-actions{display:grid!important}
+ .app-shell.sidebar-icons-only .brand-row>div:last-child{display:block!important}
+}
