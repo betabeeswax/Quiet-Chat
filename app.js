@@ -809,9 +809,9 @@ function renderRps(state){
 }
 async function refreshRps(){if(!activeChat)return;const {data,error}=await db.from("chat_games").select("state").eq("chat_id",activeChat.id).eq("game_type","rps").maybeSingle();if(!error)renderRps(data?.state);}
 $("game-btn").addEventListener("click",()=>{
-  openDialog("game-dialog");
   const frame=$("game-night-frame");
-  if(frame&&(!frame.src||frame.src==="about:blank"))frame.src="https://playbolt.app/play/tic-tac-toe/";
+  if(frame&&(!frame.getAttribute("src")||frame.getAttribute("src")==="about:blank"))frame.src="/games/";
+  openDialog("game-dialog");
 });
 document.querySelectorAll("[data-embed-game]").forEach(button=>button.addEventListener("click",()=>{
   const frame=$("game-night-frame");
@@ -1033,7 +1033,7 @@ window.addEventListener("resize",updateGoBottomButton);
 $("settings-btn")?.addEventListener("click",()=>{if($("settings-compact-sidebar"))$("settings-compact-sidebar").checked=app.classList.contains("sidebar-icons-only");if($("settings-auto-scroll"))$("settings-auto-scroll").checked=getAutoScroll();});
 
 
-// Game Night integration: external rooms are created by Game Night itself.
+// QuietChat Arcade is hosted in this app at /games/.
 (function setupGameNight(){
   const byId=id=>document.getElementById(id),frame=byId("game-night-frame");
   byId("game-night-exit")?.addEventListener("click",()=>closeDialog("game-dialog"));
