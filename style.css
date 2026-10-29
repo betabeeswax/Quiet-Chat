@@ -751,7 +751,7 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
   }
   .app-shell.sidebar-collapsed .sidebar{display:flex;transform:translateX(-105%);opacity:0}
   .app-shell.sidebar-collapsed .conversation{display:flex;grid-column:1;grid-row:1}
-  .app-shell:not(.sidebar-collapsed) .conversation{display:none}
+  .app-shell:not(.sidebar-collapsed):not(.chat-open) .conversation{display:none}
   .app-shell:not(.sidebar-collapsed) .sidebar{transform:translateX(0);opacity:1}
   .app-shell .sidebar-top-tools{gap:2px}
   .app-shell .sidebar-top{padding-left:14px;padding-right:12px}
