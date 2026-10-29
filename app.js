@@ -866,3 +866,17 @@ function setupGameCorner(){buildGamePicker();}
   document.body.classList.remove("pc-layout");
  });
 })();
+
+
+// Smooth, collapsible navigation sidebar. Remember the user's choice.
+function setSidebarCollapsed(collapsed){
+  app.classList.toggle("sidebar-collapsed",collapsed);
+  $("close-sidebar-btn")?.setAttribute("aria-expanded",String(!collapsed));
+  $("open-sidebar-btn")?.setAttribute("aria-expanded",String(!collapsed));
+  try{localStorage.setItem("quietchat-sidebar-collapsed",collapsed?"yes":"no");}catch{}
+}
+$("close-sidebar-btn")?.addEventListener("click",()=>setSidebarCollapsed(true));
+$("open-sidebar-btn")?.addEventListener("click",()=>setSidebarCollapsed(false));
+try{
+  if(localStorage.getItem("quietchat-sidebar-collapsed")==="yes")setSidebarCollapsed(true);
+}catch{}
