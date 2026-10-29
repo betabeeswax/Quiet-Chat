@@ -701,3 +701,7 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
 .sidebar-action{min-height:40px}
 @media(max-width:900px){.chat-header{height:62px;padding:0 12px}.header-tools{gap:5px}.chat-header>.header-action{display:none!important}}
 @media(max-width:720px){.online-summary{margin:0 10px 9px;padding:8px 10px}.server-list{max-height:28%;}.chat-header{height:60px;padding:0 9px}.more-menu>summary{width:32px;height:32px}.sidebar-top{padding:13px 14px 10px}.sidebar-actions{padding-bottom:10px}}
+
+/* Server/direct-message switcher */
+.chat-list-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 12px 10px;padding:4px;border:1px solid var(--line);border-radius:12px;background:rgba(12,17,25,.72)}.chat-list-tab{min-width:0;padding:9px 5px;border-radius:8px;background:transparent;color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap}.chat-list-tab.active{background:#25362f;color:#d5f7e2}.chat-list-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}.chat-list-panel.hidden{display:none!important}.chat-list-panel .chat-list{flex:1;min-height:0;max-height:none;overflow-y:auto}.chat-list-panel .list-section-label{flex-shrink:0}
+@media(max-width:720px){.chat-list-tabs{margin:0 9px 8px;gap:4px}.chat-list-tab{font-size:10px;padding:8px 3px}}
