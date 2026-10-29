@@ -999,3 +999,71 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
   .app-shell:not(.sidebar-icons-only) #close-sidebar-btn {font-size:0!important;width:30px!important;height:30px!important;padding:0!important;display:grid!important;place-items:center!important}
   .app-shell:not(.sidebar-icons-only) #close-sidebar-btn::before {content:"☰";font-size:16px!important;line-height:1!important}
 }
+
+
+/* One menu control only; centre all compact rail icons. */
+@media (min-width:721px) {
+  #open-sidebar-btn {display:none!important}
+  .app-shell.sidebar-icons-only .sidebar,
+  .app-shell.sidebar-icons-only .sidebar-top,
+  .app-shell.sidebar-icons-only .sidebar-actions,
+  .app-shell.sidebar-icons-only .chat-list-tabs,
+  .app-shell.sidebar-icons-only .chat-list-panel,
+  .app-shell.sidebar-icons-only .profile-strip {box-sizing:border-box!important}
+  .app-shell.sidebar-icons-only .sidebar {align-items:stretch!important}
+  .app-shell.sidebar-icons-only .sidebar-actions,
+  .app-shell.sidebar-icons-only .chat-list-tabs {align-items:center!important}
+  .app-shell.sidebar-icons-only .chat-item {justify-content:center!important;align-items:center!important}
+  .app-shell.sidebar-icons-only .chat-item .avatar,
+  .app-shell.sidebar-icons-only .profile-strip .avatar {margin-left:auto!important;margin-right:auto!important}
+}
+/* Ubuntu-like dock position options. */
+@media (min-width:721px) {
+  :root[data-sidebar-position="right"] .app-shell {grid-template-columns:minmax(0,1fr) 290px!important}
+  :root[data-sidebar-position="right"] .app-shell.sidebar-icons-only {grid-template-columns:minmax(0,1fr) 76px!important}
+  :root[data-sidebar-position="right"] .app-shell .sidebar {grid-column:2;grid-row:1;border-right:0;border-left:1px solid var(--line)}
+  :root[data-sidebar-position="right"] .app-shell .conversation {grid-column:1;grid-row:1}
+  :root[data-sidebar-position="top"] .app-shell,
+  :root[data-sidebar-position="bottom"] .app-shell {grid-template-columns:minmax(0,1fr)!important;grid-template-rows: minmax(0,1fr) 112px!important}
+  :root[data-sidebar-position="top"] .app-shell {grid-template-rows:112px minmax(0,1fr)!important}
+  :root[data-sidebar-position="top"] .app-shell .sidebar,
+  :root[data-sidebar-position="bottom"] .app-shell .sidebar {grid-column:1;grid-row:1;flex-direction:row!important;align-items:center!important;width:100%!important;height:112px!important;min-height:0!important;overflow:hidden!important;border:0;border-bottom:1px solid var(--line)}
+  :root[data-sidebar-position="bottom"] .app-shell .sidebar {grid-row:2;border-bottom:0;border-top:1px solid var(--line)}
+  :root[data-sidebar-position="top"] .app-shell .conversation,
+  :root[data-sidebar-position="bottom"] .app-shell .conversation {grid-column:1;grid-row:2;min-width:0;min-height:0}
+  :root[data-sidebar-position="bottom"] .app-shell .conversation {grid-row:1}
+  :root[data-sidebar-position="top"] .app-shell .sidebar-top,
+  :root[data-sidebar-position="bottom"] .app-shell .sidebar-top {width:auto!important;flex:0 0 auto;padding:6px 10px!important}
+  :root[data-sidebar-position="top"] .app-shell .sidebar-top-tools,
+  :root[data-sidebar-position="bottom"] .app-shell .sidebar-top-tools {display:flex!important;position:static!important}
+  :root[data-sidebar-position="top"] .app-shell #new-chat-btn,
+  :root[data-sidebar-position="bottom"] .app-shell #new-chat-btn {display:none!important}
+  :root[data-sidebar-position="top"] .app-shell .sidebar-actions,
+  :root[data-sidebar-position="bottom"] .app-shell .sidebar-actions {display:flex!important;flex-direction:row!important;align-items:center!important;gap:6px!important;padding:4px!important;flex:0 0 auto}
+  :root[data-sidebar-position="top"] .app-shell .sidebar-actions .secondary,
+  :root[data-sidebar-position="bottom"] .app-shell .sidebar-actions .secondary {display:none!important}
+  :root[data-sidebar-position="top"] .app-shell .online-summary,
+  :root[data-sidebar-position="bottom"] .app-shell .online-summary {display:none!important}
+  :root[data-sidebar-position="top"] .app-shell .chat-list-tabs,
+  :root[data-sidebar-position="bottom"] .app-shell .chat-list-tabs {display:flex!important;flex-direction:column!important;gap:3px!important;padding:3px!important;flex:0 0 auto}
+  :root[data-sidebar-position="top"] .app-shell .chat-list-panel,
+  :root[data-sidebar-position="bottom"] .app-shell .chat-list-panel {display:flex!important;flex-direction:row!important;align-items:center!important;gap:6px!important;flex:1 1 0!important;min-width:0!important;min-height:0!important;max-height:none!important;border:0;padding:0!important;overflow:hidden!important}
+  :root[data-sidebar-position="top"] .app-shell .chat-list-panel .section-label,
+  :root[data-sidebar-position="bottom"] .app-shell .chat-list-panel .section-label {display:none!important}
+  :root[data-sidebar-position="top"] .app-shell .chat-list-panel .chat-list,
+  :root[data-sidebar-position="bottom"] .app-shell .chat-list-panel .chat-list {display:flex!important;flex-direction:row!important;align-items:center!important;gap:5px!important;min-width:0!important;min-height:0!important;width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;padding:3px!important}
+  :root[data-sidebar-position="top"] .app-shell .chat-item,
+  :root[data-sidebar-position="bottom"] .app-shell .chat-item {width:auto!important;flex:0 0 auto!important;padding:2px!important;margin:0!important}
+  :root[data-sidebar-position="top"] .app-shell .chat-item .avatar,
+  :root[data-sidebar-position="bottom"] .app-shell .chat-item .avatar {margin:0!important}
+  :root[data-sidebar-position="top"] .app-shell .profile-strip,
+  :root[data-sidebar-position="bottom"] .app-shell .profile-strip {flex:0 0 auto!important;padding:5px!important;border:0!important}
+  :root[data-sidebar-position="top"] .app-shell.sidebar-icons-only .sidebar,
+  :root[data-sidebar-position="bottom"] .app-shell.sidebar-icons-only .sidebar {height:112px!important}
+  :root[data-sidebar-position="top"] .app-shell.sidebar-icons-only .brand-row>div:last-child,
+  :root[data-sidebar-position="bottom"] .app-shell.sidebar-icons-only .brand-row>div:last-child {display:none!important}
+  :root[data-sidebar-position="top"] .app-shell.sidebar-icons-only .sidebar-top,
+  :root[data-sidebar-position="bottom"] .app-shell.sidebar-icons-only .sidebar-top {padding:4px!important}
+  :root[data-sidebar-position="top"] .app-shell.sidebar-icons-only .sidebar-actions,
+  :root[data-sidebar-position="bottom"] .app-shell.sidebar-icons-only .sidebar-actions {padding:4px!important}
+}
