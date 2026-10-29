@@ -1127,3 +1127,95 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
  .app-shell.sidebar-icons-only #sidebar-discover-btn{align-self:center!important;margin:0 auto!important;left:auto!important;right:auto!important;transform:none!important}
  .app-shell.sidebar-icons-only #sidebar-discover-btn:before{position:static!important;margin:0!important}
 }
+
+
+/* Repair dock modes: keep the full navigation (community, server/chat switch,
+   both scrollable icon lists and profile) visible in top and bottom layouts. */
+@media(min-width:721px){
+ :root[data-sidebar-position="top"] .app-shell,
+ :root[data-sidebar-position="bottom"] .app-shell{
+   display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+   height:100dvh!important;min-height:100dvh!important;overflow:hidden!important;
+ }
+ :root[data-sidebar-position="top"] .app-shell{grid-template-rows:112px minmax(0,1fr)!important}
+ :root[data-sidebar-position="bottom"] .app-shell{grid-template-rows:minmax(0,1fr) 112px!important}
+ :root[data-sidebar-position="top"] .app-shell .sidebar,
+ :root[data-sidebar-position="bottom"] .app-shell .sidebar{
+   grid-column:1!important;width:100%!important;height:112px!important;min-height:112px!important;max-height:112px!important;
+   display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;
+   gap:8px!important;padding:6px 10px!important;overflow:hidden!important;box-sizing:border-box!important;
+ }
+ :root[data-sidebar-position="top"] .app-shell .sidebar{grid-row:1!important}
+ :root[data-sidebar-position="bottom"] .app-shell .sidebar{grid-row:2!important;border-top:1px solid var(--line)!important;border-bottom:0!important}
+ :root[data-sidebar-position="top"] .app-shell .conversation,
+ :root[data-sidebar-position="bottom"] .app-shell .conversation{grid-column:1!important;min-width:0!important;min-height:0!important}
+ :root[data-sidebar-position="top"] .app-shell .conversation{grid-row:2!important}
+ :root[data-sidebar-position="bottom"] .app-shell .conversation{grid-row:1!important}
+ :root[data-sidebar-position="top"] .app-shell .sidebar-top,
+ :root[data-sidebar-position="bottom"] .app-shell .sidebar-top{display:flex!important;flex:0 0 auto!important;width:auto!important;align-items:center!important;justify-content:center!important;padding:0!important}
+ :root[data-sidebar-position="top"] .app-shell .sidebar-actions,
+ :root[data-sidebar-position="bottom"] .app-shell .sidebar-actions{display:flex!important;flex:0 0 auto!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:4px!important;padding:0!important;margin:0!important}
+ :root[data-sidebar-position="top"] .app-shell #sidebar-discover-btn,
+ :root[data-sidebar-position="bottom"] .app-shell #sidebar-discover-btn{display:grid!important;place-items:center!important;flex:0 0 42px!important;width:42px!important;height:42px!important;min-width:42px!important;margin:0!important;padding:0!important;font-size:0!important;color:transparent!important}
+ :root[data-sidebar-position="top"] .app-shell #sidebar-discover-btn:before,
+ :root[data-sidebar-position="bottom"] .app-shell #sidebar-discover-btn:before{content:"◈"!important;display:block!important;color:var(--text)!important;font-size:22px!important;line-height:1!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-list-tabs,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-tabs{display:flex!important;flex:0 0 42px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;padding:0!important;margin:0!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-list-tab,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-tab{display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;font-size:0!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-list-panel,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-panel,
+ :root[data-sidebar-position="top"] .app-shell .chat-list-panel.hidden,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-panel.hidden{display:flex!important;flex:1 1 0!important;min-width:0!important;width:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;flex-direction:row!important;align-items:center!important;padding:0!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-list-panel .chat-list,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-list-panel .chat-list{display:flex!important;flex-direction:row!important;align-items:center!important;gap:5px!important;width:100%!important;min-width:0!important;min-height:0!important;max-height:none!important;overflow-x:auto!important;overflow-y:hidden!important;padding:3px!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-item,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-item{display:flex!important;flex:0 0 auto!important;width:auto!important;justify-content:center!important;align-items:center!important;padding:2px!important;margin:0!important}
+ :root[data-sidebar-position="top"] .app-shell .chat-item .avatar,
+ :root[data-sidebar-position="bottom"] .app-shell .chat-item .avatar{margin:0!important}
+ :root[data-sidebar-position="top"] .app-shell .profile-strip,
+ :root[data-sidebar-position="bottom"] .app-shell .profile-strip{display:flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;margin:0!important;padding:0 4px!important;border:0!important}
+ :root[data-sidebar-position="top"] .app-shell .profile-name,
+ :root[data-sidebar-position="bottom"] .app-shell .profile-name,
+ :root[data-sidebar-position="top"] .app-shell #settings-btn,
+ :root[data-sidebar-position="bottom"] .app-shell #settings-btn{display:none!important}
+ :root[data-sidebar-position="top"] .app-shell .sidebar-top-tools,
+ :root[data-sidebar-position="bottom"] .app-shell .sidebar-top-tools{display:flex!important;position:static!important;flex-direction:row!important}
+ .app-shell .profile-strip #my-avatar{cursor:pointer}
+ .app-shell .profile-strip #my-avatar:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+}
+/* Dropdown mode is a compact popover containing only navigation essentials. */
+@media(min-width:721px){
+ :root[data-sidebar-position="dropdown"] #open-sidebar-btn{
+   display:grid!important;visibility:visible!important;pointer-events:auto!important;
+   position:fixed!important;z-index:10001!important;left:12px!important;top:12px!important;
+   width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;
+   place-items:center!important;border-radius:10px!important;background:var(--panel)!important;
+   border:1px solid var(--line)!important;font-size:0!important;
+ }
+ :root[data-sidebar-position="dropdown"] #open-sidebar-btn:before{content:"☰"!important;font-size:18px!important;line-height:1!important}
+ :root[data-sidebar-position="dropdown"] #close-sidebar-btn{display:none!important}
+ :root[data-sidebar-position="dropdown"] .app-shell .sidebar{
+   display:flex!important;position:fixed!important;z-index:10000!important;left:10px!important;right:auto!important;
+   top:58px!important;bottom:auto!important;width:280px!important;max-width:calc(100vw - 20px)!important;
+   height:min(76dvh,620px)!important;max-height:calc(100dvh - 72px)!important;min-height:260px!important;
+   flex-direction:column!important;align-items:stretch!important;overflow:hidden!important;
+   border:1px solid var(--line)!important;border-radius:14px!important;box-shadow:0 12px 40px #0009!important;
+   background:var(--sidebar,var(--panel))!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+   transform:translateY(-5px)!important;transition:opacity .15s ease,transform .15s ease,visibility .15s!important;
+ }
+ :root[data-sidebar-position="dropdown"] .app-shell.dropdown-menu-open .sidebar{
+   opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:translateY(0)!important;
+ }
+ :root[data-sidebar-position="dropdown"] .app-shell .sidebar-top{display:flex!important;flex:0 0 auto!important;width:100%!important;padding:8px!important}
+ :root[data-sidebar-position="dropdown"] .app-shell .sidebar-actions{display:flex!important;flex-direction:row!important;justify-content:center!important;align-items:center!important;gap:8px!important;flex:0 0 auto!important;padding:8px!important}
+ :root[data-sidebar-position="dropdown"] .app-shell #sidebar-discover-btn{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;flex:0 0 42px!important;padding:0!important;font-size:0!important;color:transparent!important}
+ :root[data-sidebar-position="dropdown"] .app-shell #sidebar-discover-btn:before{content:"◈"!important;color:var(--text)!important;font-size:22px!important}
+ :root[data-sidebar-position="dropdown"] .app-shell .chat-list-tabs{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:6px!important;flex:0 0 auto!important;padding:6px!important}
+ :root[data-sidebar-position="dropdown"] .app-shell .chat-list-tab{display:grid!important;place-items:center!important;width:40px!important;height:40px!important;padding:0!important;font-size:0!important}
+ :root[data-sidebar-position="dropdown"] .app-shell .chat-list-panel,
+ :root[data-sidebar-position="dropdown"] .app-shell .chat-list-panel.hidden{display:flex!important;flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow:hidden!important;flex-direction:column!important}
+ :root[data-sidebar-position="dropdown"] .app-shell .chat-list-panel .chat-list{display:flex!important;flex-direction:column!important;min-height:0!important;flex:1 1 auto!important;overflow-y:auto!important;overflow-x:hidden!important}
+ :root[data-sidebar-position="dropdown"] .app-shell .profile-strip{display:flex!important;flex:0 0 auto!important;margin-top:0!important;justify-content:flex-start!important;padding:8px!important}
+ :root[data-sidebar-position="dropdown"] .app-shell .profile-strip #my-avatar{cursor:pointer}
+}
