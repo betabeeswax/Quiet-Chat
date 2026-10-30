@@ -1325,3 +1325,11 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
 .sidebar-arrow-logo{display:grid;place-items:center;width:38px;height:38px;padding:0;border:0;border-radius:11px;background:transparent;color:var(--text);font-size:34px;font-weight:400;line-height:1;cursor:pointer}
 .sidebar-arrow-logo:hover{background:var(--panel2);color:var(--accent)}
 .sidebar-top-tools{position:absolute;right:14px;top:50%;transform:translateY(-50%)}
+
+/* Centre the arrow menu control neatly in its button. */
+.menu-icon-button{display:grid!important;place-items:center!important;padding:0!important;line-height:1!important;font-size:28px!important;font-weight:400!important}
+.menu-icon-lines{display:none!important}
+.sidebar-top{justify-content:space-between;min-height:66px;padding:12px 16px}
+.sidebar-top .brand-row{width:auto;justify-content:flex-start}
+.sidebar-top-tools{position:static;transform:none}
+.sidebar-arrow-logo{display:none!important}
