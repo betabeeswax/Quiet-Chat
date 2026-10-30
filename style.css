@@ -1412,3 +1412,10 @@ html body #open-sidebar-btn{
 }
 html body #open-sidebar-btn:before,html body #open-sidebar-btn:after{content:none!important;display:none!important}
 html body #open-sidebar-btn .menu-icon-lines{display:none!important}
+
+
+/* The logo itself is the only sidebar resize/toggle control. */
+html body #close-sidebar-btn,
+html body #open-sidebar-btn{display:none!important;visibility:hidden!important;pointer-events:none!important}
+html body .sidebar #sidebar-logo-toggle{cursor:pointer!important}
+html body .sidebar #sidebar-logo-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:8px}
