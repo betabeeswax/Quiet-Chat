@@ -1370,3 +1370,45 @@ html body .sidebar .brand-mark.small img{
   max-height:none!important;object-fit:contain!important;background:transparent!important;
 }
 html body .sidebar .brand-row{gap:12px!important}
+
+
+/* Sidebar header final layout: clear brand, plus action, and arrow toggle. */
+html body .sidebar .sidebar-top{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:8px!important;min-height:76px!important;padding:10px 12px!important;
+}
+html body .sidebar .brand-row{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  gap:10px!important;min-width:0!important;flex:1 1 auto!important;width:auto!important;
+}
+html body .sidebar .brand-row>div{min-width:0!important;white-space:nowrap!important}
+html body .sidebar .brand-row strong{display:block!important;font-size:16px!important;line-height:1.2!important;white-space:nowrap!important}
+html body .sidebar .brand-row .tiny{font-size:10px!important;line-height:1.25!important;white-space:nowrap!important}
+html body .sidebar .brand-mark.small{
+  width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;
+  flex:0 0 44px!important;margin:0!important;padding:0!important;border:0!important;
+  border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+html body .sidebar .brand-mark.small img{
+  display:block!important;width:44px!important;height:44px!important;object-fit:contain!important;
+  max-width:none!important;max-height:none!important;padding:0!important;background:transparent!important;
+}
+html body .sidebar .sidebar-top-tools{
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;
+  gap:4px!important;position:static!important;transform:none!important;flex:0 0 auto!important;
+}
+html body #new-chat-btn{display:grid!important;place-items:center!important;width:34px!important;height:36px!important;font-size:22px!important}
+html body #close-sidebar-btn{
+  display:grid!important;visibility:visible!important;place-items:center!important;
+  width:34px!important;height:36px!important;min-width:34px!important;padding:0!important;
+  border:0!important;border-radius:9px!important;background:transparent!important;color:#aab4c5!important;
+  font-size:27px!important;font-weight:400!important;line-height:1!important;
+}
+html body #close-sidebar-btn:before,html body #close-sidebar-btn:after{content:none!important;display:none!important}
+html body #open-sidebar-btn{
+  display:grid!important;visibility:visible!important;place-items:center!important;
+  width:36px!important;height:36px!important;padding:0!important;font-size:27px!important;
+  line-height:1!important;font-weight:400!important;
+}
+html body #open-sidebar-btn:before,html body #open-sidebar-btn:after{content:none!important;display:none!important}
+html body #open-sidebar-btn .menu-icon-lines{display:none!important}
