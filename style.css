@@ -1352,3 +1352,21 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
 #close-sidebar-btn{
   display:none!important;
 }
+
+
+/* Final logo and menu sizing correction. */
+html body #open-sidebar-btn,
+html body #close-sidebar-btn{
+  display:none!important;
+  visibility:hidden!important;
+}
+html body .sidebar .brand-mark.small{
+  width:54px!important;height:54px!important;min-width:54px!important;min-height:54px!important;
+  flex:0 0 54px!important;padding:0!important;margin:0!important;background:transparent!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;
+}
+html body .sidebar .brand-mark.small img{
+  display:block!important;width:54px!important;height:54px!important;max-width:none!important;
+  max-height:none!important;object-fit:contain!important;background:transparent!important;
+}
+html body .sidebar .brand-row{gap:12px!important}
