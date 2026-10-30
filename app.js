@@ -238,7 +238,7 @@ $("context-open-chat")?.addEventListener("click",()=>{const chat=chats.find(c=>c
 $("context-pin-chat")?.addEventListener("click",()=>{const id=$("chat-context-menu").dataset.chatId;let ids=getPinnedChats();ids=ids.includes(id)?ids.filter(x=>x!==id):[id,...ids];localStorage.setItem(CHAT_PIN_KEY,JSON.stringify(ids));closeChatContextMenu();renderChats();toast(ids.includes(id)?"Chat pinned.":"Chat unpinned.");});
 $("context-mute-chat")?.addEventListener("click",()=>{const id=$("chat-context-menu").dataset.chatId,key="quietchat-muted-chats-"+user.id;let ids=[];try{ids=JSON.parse(localStorage.getItem(key)||"[]");}catch{}const muted=ids.includes(id);ids=muted?ids.filter(x=>x!==id):[...ids,id];localStorage.setItem(key,JSON.stringify(ids));closeChatContextMenu();toast(muted?"Notifications unmuted.":"Notifications muted.");});
 $("context-remove-chat")?.addEventListener("click",async()=>{const id=$("chat-context-menu").dataset.chatId;const chat=chats.find(c=>c.id===id);closeChatContextMenu();if(!chat)return;await selectChat(chat);$("chat-remove-btn").click();});
-$("context-report-chat")?.addEventListener("click",()=>{const id=$("chat-context-menu").dataset.chatId,chat=chats.find(c=>c.id===id);closeChatContextMenu();if(!chat)return;const subject=encodeURIComponent("QuietChat report: "+chat.title),body=encodeURIComponent("QuietChat report\nChat: "+chat.title+"\nChat ID: "+chat.id+"\nType: "+(chat.isGroup?"Community":"Private chat")+"\nReported by: "+(username||"Unknown")+"\n\nPlease review this report.");window.location.href="mailto:imandrewbrake@gmail.com?subject="+subject+"&body="+body;});
+$("context-report-chat")?.addEventListener("click",async()=>{const id=$("chat-context-menu").dataset.chatId,chat=chats.find(c=>c.id===id);closeChatContextMenu();if(!chat)return;const reason=prompt("Why are you reporting this chat or community?");if(!reason||reason.trim().length<3)return;const {error}=await db.functions.invoke("quietchat-moderation",{body:{action:"report",reason,chat_id:chat.id,details:{type:chat.isGroup?"community":"private_chat",title:chat.title}}});if(error){toast("Could not send report: "+error.message);return;}toast("Report sent to QuietChat moderators. Thank you.");});
 function renderChats(){
   const servers=$("server-list"),list=$("chat-list");
   if(!servers||!list)return;
@@ -367,8 +367,8 @@ async function renderMessage(m){
     }else{const unavailable=document.createElement("span");unavailable.textContent="Media unavailable";bubble.append(unavailable);}
   }
   if(m.body&&!((m.attachment_type==="image"&&m.body==="📷 Photo")||(m.attachment_type==="video"&&m.body==="🎬 Video")||(m.attachment_type==="audio"&&m.body==="🎙 Voice memo"))){const caption=document.createElement("div");linkifyText(filterCussing(m.body),caption);bubble.append(caption);}
-  // Cyberbullying safety: let users prepare a report without silently sending private chat data anywhere.
-  if(!mine){const safety=document.createElement("div");safety.className="message-safety-actions";safety.style.cssText="display:flex;justify-content:flex-end;gap:8px;margin-top:6px";const report=document.createElement("button");report.type="button";report.className="tiny secondary";report.textContent="⚑ Report";report.setAttribute("aria-label","Report this message for bullying or abuse");report.addEventListener("click",async()=>{const reason=prompt("Why are you reporting this message?\\n\\nExamples: cyberbullying, threats, harassment, or inappropriate content.");if(!reason||!reason.trim())return;const reportText="QuietChat safety report\\nReason: "+reason.trim()+"\\nSender: "+(m.profiles?.username||"Friend")+"\\nDate: "+date.toLocaleString()+"\\nChat: "+(activeChat?.name||activeChat?.title||"Current chat")+"\\nMessage: "+(m.body||"[attachment: "+(m.attachment_name||m.attachment_type||"media")+"]")+"\\nMessage ID: "+m.id+"\\n\\nThis report was prepared on this device; it has NOT been sent to QuietChat.";try{await navigator.clipboard.writeText(reportText);alert("Report copied. It has not been sent anywhere. Share it with a trusted adult or the person who manages this community, and keep screenshots if you feel unsafe.");}catch{prompt("Copy this report and share it with a trusted adult or community manager:",reportText);}});safety.append(report);wrap.append(safety);}
+  // Send reports directly to the secure moderation queue.
+  if(!mine){const safety=document.createElement("div");safety.className="message-safety-actions";safety.style.cssText="display:flex;justify-content:flex-end;gap:8px;margin-top:6px";const report=document.createElement("button");report.type="button";report.className="tiny secondary";report.textContent="⚑ Report";report.setAttribute("aria-label","Report this message");report.addEventListener("click",async()=>{const reason=prompt("Why are you reporting this message? Include a short reason (3–1000 characters).");if(!reason||reason.trim().length<3)return;report.disabled=true;const {error}=await db.functions.invoke("quietchat-moderation",{body:{action:"report",reason,reported_user_id:m.sender_id,chat_id:activeChat?.id||null,message_id:m.id,details:{chat_title:activeChat?.name||activeChat?.title||"Chat",sender:m.profiles?.username||"User",message_preview:(m.body||"").slice(0,500),created_at:m.created_at,attachment_type:m.attachment_type||null}}});report.disabled=false;if(error){toast("Report could not be sent: "+error.message);return;}toast("Report sent to QuietChat moderators.");});safety.append(report);wrap.append(safety);}
   scrollMessagesToBottom();
 }
 $("message-form").addEventListener("submit",async e=>{
@@ -610,6 +610,43 @@ $("settings-accent-color")?.addEventListener("input",e=>{localStorage.setItem("q
 $("settings-sidebar-position")?.addEventListener("change",e=>{localStorage.setItem("quietchat-sidebar-position",e.target.value);applyAppearanceSettings();});
 window.addEventListener("resize",()=>{if(localStorage.getItem("quietchat-device-mode")==="pc"&&window.innerWidth<900){localStorage.setItem("quietchat-device-mode","auto");applyAppearanceSettings();toast("PC mode did not fit, so QuietChat reverted to Automatic.");}});
 applyAppearanceSettings();
+$("admin-enforcement-section")?.toggleAttribute("hidden",!isQuietChatAdmin());
+
+async function moderationCall(body){const {data,error}=await db.functions.invoke("quietchat-moderation",{body});if(error)throw error;if(data?.error)throw new Error(data.error);return data;}
+async function loadAdminReports(){
+ const box=$("admin-reports-list");box.textContent="Loading reports…";
+ try{const data=await moderationCall({action:"list_reports"});box.replaceChildren();
+  if(!data.reports?.length){box.textContent="No reports yet.";return;}
+  data.reports.forEach(r=>{const card=document.createElement("article");card.className="admin-item";const head=document.createElement("strong");head.textContent=(r.details?.type||"Report")+" · "+r.status;const reason=document.createElement("p");reason.textContent=r.reason;const meta=document.createElement("small");meta.textContent="Reported: "+new Date(r.created_at).toLocaleString()+" · Reporter ID: "+r.reporter_id+(r.reported_user_id?" · Target ID: "+r.reported_user_id:"");card.append(head,reason,meta);
+   if(r.details?.message_preview){const excerpt=document.createElement("blockquote");excerpt.textContent="Message: "+r.details.message_preview;card.append(excerpt);}
+   const actions=document.createElement("div");actions.className="admin-actions";
+   [["Reviewing","reviewing"],["Resolve","resolved"],["Dismiss","dismissed"]].forEach(([label,status])=>{const b=document.createElement("button");b.className="secondary";b.type="button";b.textContent=label;b.addEventListener("click",async()=>{try{await moderationCall({action:"report_status",report_id:r.id,status});await loadAdminReports();}catch(e){toast("Could not update report: "+e.message);}});actions.append(b);});
+   if(r.reported_user_id){const ban=document.createElement("button");ban.className="danger";ban.type="button";ban.textContent="Ban account";ban.addEventListener("click",async()=>{const reasonText=prompt("Reason for banning this account?");if(!reasonText||reasonText.trim().length<3)return;try{await moderationCall({action:"ban",user_id:r.reported_user_id,reason:reasonText});toast("Account banned.");await loadAdminReports();}catch(e){toast("Ban failed: "+e.message);}});actions.append(ban);}
+   card.append(actions);box.append(card);
+  });
+ }catch(e){box.textContent="Could not load reports: "+e.message;}
+}
+async function loadAdminUsers(){
+ const box=$("admin-users-list");box.textContent="Loading accounts…";
+ try{const data=await moderationCall({action:"list_users"});box.replaceChildren();
+  const query=($("admin-user-search").value||"").toLowerCase();
+  const users=(data.users||[]).filter(x=>(x.username||"").toLowerCase().includes(query));
+  if(!users.length){box.textContent="No matching accounts.";return;}
+  users.forEach(u=>{const card=document.createElement("article");card.className="admin-item";const title=document.createElement("strong");title.textContent=u.username+" "+(u.ban?"· BANNED":"");const meta=document.createElement("small");meta.textContent="Created "+new Date(u.created_at).toLocaleDateString()+" · ID "+u.id;card.append(title,meta);if(u.ban){const why=document.createElement("p");why.textContent="Ban reason: "+u.ban.reason;card.append(why);}
+   const actions=document.createElement("div");actions.className="admin-actions";
+   const b=document.createElement("button");b.type="button";b.className="secondary";b.textContent=u.ban?"Unban":"Ban";b.addEventListener("click",async()=>{const reason=u.ban?"":prompt("Reason for banning "+u.username+"?");if(!u.ban&&(!reason||reason.trim().length<3))return;try{await moderationCall({action:u.ban?"unban":"ban",user_id:u.id,reason});toast(u.ban?"Account unbanned.":"Account banned.");await loadAdminUsers();}catch(e){toast("Action failed: "+e.message);}});actions.append(b);
+   const del=document.createElement("button");del.type="button";del.className="danger";del.textContent="Remove account";del.addEventListener("click",async()=>{if(!confirm("Permanently delete "+u.username+"'s account? This cannot be undone."))return;try{await moderationCall({action:"delete_user",user_id:u.id});toast("Account permanently removed.");await loadAdminUsers();}catch(e){toast("Could not remove account: "+e.message);}});actions.append(del);card.append(actions);box.append(card);
+  });
+ }catch(e){box.textContent="Could not load accounts: "+e.message;}
+}
+function openModerationCentre(){if(!isQuietChatAdmin()){toast("Admin access required.");return;}openDialog("admin-moderation-dialog");loadAdminReports();}
+$("open-admin-panel-btn")?.addEventListener("click",openModerationCentre);
+$("admin-close-btn")?.addEventListener("click",()=>closeDialog("admin-moderation-dialog"));
+$("admin-reports-tab")?.addEventListener("click",()=>{$("admin-reports-view").hidden=false;$("admin-users-view").hidden=true;loadAdminReports();});
+$("admin-users-tab")?.addEventListener("click",()=>{$("admin-reports-view").hidden=true;$("admin-users-view").hidden=false;loadAdminUsers();});
+$("admin-refresh-btn")?.addEventListener("click",()=>{$("admin-users-view").hidden?loadAdminReports():loadAdminUsers();});
+$("admin-user-search")?.addEventListener("input",()=>loadAdminUsers());
+
 $("settings-btn").addEventListener("click",()=>{updateAccountLinkButton();updateGoogleLinkButton();openDialog("settings-dialog");});
 function openAccountSettings(){closeDialog("profile-dialog");openDialog("settings-dialog");}
 $("my-avatar")?.addEventListener("click",openAccountSettings);
