@@ -1419,3 +1419,29 @@ html body #close-sidebar-btn,
 html body #open-sidebar-btn{display:none!important;visibility:hidden!important;pointer-events:none!important}
 html body .sidebar #sidebar-logo-toggle{cursor:pointer!important}
 html body .sidebar #sidebar-logo-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:8px}
+
+
+/* Centre the logo when the sidebar is in compact/icon-only mode. */
+@media(min-width:721px){
+  html body .app-shell.sidebar-icons-only .sidebar .sidebar-top{
+    justify-content:center!important;
+    padding-left:0!important;
+    padding-right:0!important;
+  }
+  html body .app-shell.sidebar-icons-only .sidebar .brand-row{
+    width:100%!important;
+    flex:1 1 100%!important;
+    justify-content:center!important;
+    gap:0!important;
+    margin:0 auto!important;
+  }
+  html body .app-shell.sidebar-icons-only .sidebar .brand-row>div{
+    display:none!important;
+  }
+  html body .app-shell.sidebar-icons-only .sidebar #sidebar-logo-toggle{
+    margin:0 auto!important;
+  }
+  html body .app-shell.sidebar-icons-only .sidebar .sidebar-top-tools{
+    display:none!important;
+  }
+}
