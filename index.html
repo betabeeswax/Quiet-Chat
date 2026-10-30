@@ -236,6 +236,7 @@
   <dialog id="settings-dialog" class="modal">
     <div class="dialog-head"><div><p class="eyebrow">PREFERENCES</p><h2>Settings</h2></div><button id="settings-close-btn" class="icon-button" aria-label="Close settings">×</button></div>
     <p class="muted settings-intro">Make QuietChat work the way you like. Your preferences are saved on this device.</p>
+    <button id="open-help-btn" class="secondary full" type="button">❔ Help & how to use QuietChat</button>
     <div class="settings-section appearance-settings">
       <h3>🎨 Appearance & layout</h3>
       <label for="settings-ui-version">Interface design</label>
@@ -294,6 +295,19 @@
       <button id="settings-delete-account-btn" class="secondary full" type="button">Delete account and data…</button>
       <p class="tiny muted">Permanent deletion must be completed by the secure server-side process.</p>
     </div>
+  </dialog>
+  <dialog id="help-dialog" class="modal help-modal">
+    <div class="dialog-head"><div><p class="eyebrow">QUIETCHAT GUIDE</p><h2>Help & how to use QuietChat</h2></div><button id="help-close-btn" class="icon-button" type="button" aria-label="Close help">×</button></div>
+    <p class="muted">Welcome! This guide explains the main parts of QuietChat and where to find things.</p>
+    <section class="help-section"><h3>💬 Chats and messages</h3><ul><li><strong>New private chat:</strong> Create an invite and share its code or link with the person you want to chat with.</li><li><strong>Join with code:</strong> Enter an invite code someone shared with you.</li><li><strong>Create group chat:</strong> Start a conversation with multiple people and invite them to join.</li><li><strong>Chat list:</strong> Select a conversation to open it. Chat options may include pinning, muting, reporting or removing it.</li><li><strong>Send a message:</strong> Type in the box at the bottom and press Send. Links in messages can be opened.</li></ul></section>
+    <section class="help-section"><h3>📎 Photos, files, emoji and GIFs</h3><p>Use the attachment and message tools beside the message box to add supported files, emoji, GIFs, voice messages or voice-to-text. File uploads are limited to 5 MB. Some tools depend on browser permissions and device support.</p></section>
+    <section class="help-section"><h3>👥 Communities</h3><p>Open <strong>Communities</strong> in the sidebar to browse groups, search and view public communities. You can create a community or join one when invitations or public joining are available. Owners and authorised moderators have extra management controls. Public communities are limited to text and GIFs.</p></section>
+    <section class="help-section"><h3>🎮 Games</h3><p>Choose <strong>Games</strong> in a private chat to open the QuietChat Arcade. Select a game, create or join a room, and share the room code with your friend. Player limits depend on the game.</p></section>
+    <section class="help-section"><h3>🎥 Video calls</h3><p>Open a private chat and press <strong>Call</strong>. Allow camera and microphone access when your browser asks. In Settings, choose whether calls open inside QuietChat or in a new browser tab. If the embedded call does not work, try the new-tab option.</p></section>
+    <section class="help-section"><h3>⚙️ Settings and your profile</h3><ul><li><strong>Appearance & layout:</strong> Change the interface style, device layout, sidebar position, compact sidebar and accent colour.</li><li><strong>Logo:</strong> Click the QuietChat logo to switch between the full sidebar and compact icon-only sidebar.</li><li><strong>Message scrolling:</strong> Turn automatic scrolling on or off.</li><li><strong>Notifications:</strong> Choose whether this browser may show notifications. Your browser may ask for permission.</li><li><strong>Your account:</strong> Edit your profile, connect an email/password or Google sign-in where available, and open your local media library.</li><li><strong>Chat exports:</strong> Export the current chat or all chats as a PDF using your browser's print window.</li></ul></section>
+    <section class="help-section"><h3>🔒 Safety and privacy</h3><p>Only chat with people you trust. Do not share passwords or sensitive personal information. QuietChat stores chat data online so conversations can sync with other participants. The local media library saves copies in this browser only; clearing browser data can remove those copies. Read the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a> for more details.</p></section>
+    <section class="help-section"><h3>🛠️ Something not working?</h3><ul><li>Refresh the page and check your internet connection.</li><li>If a call cannot access your camera or microphone, check your browser's site permissions.</li><li>If a file will not upload, check that it is under 5 MB and try again.</li><li>If a feature is missing, it may not be available for that chat type, account type, browser or device.</li></ul></section>
+    <button id="help-done-btn" class="primary full" type="button">Got it</button>
   </dialog>
   <dialog id="link-account-dialog" class="modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
