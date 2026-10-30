@@ -1052,6 +1052,9 @@ $("messages")?.addEventListener("scroll",updateGoBottomButton,{passive:true});
 if($("messages")&&typeof MutationObserver!=="undefined"){new MutationObserver(()=>requestAnimationFrame(updateGoBottomButton)).observe($("messages"),{childList:true,subtree:true});}
 window.addEventListener("resize",updateGoBottomButton);
 $("settings-btn")?.addEventListener("click",()=>{if($("settings-compact-sidebar"))$("settings-compact-sidebar").checked=app.classList.contains("sidebar-icons-only");if($("settings-auto-scroll"))$("settings-auto-scroll").checked=getAutoScroll();});
+$("open-help-btn")?.addEventListener("click",()=>{closeDialog("settings-dialog");openDialog("help-dialog");});
+$("help-close-btn")?.addEventListener("click",()=>closeDialog("help-dialog"));
+$("help-done-btn")?.addEventListener("click",()=>closeDialog("help-dialog"));
 
 
 // QuietChat Arcade is hosted in this app at /games/.
