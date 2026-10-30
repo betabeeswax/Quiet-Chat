@@ -1309,3 +1309,11 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
     flex:0 0 auto!important;
   }
 }
+
+
+/* Clean, perfectly centred three-line sidebar menu icon. */
+.menu-icon-button{display:grid!important;place-items:center!important;padding:0!important;line-height:0!important;}
+.menu-icon-lines{display:block;width:19px;height:14px;position:relative;border-top:2px solid currentColor;border-bottom:2px solid currentColor;box-sizing:border-box;}
+.menu-icon-lines:after{content:"";position:absolute;left:0;right:0;top:4px;border-top:2px solid currentColor;}
+@media(min-width:721px){.app-shell:not(.sidebar-icons-only) #close-sidebar-btn{display:grid!important;place-items:center!important;font-size:0!important;line-height:0!important}.app-shell:not(.sidebar-icons-only) #close-sidebar-btn:before{content:""!important;width:18px;height:14px;border-top:2px solid currentColor;border-bottom:2px solid currentColor;box-sizing:border-box;position:relative}.app-shell:not(.sidebar-icons-only) #close-sidebar-btn:after{content:"";position:absolute;width:18px;border-top:2px solid currentColor}}
+:root[data-sidebar-position="dropdown"] #open-sidebar-btn:before{content:none!important}
