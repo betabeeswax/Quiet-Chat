@@ -1333,3 +1333,22 @@ label{color:#dce5f4;font-size:12px;letter-spacing:.025em}
 .sidebar-top .brand-row{width:auto;justify-content:flex-start}
 .sidebar-top-tools{position:static;transform:none}
 .sidebar-arrow-logo{display:none!important}
+
+
+/* Requested cleanup: remove the green tile/barrier behind the QuietChat logo
+   and remove the arrow sidebar menu controls. Keep the logo artwork itself. */
+.brand-mark,
+.brand-mark.small,
+.setup-card .brand-mark{
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+}
+.brand-mark img{
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#open-sidebar-btn,
+#close-sidebar-btn{
+  display:none!important;
+}
