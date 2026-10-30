@@ -289,7 +289,12 @@
       <button id="settings-all-export-btn" class="secondary full">Export all chats as PDF <span>›</span></button>
       <p class="tiny muted">For PDF, choose “Save as PDF” in your browser's print window.</p>
     </div>
-        <div class="settings-section">
+        <div class="settings-section" id="admin-enforcement-section" hidden>
+      <h3>🛡️ Admin enforcement</h3>
+      <p class="tiny muted">Review reports, ban accounts, restore access, or permanently remove an account.</p>
+      <button id="open-admin-panel-btn" class="secondary full" type="button">Open moderation centre</button>
+    </div>
+    <div class="settings-section">
       <h3>🔐 Account actions</h3>
       <button id="settings-signout-btn" class="secondary full" type="button">Sign out</button>
       <button id="settings-delete-account-btn" class="secondary full" type="button">Delete account and data…</button>
@@ -308,6 +313,12 @@
     <section class="help-section"><h3>🔒 Safety and privacy</h3><p>Only chat with people you trust. Do not share passwords or sensitive personal information. QuietChat stores chat data online so conversations can sync with other participants. The local media library saves copies in this browser only; clearing browser data can remove those copies. Read the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a> for more details.</p></section>
     <section class="help-section"><h3>🛠️ Something not working?</h3><ul><li>Refresh the page and check your internet connection.</li><li>If a call cannot access your camera or microphone, check your browser's site permissions.</li><li>If a file will not upload, check that it is under 5 MB and try again.</li><li>If a feature is missing, it may not be available for that chat type, account type, browser or device.</li></ul></section>
     <button id="help-done-btn" class="primary full" type="button">Got it</button>
+  </dialog>
+  <dialog id="admin-moderation-dialog" class="modal admin-moderation-modal">
+    <div class="dialog-head"><div><p class="eyebrow">QUIETCHAT ADMIN</p><h2>Moderation centre</h2></div><button id="admin-close-btn" class="icon-button" type="button" aria-label="Close">×</button></div>
+    <div class="admin-tabs"><button id="admin-reports-tab" class="secondary" type="button">Reports</button><button id="admin-users-tab" class="secondary" type="button">Accounts</button><button id="admin-refresh-btn" class="secondary" type="button">↻ Refresh</button></div>
+    <section id="admin-reports-view"><p class="tiny muted">Reports submitted by users. Review the report before taking action.</p><div id="admin-reports-list" class="admin-list">Loading reports…</div></section>
+    <section id="admin-users-view" hidden><p class="tiny muted">Search accounts by username. Ban blocks sign-in; remove permanently deletes the account and its linked account data.</p><input id="admin-user-search" placeholder="Search username…"><div id="admin-users-list" class="admin-list">Loading accounts…</div></section>
   </dialog>
   <dialog id="link-account-dialog" class="modal">
     <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
