@@ -1445,3 +1445,16 @@ html body .sidebar #sidebar-logo-toggle:focus-visible{outline:2px solid var(--ac
     display:none!important;
   }
 }
+
+
+/* In-app help page */
+.help-modal{width:min(calc(100% - 28px),680px);max-height:min(88dvh,900px);overflow-y:auto}
+.help-modal .dialog-head{position:sticky;top:-28px;z-index:2;background:#131923;padding:12px 0 10px;margin-bottom:8px}
+.help-modal .dialog-head h2{margin:4px 0}
+.help-section{padding:15px 0;border-top:1px solid var(--line);line-height:1.65}
+.help-section h3{font:700 15px Manrope;margin:0 0 8px;color:var(--text)}
+.help-section p{margin:5px 0;color:#b9c4d4}
+.help-section ul{margin:6px 0 0;padding-left:22px;color:#b9c4d4}
+.help-section li{margin:6px 0}
+.help-section strong{color:#f0f4fa}
+.help-section a{color:var(--accent);text-decoration:underline}
