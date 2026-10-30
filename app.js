@@ -91,6 +91,7 @@ document.addEventListener("pointerdown",scheduleActivityTouch,{passive:true});
 document.addEventListener("keydown",scheduleActivityTouch);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)scheduleActivityTouch();});
 async function loadProfile(){
+  try{const {data:moderation,error:moderationError}=await db.functions.invoke("quietchat-moderation",{body:{action:"check_status"}});if(moderationError)throw moderationError;if(moderation?.banned){await db.auth.signOut();user=null;showSetup(false);toast("This QuietChat account is banned. Reason: "+(moderation.ban?.reason||"No reason provided."));return;}}catch(e){console.warn("Could not check account status:",e);toast("Could not verify account status. Please refresh and try again.");user=null;showSetup(false);return;}
   const {data,error}=await db.from("profiles").select("username,bio,avatar_path").eq("id",user.id).maybeSingle();
   if(error){toast("Could not load your profile: "+error.message);user=null;showSetup(false);return;}
   if(data?.username){setProfile(data.username);window.myProfile=data;$("profile-bio").value=data.bio||"";if(data.avatar_path)await showAvatar(data.avatar_path);await touchActivity();showApp();await loadChats();subscribeChatList();subscribeOnlineUsers();handleInviteLink();}
