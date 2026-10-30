@@ -1043,7 +1043,7 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Escape"&&document.documentElement.dataset.sidebarPosition==="dropdown")app.classList.remove("dropdown-menu-open");
 });
 
- $("sidebar-logo-toggle")?.addEventListener("click",()=>{if(app.classList.contains("sidebar-icons-only")||app.classList.contains("sidebar-collapsed")){app.classList.remove("chat-open");setSidebarCollapsed(false);}});
+ $("sidebar-logo-toggle")?.addEventListener("click",()=>{if(document.documentElement.dataset.sidebarPosition==="dropdown"){app.classList.toggle("dropdown-menu-open");return;}const compact=app.classList.contains("sidebar-icons-only")||app.classList.contains("sidebar-collapsed");app.classList.remove("chat-open");setSidebarCollapsed(!compact);});
 try{if(localStorage.getItem("quietchat-sidebar-collapsed")==="yes")setSidebarCollapsed(true);}catch{}
 $("settings-compact-sidebar")?.addEventListener("change",e=>setSidebarCollapsed(e.target.checked));
 $("settings-auto-scroll")?.addEventListener("change",e=>{try{localStorage.setItem(AUTO_SCROLL_KEY,e.target.checked?"on":"off");}catch{}if(e.target.checked)scrollMessagesToBottom(true);else updateGoBottomButton();});
