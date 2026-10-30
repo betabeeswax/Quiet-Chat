@@ -74,7 +74,6 @@ else if(slug==='four-in-a-row'){html='<div class="board connect">'+s.board.map((
 else if(slug==='flip-frenzy'){html='<div class="board memory">'+s.board.map((v,i)=>'<button class="cell" onclick="flipCard('+i+')">'+(v.done||v.open?v.v:'?')+'</button>').join('')+'</div><div class="actions" style="justify-content:center"><button onclick="resetBoard()">Shuffle again</button></div>'}
 else if(['five-stones','corner-capture','box-battle'].includes(slug)){let n=slug==='five-stones'?15:8;html='<div class="board '+(slug==='five-stones'?'gomoku':slug==='box-battle'?'dots':'reversi')+'" style="max-width:560px">'+Array.from({length:n*n},(_,i)=>'<button class="cell" onclick="placeMark('+i+')">'+(s.board[i]||'')+'</button>').join('')+'</div><div class="actions" style="justify-content:center"><button onclick="resetBoard()">Reset board</button></div>'}
 else {html=renderExtraGame(slug,s)}
-else {html='<div class="board ttt">'+s.board.map((v,i)=>'<button class="cell" onclick="tttMove('+i+')">'+v+'</button>').join('')+'</div><div class="actions" style="justify-content:center"><button onclick="resetBoard()">Restart</button></div>'}
 $('game-content').innerHTML=html}
 
 function renderExtraGame(slug,s){
