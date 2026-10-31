@@ -177,6 +177,11 @@ async function loadChats(){
     const {data:memberships,error:membersError}=await db.from("chat_members")
       .select("chat_id,user_id").in("chat_id",validIds);
     if(membersError) throw new Error("Chats loaded, but member lists couldn't load: "+membersError.message);
+    // Count community members only after they have sent at least one message.
+    const {data:communityMessages,error:communityMessagesError}=await db.from("messages").select("chat_id,sender_id").in("chat_id",validIds);
+    if(communityMessagesError) throw new Error("Chats loaded, but community activity couldn't load: "+communityMessagesError.message);
+    const activeSendersByChat={};
+    (communityMessages||[]).forEach(m=>{(activeSendersByChat[m.chat_id] ||= new Set()).add(m.sender_id);});
     const userIds=[...new Set((memberships||[]).map(m=>m.user_id).filter(Boolean))];
     let profiles=[];
     if(userIds.length){
@@ -193,10 +198,12 @@ async function loadChats(){
       const chat=chatById[chatId]||{};
       const allMembers=membersByChat[chatId]||[];
       const members=allMembers.filter(m=>m.user_id!==user.id);
-      const memberCount=allMembers.length||1;
+      const activeSenders=activeSendersByChat[chatId]||new Set();
+      const countedMembers=allMembers.filter(m=>activeSenders.has(m.user_id));
+      const memberCount=chat.name?countedMembers.length:(allMembers.length||1);
       const other=members[0]?.profiles?.username||"Waiting for friend";
       if(members[0]?.profiles)window.chatProfileLookup[chatId]=members[0].profiles;
-      return {id:chatId,created_at:chat.created_at,title:chat.name||other,memberCount,isGroup:Boolean(chat.name),isAdult:!!chat.is_adult,bio:members[0]?.profiles?.bio||"",isPublic:!!chat.is_public,description:chat.description||"",allowGifs:chat.allow_gifs!==false,removeInactive:chat.remove_inactive!==false,createdBy:chat.created_by,logoPath:chat.logo_path||null,notificationsEnabled:chat.notifications_enabled!==false,memberIds:allMembers.map(m=>({id:m.user_id,name:m.profiles?.username||"Member"})),memberNames:allMembers.map(m=>m.profiles?.username).filter(Boolean)};
+      return {id:chatId,created_at:chat.created_at,title:chat.name||other,memberCount,isGroup:Boolean(chat.name),isAdult:!!chat.is_adult,bio:members[0]?.profiles?.bio||"",isPublic:!!chat.is_public,description:chat.description||"",allowGifs:chat.allow_gifs!==false,removeInactive:chat.remove_inactive!==false,createdBy:chat.created_by,logoPath:chat.logo_path||null,notificationsEnabled:chat.notifications_enabled!==false,memberIds:countedMembers.map(m=>({id:m.user_id,name:m.profiles?.username||"Member"})),memberNames:countedMembers.map(m=>m.profiles?.username).filter(Boolean)};
     });
     renderChats();
     if(!activeChat&&chats.length){
@@ -219,12 +226,17 @@ setChatListView(localStorage.getItem("quietchat-list-view")==="dms"?"dms":"serve
 
 const CHAT_PIN_KEY="quietchat-pinned-chats-v1";
 function getPinnedChats(){try{return JSON.parse(localStorage.getItem(CHAT_PIN_KEY)||"[]");}catch{return [];}}
+const PRIVATE_CHAT_ICONS_KEY="quietchat-private-chat-icons-v1";
+function getPrivateChatIcons(){try{return JSON.parse(localStorage.getItem(PRIVATE_CHAT_ICONS_KEY)||"{}");}catch{return {};}}
+function getPrivateChatIcon(chatId){return getPrivateChatIcons()[chatId]||"";}
+function setPrivateChatIcon(chatId,icon){const icons=getPrivateChatIcons();if(icon)icons[chatId]=icon;else delete icons[chatId];localStorage.setItem(PRIVATE_CHAT_ICONS_KEY,JSON.stringify(icons));renderChats();if(activeChat?.id===chatId){const avatar=$("chat-avatar");if(avatar)avatar.textContent=icon||initials(activeChat.title);}}
 function isChatMuted(chatId){try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chatId);}catch{return false;}}
 function showChatContextMenu(event,chat){
   const menu=$("chat-context-menu");if(!menu)return;
   menu.dataset.chatId=chat.id;menu.dataset.isGroup=String(!!chat.isGroup);
   $("context-menu-title").textContent=chat.title;
   $("context-open-chat").textContent="Open chat";
+  $("context-chat-icon")?.classList.toggle("hidden",!!chat.isGroup);
   $("context-pin-chat").textContent=getPinnedChats().includes(chat.id)?"Unpin chat":"Pin chat";
   $("context-mute-chat").textContent=isChatMuted(chat.id)?"Unmute notifications":"Mute notifications";
   $("context-remove-chat").textContent=chat.isGroup?"Leave community":"Remove chat";
@@ -236,6 +248,7 @@ function closeChatContextMenu(){ $("chat-context-menu")?.classList.add("hidden")
 document.addEventListener("click",e=>{if(!e.target.closest("#chat-context-menu"))closeChatContextMenu();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeChatContextMenu();});
 $("context-open-chat")?.addEventListener("click",()=>{const chat=chats.find(c=>c.id===$("chat-context-menu").dataset.chatId);closeChatContextMenu();if(chat)selectChat(chat);});
+$("context-chat-icon")?.addEventListener("click",()=>{const id=$("chat-context-menu").dataset.chatId;const chat=chats.find(c=>c.id===id);closeChatContextMenu();if(!chat||chat.isGroup)return;const current=getPrivateChatIcon(id);const next=window.prompt("Choose an emoji for this private chat (leave blank to reset):",current);if(next===null)return;setPrivateChatIcon(id,[...next.trim()].slice(0,2).join(""));toast("Private chat icon updated.");});
 $("context-pin-chat")?.addEventListener("click",()=>{const id=$("chat-context-menu").dataset.chatId;let ids=getPinnedChats();ids=ids.includes(id)?ids.filter(x=>x!==id):[id,...ids];localStorage.setItem(CHAT_PIN_KEY,JSON.stringify(ids));closeChatContextMenu();renderChats();toast(ids.includes(id)?"Chat pinned.":"Chat unpinned.");});
 $("context-mute-chat")?.addEventListener("click",()=>{const id=$("chat-context-menu").dataset.chatId,key="quietchat-muted-chats-"+user.id;let ids=[];try{ids=JSON.parse(localStorage.getItem(key)||"[]");}catch{}const muted=ids.includes(id);ids=muted?ids.filter(x=>x!==id):[...ids,id];localStorage.setItem(key,JSON.stringify(ids));closeChatContextMenu();toast(muted?"Notifications unmuted.":"Notifications muted.");});
 $("context-remove-chat")?.addEventListener("click",async()=>{const id=$("chat-context-menu").dataset.chatId;const chat=chats.find(c=>c.id===id);closeChatContextMenu();if(!chat)return;await selectChat(chat);$("chat-remove-btn").click();});
@@ -250,7 +263,7 @@ function renderChats(){
   const renderOne=(chat,target)=>{
     const b=document.createElement("button");b.className="chat-item"+(activeChat?.id===chat.id?" active":"");
     if(chat.isGroup)b.classList.add("server-item");
-    const av=document.createElement("div");av.className="avatar";av.textContent=initials(chat.title);
+    const av=document.createElement("div");av.className="avatar";av.textContent=chat.isGroup?initials(chat.title):(getPrivateChatIcon(chat.id)||initials(chat.title));
     if(chat.isGroup&&chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";av.replaceChildren(img);}});}
     const t=document.createElement("div");t.className="chat-item-text";
     const strong=document.createElement("strong");strong.textContent=chat.title;
@@ -291,7 +304,7 @@ async function showEmptyChatInvite(chat,messageCount){
 $("empty-chat-copy-code")?.addEventListener("click",()=>copyInviteText($("empty-chat-invite-code").textContent,"Invite code"));
 $("empty-chat-copy-link")?.addEventListener("click",()=>copyInviteText($("empty-chat-invite-link").value,"Invite link"));
 async function selectChat(chat){
-  activeChat=chat;closeArcadeInChat();emptyChatInviteRequest++;$("empty-chat-invite")?.classList.add("hidden");try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":initials(chat.title);if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
+  activeChat=chat;closeArcadeInChat();emptyChatInviteRequest++;$("empty-chat-invite")?.classList.add("hidden");try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":(getPrivateChatIcon(chat.id)||initials(chat.title));if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
   $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";$("chat-remove-btn").disabled=!!user?.is_anonymous&&chat.isGroup;  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=!!chat.isGroup;$("call-btn").classList.toggle("hidden",!!chat.isGroup);$("settings-export-btn").disabled=false;$("game-btn").disabled=!!chat.isGroup;$("game-btn").classList.toggle("hidden",!!chat.isGroup);document.querySelectorAll('[data-menu-action="games"]').forEach(b=>b.classList.toggle("hidden",!!chat.isGroup));$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
   requestAnimationFrame(()=>{const item=document.querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
@@ -904,7 +917,7 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
    if(!user){list.innerHTML='<div class="community-empty"><strong>Sign in to view your communities</strong></div>';return;}
    await loadChats();const groups=chats.filter(c=>c.isGroup);list.replaceChildren();
    if(!groups.length){list.innerHTML='<div class="community-empty"><strong>No communities yet</strong><p class="muted">Create a private community or accept an invite from a friend.</p></div>';return;}
-   groups.forEach(g=>{const card=document.createElement("article");card.className="discover-group-card";const details=document.createElement("div");details.className="discover-group-details";const title=document.createElement("strong");title.textContent=g.title;const meta=document.createElement("small");meta.textContent=(g.isAdult?"🔞 18+ · ":"")+(g.memberCount||1)+" members · "+(g.isPublic?"Public":"Private");details.append(title,meta);const btn=document.createElement("button");btn.className="primary discover-join";btn.type="button";btn.textContent="Open";btn.addEventListener("click",()=>{closeDialog("communities-dialog");selectChat(g);});card.append(details,btn);list.append(card);});
+   groups.forEach(g=>{const card=document.createElement("article");card.className="discover-group-card";const details=document.createElement("div");details.className="discover-group-details";const title=document.createElement("strong");title.textContent=g.title;const description=document.createElement("p");description.className="muted tiny community-card-description";description.textContent=g.description||"No description added yet.";const meta=document.createElement("small");meta.textContent=(g.isAdult?"🔞 18+ · ":"")+(g.memberCount||0)+" members · "+(g.isPublic?"Public":"Private");details.append(title,description,meta);const btn=document.createElement("button");btn.className="primary discover-join";btn.type="button";btn.textContent="Open";btn.addEventListener("click",()=>{closeDialog("communities-dialog");selectChat(g);});card.append(details,btn);list.append(card);});
  }
  function showCommunityView(view){document.querySelectorAll("[data-community-view]").forEach(btn=>btn.classList.toggle("active",btn.dataset.communityView===view));["discover","public","create"].forEach(n=>$("community-"+n+"-panel")?.classList.toggle("hidden",n!==view));}
  $("refresh-communities-btn")?.addEventListener("click",loadMyCommunities);
@@ -913,7 +926,7 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
    const {data,error}=await db.rpc("discover_public_groups");
    if(error){list.innerHTML='<div class="community-empty"><strong>Public group listing needs a database update</strong><p class="muted tiny">The secure list_public_groups database function is not available yet.</p></div>';return;}
    if(!Array.isArray(data)||!data.length){list.innerHTML='<div class="community-empty"><strong>No public communities found</strong></div>';return;}
-   data.forEach(g=>{const card=document.createElement("article");card.className="discover-group-card";const details=document.createElement("div");details.className="discover-group-details";const title=document.createElement("strong");title.textContent=g.name||g.group_name||"Public community";const meta=document.createElement("small");meta.textContent=(g.is_adult?"🔞 18+ · ":"")+(g.description?g.description+" · ":"")+"Public · Text and GIFs only · "+g.member_count+" members";details.append(title,meta);const btn=document.createElement("button");btn.className="primary discover-join";btn.type="button";btn.textContent=g.is_member?"Open community":"Join community";btn.addEventListener("click",async()=>{if(g.is_adult&&!window.confirm("🔞 ADULTS-ONLY GROUP (18+). This community is intended only for adults. If you are under 18, do not join. Continue only if you are 18 or older and understand this group is marked 18+. Do you want to continue?"))return;if(!g.is_member){const {error:joinError}=await db.rpc("join_public_group",{target_chat:g.id||g.chat_id,confirm_adult:!!g.is_adult});if(joinError){toast("Could not join: "+joinError.message);return;}toast("You joined the community!");}await loadChats();await loadPublicCommunities();const chat=chats.find(x=>x.id===(g.id||g.chat_id));if(chat){closeDialog("communities-dialog");selectChat(chat);}});card.append(details,btn);list.append(card);});
+   data.forEach(g=>{const card=document.createElement("article");card.className="discover-group-card";const details=document.createElement("div");details.className="discover-group-details";const title=document.createElement("strong");title.textContent=g.name||g.group_name||"Public community";const description=document.createElement("p");description.className="muted tiny community-card-description";description.textContent=g.description||"No description added yet.";const meta=document.createElement("small");meta.textContent=(g.is_adult?"🔞 18+ · ":"")+"Public · Text and GIFs only · "+g.member_count+" members";details.append(title,description,meta);const btn=document.createElement("button");btn.className="primary discover-join";btn.type="button";btn.textContent=g.is_member?"Open community":"Join community";btn.addEventListener("click",async()=>{if(g.is_adult&&!window.confirm("🔞 ADULTS-ONLY GROUP (18+). This community is intended only for adults. If you are under 18, do not join. Continue only if you are 18 or older and understand this group is marked 18+. Do you want to continue?"))return;if(!g.is_member){const {error:joinError}=await db.rpc("join_public_group",{target_chat:g.id||g.chat_id,confirm_adult:!!g.is_adult});if(joinError){toast("Could not join: "+joinError.message);return;}toast("You joined the community!");}await loadChats();await loadPublicCommunities();const chat=chats.find(x=>x.id===(g.id||g.chat_id));if(chat){closeDialog("communities-dialog");selectChat(chat);}});card.append(details,btn);list.append(card);});
  }
  $("refresh-public-communities-btn")?.addEventListener("click",loadPublicCommunities);
  document.querySelectorAll("[data-community-view]").forEach(btn=>btn.addEventListener("click",()=>{showCommunityView(btn.dataset.communityView);if(btn.dataset.communityView==="discover")loadMyCommunities();if(btn.dataset.communityView==="public")loadPublicCommunities();}));
