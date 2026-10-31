@@ -390,14 +390,9 @@ async function sendAttachment(file, forcedType=null){
     $("media-input").value="";
     return;
   }
-  if(activeChat.isGroup && (!user?.email || user.is_anonymous)){
-    toast("Use an email-based account to upload attachments in communities. Link your account in Settings.");
-    $("media-input").value="";
-    return;
-  }
-  // Community uploads: QuietChat admins can upload arbitrary files in communities they created. Other communities are GIF-only.
-  if(activeChat.isGroup && !(isQuietChatAdmin() && activeChat.createdBy===user?.id) && !isGifFile(file)){
-    toast("This community only allows GIF uploads. Full file uploads are enabled only in communities created by a QuietChat admin.");
+  // Every community upload must be a real GIF file, including uploads by admins.
+  if(activeChat.isGroup && !isGifFile(file)){
+    toast("Community uploads must be .gif files. Other file types are not allowed.");
     $("media-input").value="";
     return;
   }
