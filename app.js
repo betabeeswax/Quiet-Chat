@@ -112,7 +112,7 @@ $("email-auth-form").addEventListener("submit",async e=>{
       if(name.length<2){toast("Choose a username with at least 2 characters.");return;}
       const {data,error}=await db.auth.signUp({email,password,options:{data:{username:name},emailRedirectTo:window.location.origin}});
       if(error){toast(error.message);return;}
-      if(data.session&&data.user){user=data.user;const {error:saveError}=await db.from("profiles").upsert({id:user.id,username:name,bio:""},{onConflict:"id"});if(saveError){toast("Account made, but username save failed: "+saveError.message);return;}setProfile(name);window.myProfile={username:name,bio:"",avatar_path:null};showApp();await loadChats();subscribeChatList();}
+      if(data.session&&data.user){user=data.user;const {error:saveError}=await db.from("profiles").upsert({id:user.id,username:name,bio:""},{onConflict:"id"});if(saveError){toast("Account made, but username save failed: "+saveError.message);return;}setProfile(name);window.myProfile={username:name,bio:"",avatar_path:null};showApp();await loadChats();subscribeChatList();subscribeOnlineUsers();await handleInviteLink();}
       else toast("Account created! Check your email to confirm it, then sign in.");
     }else{
       const {data,error}=await db.auth.signInWithPassword({email,password});
@@ -147,7 +147,7 @@ $("profile-form").addEventListener("submit",async e=>{
   if(!user){const {data,error}=await db.auth.signInAnonymously();if(error){toast("Guest sign-in failed. Enable Anonymous Sign-Ins in Supabase Auth.");return;}user=data.user;}
   const {error:saveError}=await db.from("profiles").upsert({id:user.id,username:name,bio:""},{onConflict:"id"});
   if(saveError){toast("Could not save username: "+saveError.message);return;}
-  setProfile(name);showApp();await loadChats();subscribeChatList();
+  setProfile(name);showApp();await loadChats();subscribeChatList();subscribeOnlineUsers();await handleInviteLink();
 });
 async function loadChats(){
   if(!db||!user){toast("Please sign in again to load chats.");return;}
