@@ -33,7 +33,7 @@
     .game-night-share input{flex:1;min-width:0}
     #game-night-frame{display:block;width:100%;height:calc(92dvh - 230px);min-height:360px;border:1px solid var(--line);border-radius:12px;background:#fff}
     @media(max-width:600px){.game-night-mode-grid{grid-template-columns:1fr}.game-night-top{align-items:center}.game-night-share{flex-direction:column}#game-night-frame{height:65dvh;min-height:300px}}
-  </style>
+  .server-members-list{display:flex;flex-direction:column;gap:8px;max-height:55vh;overflow:auto;margin:14px 0}.server-member-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line,#ddd);border-radius:12px}.server-member-row strong{overflow-wrap:anywhere}.server-member-row .danger{flex:0 0 auto}.</style>
 </head>
 <body>
   <main id="setup-screen" class="setup-wrap">
@@ -90,7 +90,7 @@
         <button id="create-invite-btn" class="secondary">＋ New private chat</button>
         <button id="create-group-btn" class="secondary">＋ Create group chat</button>
         <button id="join-invite-btn" class="secondary">↗ Join with code</button>
-        <button id="sidebar-discover-btn" class="sidebar-action community-action" type="button" title="Communities" aria-label="Communities"><span class="community-logo-mark" aria-hidden="true">◈</span><span class="community-button-label">Communities</span></button>
+        <button id="sidebar-discover-btn" class="sidebar-action community-action" type="button" title="Communities" aria-label="Communities"><span class="community-logo-mark" aria-hidden="true">◈</span><span class="community-button-label">Communities</span></button>\n        <button id="server-members-btn" class="sidebar-action" type="button" title="Server member list"><span aria-hidden="true">☷</span><span class="community-button-label">Server members</span></button>
       </div>
       <div class="online-summary"><span class="online-dot"></span><span>PEOPLE ONLINE</span><strong id="online-count">0</strong></div>
       <div class="chat-list-tabs" role="group" aria-label="Chat list"><button id="show-servers-btn" class="chat-list-tab active" type="button" aria-pressed="true">▦ Servers</button><button id="show-dms-btn" class="chat-list-tab" type="button" aria-pressed="false">✉ Direct messages</button></div>
@@ -162,6 +162,12 @@
     <div class="modal-icon">👥</div><h2>Create a group chat</h2>
     <p class="muted">Give your group a name, then invite people with separate one-time codes.</p>
     <form id="group-form"><label for="group-name-input">Group name</label><input id="group-name-input" maxlength="60" minlength="2" placeholder="Weekend crew" required><label class="setting-toggle field-gap"><span><strong>18+ group</strong><small>Adults-only group; members must acknowledge the warning before joining.</small></span><input id="group-is-adult" type="checkbox"></label><p class="tiny muted field-gap">Groups are private. Invite friends after creating the group.</p><button class="primary full" type="submit">Create group →</button></form>
+  </dialog>
+
+  <dialog id="server-members-dialog" class="modal community-modal">
+    <form method="dialog" class="modal-close-row"><button class="icon-button" aria-label="Close">×</button></form>
+    <div class="modal-icon">☷</div><h2>Server members</h2><p class="muted">Everyone who belongs to this server.</p>
+    <div id="server-members-list" class="server-members-list"></div>
   </dialog>
 
   <dialog id="group-settings-dialog" class="modal community-modal">
