@@ -474,3 +474,36 @@ begin
 end; $$;
 revoke all on function public.join_chat_with_invite(text) from public,anon;
 grant execute on function public.join_chat_with_invite(text) to authenticated;
+
+
+-- Community ownership transfer and member removal controls.
+create or replace function public.transfer_group_ownership(target_chat uuid, new_owner uuid)
+returns void language plpgsql security definer set search_path=public as $$
+declare current_owner uuid;
+begin
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
+  select created_by into current_owner from public.chats where id=target_chat and name is not null for update;
+  if not found then raise exception 'Community not found'; end if;
+  if current_owner is distinct from auth.uid() and auth.uid() not in ('6690d263-46ff-4cb3-a257-c4235fcb9ae1'::uuid,'33101fc2-e3f1-4b32-adb6-85c17a099aac'::uuid) then raise exception 'Only the current owner can transfer ownership'; end if;
+  if not exists(select 1 from public.chat_members where chat_id=target_chat and user_id=new_owner) then raise exception 'The new owner must already be a member of this community'; end if;
+  if new_owner=current_owner then raise exception 'That person already owns this community'; end if;
+  update public.chats set created_by=new_owner where id=target_chat;
+end; $$;
+revoke all on function public.transfer_group_ownership(uuid,uuid) from public,anon;
+grant execute on function public.transfer_group_ownership(uuid,uuid) to authenticated;
+
+create or replace function public.kick_community_member(target_chat uuid, target_user uuid)
+returns void language plpgsql security definer set search_path=public as $$
+declare current_owner uuid;
+begin
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
+  select created_by into current_owner from public.chats where id=target_chat and name is not null for update;
+  if not found then raise exception 'Community not found'; end if;
+  if current_owner is distinct from auth.uid() and auth.uid() not in ('6690d263-46ff-4cb3-a257-c4235fcb9ae1'::uuid,'33101fc2-e3f1-4b32-adb6-85c17a099aac'::uuid) then raise exception 'Only the community owner can remove members'; end if;
+  if target_user=current_owner then raise exception 'The owner cannot be kicked. Transfer ownership first.'; end if;
+  if target_user=auth.uid() then raise exception 'Use Leave community to leave yourself'; end if;
+  delete from public.chat_members where chat_id=target_chat and user_id=target_user;
+  if not found then raise exception 'That person is not a member of this community'; end if;
+end; $$;
+revoke all on function public.kick_community_member(uuid,uuid) from public,anon;
+grant execute on function public.kick_community_member(uuid,uuid) to authenticated;
