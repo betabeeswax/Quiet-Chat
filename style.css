@@ -1470,3 +1470,37 @@ html body .sidebar #sidebar-logo-toggle:focus-visible{outline:2px solid var(--ac
 .admin-item small{color:var(--muted);font-size:11px;overflow-wrap:anywhere}
 .admin-item blockquote{margin:8px 0;padding:8px 12px;border-left:3px solid var(--accent);color:var(--muted);overflow-wrap:anywhere}
 .admin-actions button{min-height:34px}
+
+
+/* Keep server members beside the chat identity, and keep all content inside its panels. */
+.server-members-header-btn{flex:0 0 auto;white-space:nowrap;padding:8px 10px;font-size:12px}
+.chat-header>*{min-width:0}
+.chat-heading{min-width:0;max-width:100%;overflow:hidden}
+.chat-heading strong,.chat-heading span{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+.chat-heading strong{line-height:1.25}
+.chat-heading span{line-height:1.35;white-space:normal}
+.server-members-list,.server-member-row,.server-member-row>*{min-width:0;max-width:100%}
+.server-member-row{flex-wrap:wrap}
+.server-member-row strong{flex:1 1 120px;overflow-wrap:anywhere;word-break:break-word}
+.server-member-row .danger{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.modal,.modal *{min-width:0}
+.modal{max-width:calc(100vw - 24px);overflow-x:hidden}
+.modal p,.modal label,.modal small,.modal strong,.modal span{overflow-wrap:anywhere;word-break:break-word}
+input,textarea,select{max-width:100%;min-width:0}
+button{max-width:100%;overflow-wrap:anywhere}
+.bubble,.message,.chat-file-link,.preview,.empty-small{overflow-wrap:anywhere;word-break:break-word}
+@media(max-width:720px){
+ .chat-header{height:auto;min-height:68px;flex-wrap:wrap;gap:6px;padding:8px 10px}
+ .chat-heading{flex:1 1 calc(100% - 125px)}
+ .server-members-header-btn{font-size:11px;padding:7px 8px}
+ .chat-header .header-action,.chat-header .header-tools{flex:0 1 auto}
+ .header-tools{max-width:100%;flex-wrap:wrap}
+ .header-tools button{white-space:normal}
+}
+@media(max-width:420px){
+ .chat-heading{flex:1 1 calc(100% - 95px)}
+ .chat-heading strong{font-size:13px}
+ .chat-heading span{font-size:10px}
+ .server-members-header-btn{font-size:10px;padding:6px}
+ .chat-header{gap:5px}
+}
