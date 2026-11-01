@@ -203,7 +203,7 @@ async function loadChats(){
       const memberCount=chat.name?countedMembers.length:(allMembers.length||1);
       const other=members[0]?.profiles?.username||"Waiting for friend";
       if(members[0]?.profiles)window.chatProfileLookup[chatId]=members[0].profiles;
-      return {id:chatId,created_at:chat.created_at,title:chat.name||other,memberCount,isGroup:Boolean(chat.name),isAdult:!!chat.is_adult,bio:members[0]?.profiles?.bio||"",isPublic:!!chat.is_public,description:chat.description||"",allowGifs:chat.allow_gifs!==false,removeInactive:chat.remove_inactive!==false,createdBy:chat.created_by,logoPath:chat.logo_path||null,notificationsEnabled:chat.notifications_enabled!==false,memberIds:countedMembers.map(m=>({id:m.user_id,name:m.profiles?.username||"Member"})),memberNames:countedMembers.map(m=>m.profiles?.username).filter(Boolean)};
+      return {id:chatId,created_at:chat.created_at,title:chat.name||other,memberCount,isGroup:Boolean(chat.name),isAdult:!!chat.is_adult,bio:members[0]?.profiles?.bio||"",isPublic:!!chat.is_public,description:chat.description||"",allowGifs:chat.allow_gifs!==false,removeInactive:chat.remove_inactive!==false,createdBy:chat.created_by,logoPath:chat.logo_path||null,notificationsEnabled:chat.notifications_enabled!==false,memberIds:allMembers.map(m=>({id:m.user_id,name:m.profiles?.username||"Member"})),memberNames:allMembers.map(m=>m.profiles?.username||"Member")};
     });
     renderChats();
     if(!activeChat&&chats.length){
@@ -305,7 +305,7 @@ $("empty-chat-copy-code")?.addEventListener("click",()=>copyInviteText($("empty-
 $("empty-chat-copy-link")?.addEventListener("click",()=>copyInviteText($("empty-chat-invite-link").value,"Invite link"));
 async function selectChat(chat){
   activeChat=chat;closeArcadeInChat();emptyChatInviteRequest++;$("empty-chat-invite")?.classList.add("hidden");try{localStorage.setItem("quietchat-last-chat-"+user.id,chat.id);}catch{};$("app-screen").classList.add("chat-open");$("chat-title").textContent=chat.title;$("chat-subtitle").textContent=chat.isGroup?`${chat.isAdult?"🔞 18+ · ":""}${chat.memberCount} members · Messages are live`:(chat.bio||"Private chat · messages are live");$("chat-avatar").textContent=chat.isGroup?"👥":(getPrivateChatIcon(chat.id)||initials(chat.title));if(chat.logoPath){db.storage.from("chat-media").createSignedUrl(chat.logoPath,3600).then(({data,error})=>{if(!error&&data?.signedUrl&&activeChat?.id===chat.id){const img=document.createElement("img");img.src=data.signedUrl;img.alt="Community logo";img.className="profile-avatar-img";$("chat-avatar").replaceChildren(img);}});}$("chat-notification-btn").textContent=(()=>{try{return JSON.parse(localStorage.getItem("quietchat-muted-chats-"+user.id)||"[]").includes(chat.id)?"🔕 Muted":"🔔 Notifications";}catch{return "🔔 Notifications";}})();
-  $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";$("chat-remove-btn").disabled=!!user?.is_anonymous&&chat.isGroup;  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=!!chat.isGroup;$("call-btn").classList.toggle("hidden",!!chat.isGroup);$("settings-export-btn").disabled=false;$("game-btn").disabled=!!chat.isGroup;$("game-btn").classList.toggle("hidden",!!chat.isGroup);document.querySelectorAll('[data-menu-action="games"]').forEach(b=>b.classList.toggle("hidden",!!chat.isGroup));$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
+  $("chat-remove-btn").textContent=chat.isGroup?"Leave group":"Remove chat";$("chat-remove-btn").disabled=!!user?.is_anonymous&&chat.isGroup;  $("welcome-panel").classList.add("hidden");$("messages").classList.remove("hidden");$("composer-wrap").classList.remove("hidden");$("call-btn").disabled=!!chat.isGroup;$("call-btn").classList.toggle("hidden",!!chat.isGroup);$("settings-export-btn").disabled=false;$("game-btn").disabled=!!chat.isGroup;$("game-btn").classList.toggle("hidden",!!chat.isGroup);document.querySelectorAll('[data-menu-action="games"]').forEach(b=>b.classList.toggle("hidden",!!chat.isGroup));$("add-people-btn").classList.toggle("hidden",!chat.isGroup);$("add-people-btn").disabled=false;$("group-settings-btn")?.classList.toggle("hidden",!chat.isGroup||!canManageCommunity(chat));document.querySelectorAll('[data-menu-action="settings"]').forEach(b=>b.classList.toggle("hidden",!chat.isGroup||!canManageCommunity(chat)));$("server-members-btn")?.classList.toggle("hidden",!chat.isGroup);renderChats();
   requestAnimationFrame(()=>{const item=document.querySelector(`[data-chat-id="${CSS.escape(chat.id)}"]`);item?.scrollIntoView({block:"nearest"});});
   if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}
   if(messageRefreshTimer){clearInterval(messageRefreshTimer);messageRefreshTimer=null;}
@@ -968,7 +968,7 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
   const {error}=await db.rpc("update_group_settings",{target_chat:activeChat.id,make_public:isPublic,p_allow_gifs:allowGifs,p_remove_inactive:removeInactive,p_name:newName,p_logo_path:logoPath});
   if(error){if(logoPath)await db.storage.from("chat-media").remove([logoPath]);toast("Could not save changes: "+error.message);return;}
   const newOwner=$("transfer-owner-select").value;
-  if(newOwner){const transfer=await db.rpc("transfer_group_ownership",{target_chat:activeChat.id,new_owner:newOwner});if(transfer.error){toast("Settings saved, but ownership transfer failed: "+transfer.error.message);}else toast("Community settings saved and ownership transferred.");}
+  if(newOwner){const transfer=await db.rpc("transfer_group_ownership",{target_chat:activeChat.id,new_owner:newOwner});if(transfer.error){toast("Settings saved, but ownership transfer failed: "+transfer.error.message);return;}toast("Community settings saved and ownership transferred.");}
   else toast("Community settings saved.");
   $("community-logo-input").value="";
   await loadChats();const fresh=chats.find(x=>x.id===activeChat.id);if(fresh)await selectChat(fresh);closeDialog("group-settings-dialog");
@@ -984,7 +984,33 @@ $("gif-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefa
   toast(muted.includes(activeChat.id)?"Notifications muted for this chat.":"Notifications enabled for this chat.");
  });
  
- $("group-settings-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup)return;if(!canManageCommunity(activeChat)){toast("Only the community owner or QuietChat admin can manage this community.");return;}document.querySelectorAll('input[name="existing-group-visibility"]').forEach(x=>x.checked=(x.value==="public"&&activeChat.isPublic)||(x.value==="private"&&!activeChat.isPublic));$("group-allow-gifs").checked=!!activeChat.allowGifs;$("group-inactivity-rule").checked=activeChat.removeInactive!==false;$("group-name-edit").value=activeChat.title||"";const select=$("transfer-owner-select");select.replaceChildren(new Option("Keep current owner",""));(activeChat.memberIds||[]).filter(m=>m.id!==user.id).forEach(m=>select.add(new Option(m.name,m.id)));openDialog("group-settings-dialog");});
+ $("group-settings-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup||!canManageCommunity(activeChat))return;document.querySelectorAll('input[name="existing-group-visibility"]').forEach(x=>x.checked=(x.value==="public"&&activeChat.isPublic)||(x.value==="private"&&!activeChat.isPublic));$("group-allow-gifs").checked=!!activeChat.allowGifs;$("group-inactivity-rule").checked=activeChat.removeInactive!==false;$("group-name-edit").value=activeChat.title||"";const select=$("transfer-owner-select");select.replaceChildren(new Option("Keep current owner",""));(activeChat.memberIds||[]).filter(m=>m.id!==user.id).forEach(m=>select.add(new Option(m.name,m.id)));openDialog("group-settings-dialog");});
+ $("server-members-btn")?.addEventListener("click",()=>{if(!activeChat?.isGroup)return;renderServerMembers();openDialog("server-members-dialog");});
+ function renderServerMembers(){
+  const list=$("server-members-list");if(!list||!activeChat?.isGroup)return;
+  list.replaceChildren();
+  const owner=canManageCommunity(activeChat);
+  const members=activeChat.memberIds||[];
+  if(!members.length){const p=document.createElement("p");p.className="muted";p.textContent="No members found.";list.append(p);return;}
+  members.forEach(member=>{
+    const row=document.createElement("div");row.className="server-member-row";
+    const name=document.createElement("strong");name.textContent=member.name+(member.id===activeChat.createdBy?" · Owner":"")+(member.id===user.id?" · You":"");
+    row.append(name);
+    if(owner&&member.id!==activeChat.createdBy&&member.id!==user.id){
+      const kick=document.createElement("button");kick.type="button";kick.className="danger small";kick.textContent="Kick from server";
+      kick.addEventListener("click",async()=>{
+        if(!confirm("Kick "+member.name+" from "+activeChat.title+"? They will lose access to this server."))return;
+        kick.disabled=true;
+        const {error}=await db.rpc("kick_community_member",{target_chat:activeChat.id,target_user:member.id});
+        if(error){kick.disabled=false;toast("Could not kick member: "+error.message);return;}
+        const id=activeChat.id;await loadChats();const fresh=chats.find(c=>c.id===id);if(fresh){activeChat=fresh;renderServerMembers();}else closeDialog("server-members-dialog");
+        toast(member.name+" was kicked from the server.");
+      });
+      row.append(kick);
+    }
+    list.append(row);
+  });
+ }
  $("delete-group-btn")?.addEventListener("click",async()=>{if(!activeChat?.isGroup){toast("Open a group first.");return;}if(!canManageCommunity(activeChat)){toast("Only the community owner or QuietChat admin can delete this community.");return;}if(!confirm('Delete "'+activeChat.title+'" and its group chat? This cannot be undone.'))return;const id=activeChat.id;const {error}=await db.rpc("delete_group_chat",{target_chat:id});if(error){toast("Could not delete group: "+error.message+" (secure delete function may need installing)");return;}if(messageChannel){db.removeChannel(messageChannel);messageChannel=null;}activeChat=null;$("app-screen").classList.remove("chat-open");$("welcome-panel").classList.remove("hidden");$("messages").classList.add("hidden");$("composer-wrap").classList.add("hidden");await loadChats();await loadMyCommunities();toast("Group deleted.");});
  $("mobile-back").addEventListener("click",()=>{$("app-screen").classList.remove("chat-open");setSidebarCollapsed(false);});
 let onlineChannel=null;
