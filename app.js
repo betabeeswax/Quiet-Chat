@@ -21,7 +21,40 @@ function cleanName(s){return s.trim().replace(/\s+/g," ").slice(0,24);}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function initials(s){return (s||"?").trim().slice(0,1).toUpperCase();}
 function niceTime(s){return new Date(s).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});}
-function linkifyText(text,parent){const re=/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;let cursor=0,m;while((m=re.exec(text))){parent.append(document.createTextNode(text.slice(cursor,m.index)));const raw=m[0],clean=raw.replace(/[),.!?;:]+$/g,"");if(clean){const a=document.createElement("a");a.href=clean.startsWith("www.")?"https://"+clean:clean;a.textContent=clean;a.target="_blank";a.rel="noopener noreferrer";parent.append(a);}parent.append(document.createTextNode(raw.slice(clean.length)));cursor=m.index+raw.length;}parent.append(document.createTextNode(text.slice(cursor)));}
+function youtubeVideoId(value){
+  try{
+    const url=new URL(value.startsWith("www.")?"https://"+value:value);
+    const host=url.hostname.toLowerCase().replace(/^www\./,"");
+    if(host==="youtu.be")return url.pathname.split("/").filter(Boolean)[0]||null;
+    if(host==="youtube.com"||host==="m.youtube.com"||host==="youtube-nocookie.com"){
+      if(url.pathname==="/watch")return url.searchParams.get("v");
+      const match=url.pathname.match(/^\/(?:shorts|embed|live)\/([A-Za-z0-9_-]{11})(?:$|\/)/);
+      return match?.[1]||null;
+    }
+  }catch{}
+  return null;
+}
+function linkifyText(text,parent){
+  const re=/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;let cursor=0,m;
+  while((m=re.exec(text))){
+    parent.append(document.createTextNode(text.slice(cursor,m.index)));
+    const raw=m[0],clean=raw.replace(/[),.!?;:]+$/g,"");
+    if(clean){
+      const href=clean.startsWith("www.")?"https://"+clean:clean;
+      const a=document.createElement("a");a.href=href;a.textContent=clean;a.target="_blank";a.rel="noopener noreferrer";parent.append(a);
+      const videoId=youtubeVideoId(href);
+      if(videoId&&/^[A-Za-z0-9_-]{11}$/.test(videoId)){
+        const frame=document.createElement("iframe");
+        frame.className="youtube-embed";frame.src="https://www.youtube-nocookie.com/embed/"+videoId;
+        frame.title="YouTube video";frame.loading="lazy";frame.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        frame.referrerPolicy="strict-origin-when-cross-origin";frame.allowFullscreen=true;
+        parent.append(frame);
+      }
+    }
+    parent.append(document.createTextNode(raw.slice(clean.length)));cursor=m.index+raw.length;
+  }
+  parent.append(document.createTextNode(text.slice(cursor)));
+}
 const MEDIA_DB_NAME="quietchat-local-media-v1";
 function openMediaDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(MEDIA_DB_NAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains("media"))r.result.createObjectStore("media",{keyPath:"id"});};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 async function localMediaGet(id){const d=await openMediaDB();return new Promise((resolve,reject)=>{const r=d.transaction("media","readonly").objectStore("media").get(id);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>reject(r.error);});}
