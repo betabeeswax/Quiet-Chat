@@ -131,10 +131,6 @@ async function loadProfile(){
   else {showSetup(true);$("username").focus();}
 }
 $("auth-mode-btn").addEventListener("click",()=>setAuthMode(authMode==="signin"?"signup":"signin"));
-$("google-signin-btn").addEventListener("click",async()=>{
-  const {error}=await db.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin}});
-  if(error)toast("Google sign-in failed: "+error.message);
-});
 $("email-auth-form").addEventListener("submit",async e=>{
   e.preventDefault();if(!configured)return;
   const email=$("auth-email").value.trim(),password=$("auth-password").value;
@@ -689,7 +685,7 @@ $("admin-users-tab")?.addEventListener("click",()=>{$("admin-reports-view").hidd
 $("admin-refresh-btn")?.addEventListener("click",()=>{$("admin-users-view").hidden?loadAdminReports():loadAdminUsers();});
 $("admin-user-search")?.addEventListener("input",()=>loadAdminUsers());
 
-$("settings-btn").addEventListener("click",()=>{updateAccountLinkButton();updateGoogleLinkButton();openDialog("settings-dialog");});
+$("settings-btn").addEventListener("click",()=>{updateAccountLinkButton();openDialog("settings-dialog");});
 function openAccountSettings(){closeDialog("profile-dialog");openDialog("settings-dialog");}
 $("my-avatar")?.addEventListener("click",openAccountSettings);
 $("my-avatar")?.setAttribute("title","Open profile and settings");
@@ -698,9 +694,7 @@ $("my-avatar")?.setAttribute("tabindex","0");
 $("my-avatar")?.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openAccountSettings();}});
 
 function updateAccountLinkButton(){const guest=!!user?.is_anonymous;$("settings-link-account-btn")?.classList.remove("hidden");$("settings-link-account-help")?.classList.remove("hidden");$("settings-link-account-btn").textContent=guest?"🔗 Link a real account":"Account already linked";$("settings-link-account-btn").disabled=!guest;$("settings-link-account-help").textContent=guest?"Upgrade this guest account with an email and password. Your existing chats stay on this account.":"This account is already linked. Sign in with this account on another device to access its chats.";}
-function updateGoogleLinkButton(){const guest=!!user?.is_anonymous;const b=$("settings-link-google-btn"),help=$("settings-link-google-help");if(!b)return;b.classList.remove("hidden");if(guest){b.disabled=false;b.textContent="G Link Google account (optional)";if(help)help.textContent="Optional: connect Google to this guest account so your existing chats stay attached.";}else{b.disabled=true;b.textContent="Google linking available for guest accounts";if(help)help.textContent="If you signed in with Google already, your Google account is connected. Other signed-in accounts cannot be merged automatically.";}}
 $("settings-link-account-btn")?.addEventListener("click",()=>{if(!user?.is_anonymous){toast("This account is already linked. You don't need to make another account.");return;}closeDialog("settings-dialog");$("link-account-email").value="";$("link-account-password").value="";openDialog("link-account-dialog");});
-$("settings-link-google-btn")?.addEventListener("click",async()=>{if(!user?.is_anonymous){toast("Google can only be linked to your current guest account here. Accounts cannot be merged automatically.");return;}if(!db?.auth?.linkIdentity){toast("Google linking is not supported by the current auth setup. You can still link email and password.");return;}const {error}=await db.auth.linkIdentity({provider:"google",options:{redirectTo:window.location.origin}});if(error)toast("Could not start Google linking: "+error.message+". Check that Google sign-in is enabled in Supabase.");});
 let linkAccountMode="signup";
 function setLinkAccountMode(mode){
   linkAccountMode=mode;
