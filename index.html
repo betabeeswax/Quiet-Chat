@@ -44,8 +44,6 @@
       <p class="muted">A private place to chat with people you invite.</p>
       <div id="config-warning" class="notice hidden">First, add your Supabase URL and publishable/anon key in <code>app.js</code>.</div>
       <section id="auth-options" class="hidden">
-        <button id="google-signin-btn" class="provider-button full" type="button"><span class="google-g" aria-hidden="true">G</span> Continue with Google</button>
-        <div class="auth-divider"><span>or use email</span></div>
         <form id="email-auth-form">
           <label for="auth-email">Email address</label>
           <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" required>
@@ -286,7 +284,7 @@
       <h3>👤 Your account</h3>
       <button id="settings-edit-profile-btn" class="secondary full">Edit profile <span>›</span></button>
       <button id="settings-link-account-btn" class="secondary full" type="button">🔐 Sign in / create account and save chats</button>
-      <p id="settings-link-account-help" class="tiny muted">Keep your chats when you connect an email or Google account.</p>
+      <p id="settings-link-account-help" class="tiny muted">Keep your chats by linking an email and password.</p>
       <button id="settings-gallery-btn" class="secondary full">Open local media library <span>›</span></button>
     </div>
     <div class="settings-section">
@@ -336,7 +334,6 @@
       <button id="link-account-submit" class="primary full field-gap" type="submit">Create account and save chats →</button>
       <p class="auth-switch"><span id="link-account-mode-copy">Already have an account?</span> <button id="link-account-mode-btn" type="button">Sign in instead</button></p>
     </form>
-    <div class="field-gap"><button id="settings-link-google-btn" class="secondary full" type="button"><span class="google-g" aria-hidden="true">G</span> Continue with Google (save chats)</button></div>
     <p class="tiny muted">These options link to your current guest account, keeping its chats. Signing into a different existing account cannot merge chats. If email confirmation is required, check your inbox and do not clear this browser data.</p>
   </dialog>
   <dialog id="gallery-dialog" class="modal gallery-modal">
